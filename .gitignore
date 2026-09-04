@@ -1,0 +1,8 @@
+﻿node_modules/
+dist/
+.env
+.env.*
+server/data.json
+server/uploads/
+client_backup/
+client_diseño_actual_backup/
