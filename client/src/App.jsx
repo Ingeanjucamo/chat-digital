@@ -6,6 +6,7 @@ import Login from "./components/Login/Login";
 import Sidebar from "./components/Sidebar/Sidebar";
 import Contacts from "./components/Contacts/Contacts";
 import Chat from "./components/Chat/Chat";
+import Administration from "./components/Administration/Administration";
 
 import {
   obtenerUsuarios,
@@ -1168,447 +1169,37 @@ function App() {
             ADMINISTRACIÓN
         ================================================= */}
 
-        {seccion === "administracion" ? (
-          <div
-            className="administration-page"
-            style={
-              estilos.administracion
-            }
-          >
-            <div
-              className="administration-top"
-              style={
-                estilos.adminEncabezado
-              }
-            >
-              <div>
-                <div
-                  className="admin-kicker"
-                  style={
-                    estilos.adminKicker
-                  }
-                >
-                  PANEL ADMINISTRATIVO
-                </div>
-
-                <h1
-                  style={
-                    estilos.adminTitulo
-                  }
-                >
-                  Administración de usuarios
-                </h1>
-
-                <p
-                  style={
-                    estilos.adminSubtitulo
-                  }
-                >
-                  Gestiona asesores y administradores
-                  de Chat Digital.
-                </p>
-              </div>
-
-              <button
-                className="admin-new-button"
-                onClick={() => {
-                  setUsuarioEditando(null);
-
-                  setFormUsuario({
-                    usuario: "",
-                    nombre: "",
-                    password: "",
-                    rol: "Asesor",
-                  });
-
-                  setMostrarFormularioUsuario(
-                    true
-                  );
-                }}
-                style={
-                  estilos.botonNuevoUsuario
-                }
-              >
-                <span>＋</span>
-                Nuevo usuario
-              </button>
-            </div>
-
-            {/* RESUMEN */}
-
-            <div
-              className="admin-summary"
-              style={
-                estilos.adminResumen
-              }
-            >
-              <div
-                style={
-                  estilos.adminResumenCard
-                }
-              >
-                <div
-                  style={
-                    estilos.adminResumenIconoAzul
-                  }
-                >
-                  👥
-                </div>
-
-                <div>
-                  <div
-                    style={
-                      estilos.adminResumenNumero
-                    }
-                  >
-                    {usuariosAdmin.length}
-                  </div>
-
-                  <div
-                    style={
-                      estilos.adminResumenTexto
-                    }
-                  >
-                    Usuarios registrados
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={
-                  estilos.adminResumenCard
-                }
-              >
-                <div
-                  style={
-                    estilos.adminResumenIconoVerde
-                  }
-                >
-                  ✓
-                </div>
-
-                <div>
-                  <div
-                    style={
-                      estilos.adminResumenNumero
-                    }
-                  >
-                    {
-                      usuariosAdmin.filter(
-                        (u) =>
-                          u.activo !== false
-                      ).length
-                    }
-                  </div>
-
-                  <div
-                    style={
-                      estilos.adminResumenTexto
-                    }
-                  >
-                    Usuarios activos
-                  </div>
-                </div>
-              </div>
-
-              <div
-                style={
-                  estilos.adminResumenCard
-                }
-              >
-                <div
-                  style={
-                    estilos.adminResumenIconoMorado
-                  }
-                >
-                  🛡️
-                </div>
-
-                <div>
-                  <div
-                    style={
-                      estilos.adminResumenNumero
-                    }
-                  >
-                    {
-                      usuariosAdmin.filter(
-                        (u) =>
-                          u.rol ===
-                          "Administrador"
-                      ).length
-                    }
-                  </div>
-
-                  <div
-                    style={
-                      estilos.adminResumenTexto
-                    }
-                  >
-                    Administradores
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* TABLA */}
-
-            {cargandoAdmin ? (
-              <div
-                className="admin-loading"
-                style={
-                  estilos.adminLoading
-                }
-              >
-                <div
-                  className="admin-loading-icon"
-                >
-                  ⏳
-                </div>
-
-                <strong>
-                  Cargando usuarios...
-                </strong>
-
-                <span>
-                  Espera un momento.
-                </span>
-              </div>
-            ) : (
-              <div
-                className="admin-table-card"
-                style={
-                  estilos.adminTabla
-                }
-              >
-                <div
-                  style={
-                    estilos.adminTablaHeader
-                  }
-                >
-                  <div>
-                    <h2
-                      style={
-                        estilos.adminTablaTitulo
-                      }
-                    >
-                      Usuarios
-                    </h2>
-
-                    <p
-                      style={
-                        estilos.adminTablaTexto
-                      }
-                    >
-                      Listado de usuarios registrados
-                    </p>
-                  </div>
-
-                  <div
-                    style={
-                      estilos.adminContador
-                    }
-                  >
-                    {usuariosAdmin.length} usuarios
-                  </div>
-                </div>
-
-                <div
-                  className="admin-table-head"
-                  style={
-                    estilos.adminFilaCabecera
-                  }
-                >
-                  <div>USUARIO</div>
-                  <div>ROL</div>
-                  <div>ESTADO</div>
-                  <div>ACCIONES</div>
-                </div>
-
-                {usuariosAdmin.map((u) => (
-                  <div
-                    key={u.id}
-                    className="admin-user-row"
-                    style={
-                      estilos.adminFila
-                    }
-                  >
-                    {/* USUARIO */}
-
-                    <div
-                      style={
-                        estilos.adminUsuario
-                      }
-                    >
-                      <div
-                        style={{
-                          ...estilos.adminAvatar,
-                          background:
-                            u.rol ===
-                            "Administrador"
-                              ? "#6941c6"
-                              : "#1769e8",
-                        }}
-                      >
-                        {u.nombre
-                          ? u.nombre
-                              .charAt(0)
-                              .toUpperCase()
-                          : "U"}
-                      </div>
-
-                      <div
-                        style={{
-                          minWidth: 0,
-                        }}
-                      >
-                        <div
-                          style={
-                            estilos.adminNombre
-                          }
-                        >
-                          {u.nombre}
-                        </div>
-
-                        <div
-                          style={
-                            estilos.adminUsername
-                          }
-                        >
-                          @{u.usuario}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* ROL */}
-
-                    <div>
-                      <span
-                        style={{
-                          ...estilos.adminRol,
-                          ...(u.rol ===
-                          "Administrador"
-                            ? estilos.adminRolAdmin
-                            : estilos.adminRolAsesor),
-                        }}
-                      >
-                        {u.rol ===
-                        "Administrador"
-                          ? "Administrador"
-                          : "Asesor"}
-                      </span>
-                    </div>
-
-                    {/* ESTADO */}
-
-                    <div>
-                      <span
-                        style={{
-                          ...estilos.adminEstado,
-                          ...(u.activo !==
-                          false
-                            ? estilos.adminEstadoActivo
-                            : estilos.adminEstadoInactivo),
-                        }}
-                      >
-                        <span
-                          style={
-                            estilos.puntoEstado
-                          }
-                        />
-                        {u.activo !== false
-                          ? "Activo"
-                          : "Desactivado"}
-                      </span>
-                    </div>
-
-                    {/* ACCIONES */}
-
-                    <div
-                      style={
-                        estilos.adminAcciones
-                      }
-                    >
-                      {u.esSuperAdmin ? (
-                        <span
-                          style={
-                            estilos.superAdminBadge
-                          }
-                        >
-                          👑 SuperAdmin
-                        </span>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              editarUsuario(u)
-                            }
-                            style={
-                              estilos.adminBotonEditar
-                            }
-                            title="Editar usuario"
-                          >
-                            ✏️
-                            <span>
-                              Editar
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setUsuarioPassword(
-                                u
-                              );
-                              setNuevaPassword(
-                                ""
-                              );
-                            }}
-                            style={
-                              estilos.adminBotonPassword
-                            }
-                            title="Cambiar contraseña"
-                          >
-                            🔑
-                            <span>
-                              Contraseña
-                            </span>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {usuariosAdmin.length === 0 && (
-                  <div
-                    style={
-                      estilos.adminVacio
-                    }
-                  >
-                    <div
-                      style={{
-                        fontSize: 45,
-                      }}
-                    >
-                      👥
-                    </div>
-
-                    <strong>
-                      No hay usuarios registrados
-                    </strong>
-
-                    <span>
-                      Crea el primer usuario con
-                      el botón "Nuevo usuario".
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
+   {seccion === "administracion" ? (
+  <Administration
+    usuario={usuario}
+    usuarios={usuariosAdmin}
+    cargando={cargandoAdmin}
+    usuarioEditando={usuarioEditando}
+    setUsuarioEditando={setUsuarioEditando}
+    usuarioPassword={usuarioPassword}
+    setUsuarioPassword={setUsuarioPassword}
+    nuevaPassword={nuevaPassword}
+    setNuevaPassword={setNuevaPassword}
+    mostrarFormularioUsuario={mostrarFormularioUsuario}
+    setMostrarFormularioUsuario={
+      setMostrarFormularioUsuario
+    }
+    formUsuario={formUsuario}
+    setFormUsuario={setFormUsuario}
+    cargarUsuariosAdministracion={
+      cargarUsuariosAdministracion
+    }
+    limpiarFormularioUsuario={
+      limpiarFormularioUsuario
+    }
+    editarUsuario={editarUsuario}
+    guardarUsuario={guardarUsuario}
+    cambiarPassword={cambiarPassword}
+    estilos={estilos}
+  />
+) : (
+  <>
+          
             {/* =================================================
                 MENSAJES
             ================================================= */}
@@ -3081,6 +2672,8 @@ const estilos = {
 
   /* =====================================================
      ADMINISTRACIÓN
+     
+     
   ===================================================== */
 
   administracion: {

@@ -1188,7 +1188,7 @@ function App() {
                     estilos.adminKicker
                   }
                 >
-                  PANEL ADMINISTRATIVO
+                  
                 </div>
 
                 <h1

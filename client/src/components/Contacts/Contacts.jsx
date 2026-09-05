@@ -12,74 +12,15 @@ function Contacts({
   estilos,
 }) {
   return (
-    <section
-      className="contacts-panel"
-      style={estilos.contactos}
-    >
-      <div
-        className="contacts-heading"
-        style={estilos.contactosTitulo}
-      >
-        <h2
-          className="contacts-title"
-          style={estilos.tituloContactos}
-        >
-          {seccion === "informacion"
-            ? "Información"
-            : seccion === "administracion"
-            ? "Administración"
-            : "Conversaciones"}
-        </h2>
+   <section
+  
+>
+  {/* INFORMACIÓN */}
 
-        <p
-          className="contacts-subtitle"
-          style={estilos.subtituloContactos}
-        >
-          {seccion === "informacion"
-            ? "Comunicados generales"
-            : seccion === "administracion"
-            ? "Panel administrativo"
-            : usuario.rol === "Asesor"
-            ? "Administradores disponibles"
-            : "Asesores disponibles"}
-        </p>
-      </div>
-
-      {/* INFORMACIÓN */}
-
-      {seccion === "informacion" && (
-        <div
-          className="info-card"
-          style={estilos.infoPanel}
-        >
-          <div
-            className="info-icon"
-            style={estilos.infoIcono}
-          >
-            📢
-          </div>
-
-          <h3>
-            Canal de información
-          </h3>
-
-          <p>
-            Aquí los administradores
-            publican comunicados para
-            todo el equipo.
-          </p>
-
-          {usuario.rol === "Administrador" ? (
-            <div style={estilos.infoPermitido}>
-              ✓ Puedes publicar información
-            </div>
-          ) : (
-            <div style={estilos.infoSoloLectura}>
-              👁 Solo lectura para asesores
-            </div>
-          )}
-        </div>
-      )}
+{seccion === "informacion" && (
+  <div className="contacts-empty">
+  </div>
+)}
 
       {/* BUSCADOR */}
 

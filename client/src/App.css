@@ -1304,3 +1304,52 @@ select:focus-visible {
     transition-duration: .01ms !important;
   }
 }
+
+
+
+
+/* Ajuste columna de contactos */
+.contacts-panel {
+  padding-top: 0 !important;
+}
+
+.contacts-panel .info-card {
+  margin-top: 0 !important;
+}
+
+.contacts-panel .search-box {
+  margin-top: 0 !important;
+}
+
+.contacts-panel .contacts-list {
+  margin-top: 0 !important;
+}
+
+
+
+/* =====================================================
+   COLUMNA CONTACTOS
+===================================================== */
+
+.contacts-panel {
+  width: 315px !important;
+  min-width: 315px !important;
+  height: 100vh;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #ffffff !important;
+  border-right: 1px solid #e3e9f1 !important;
+  box-sizing: border-box;
+}
+
+/* En INFORMACIÓN dejamos la columna vacía,
+   pero conservamos su ancho para no descuadrar el chat */
+
+.contacts-panel:has(.info-card) {
+  padding: 0 !important;
+}
+
+.contacts-panel:has(.info-card) .info-card {
+  margin: 0 !important;
+  padding-top: 20px !important;
+}
