@@ -6,6 +6,12 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import Contacts from "./components/Contacts/Contacts";
 import Chat from "./components/Chat/Chat";
 
+import {
+  obtenerUsuarios,
+  iniciarLogin,
+  obtenerUsuariosAdministracion,
+} from "./services/api";
+
 const API = `http://${window.location.hostname}:3000`;
 
 const socket = io(API, {
@@ -130,88 +136,60 @@ function App() {
      ADMINISTRACIÓN - CARGAR USUARIOS
   ===================================================== */
 
-  async function cargarUsuariosAdministracion() {
-    if (!usuario?.esSuperAdmin) return;
+ async function cargarUsuariosAdministracion() {
+  if (!usuario?.esSuperAdmin) return;
 
-    try {
-      setCargandoAdmin(true);
+  try {
+    setCargandoAdmin(true);
 
-      const respuesta = await fetch(
-        `${API}/api/administracion/usuarios`,
-        {
-          headers: {
-            "x-usuario-id": String(usuario.id),
-          },
-        }
-      );
+    const datos = await obtenerUsuariosAdministracion(usuario.id);
 
-      const datos = await respuesta.json();
+    setUsuariosAdmin(datos);
+  } catch (error) {
+    console.error(
+      "Error cargando usuarios de administración:",
+      error
+    );
 
-      if (!respuesta.ok) {
-        throw new Error(
-          datos.error || "No se pudieron cargar los usuarios"
-        );
-      }
-
-      setUsuariosAdmin(datos);
-    } catch (error) {
-      console.error(
-        "Error cargando usuarios de administración:",
-        error
-      );
-
-      setAlerta({
-        titulo: "Error",
-        mensaje: error.message,
-      });
-    } finally {
-      setCargandoAdmin(false);
-    }
+    setAlerta({
+      titulo: "Error",
+      mensaje: error.message,
+    });
+  } finally {
+    setCargandoAdmin(false);
   }
+}
 
   /* =====================================================
      LOGIN
   ===================================================== */
 
-  async function iniciarSesion(e) {
-    e.preventDefault();
+async function iniciarSesion(e) {
+  e.preventDefault();
 
-    setErrorLogin("");
+  setErrorLogin("");
 
-    try {
-      const respuesta = await fetch(`${API}/api/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          usuario: loginUsuario.trim(),
-          password: loginPassword,
-        }),
-      });
+  try {
+    const datos = await iniciarLogin(
+      loginUsuario,
+      loginPassword
+    );
 
-      const datos = await respuesta.json();
+    setUsuario(datos.usuario);
 
-      if (!respuesta.ok) {
-        setErrorLogin(
-          datos.error || "Usuario o contraseña incorrectos"
-        );
-        return;
-      }
+    await cargarUsuarios();
 
-      setUsuario(datos.usuario);
+    solicitarNotificaciones();
 
-      await cargarUsuarios();
+    socket.emit("usuario:conectar", datos.usuario.id);
+  } catch (error) {
+    console.error(error);
 
-      solicitarNotificaciones();
-
-      socket.emit("usuario:conectar", datos.usuario.id);
-    } catch (error) {
-      console.error(error);
-
-      setErrorLogin("No se pudo conectar con el servidor");
-    }
+    setErrorLogin(
+      error.message || "No se pudo conectar con el servidor"
+    );
   }
+}
 
   /* =====================================================
      SOCKET
