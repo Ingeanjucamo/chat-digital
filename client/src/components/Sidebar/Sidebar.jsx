@@ -127,7 +127,8 @@ function Sidebar({
         {/* ADMINISTRACIÓN */}
 
         {usuario.rol === "Administrador" &&
-          usuario.esSuperAdmin && (
+  (usuario.esSuperAdmin ||
+    usuario.usuario === "andres.cardozo") && (
             <button
               className="menu-item"
               style={{

@@ -56,9 +56,13 @@ function Contacts({
 
       {seccion === "privado" && (
         <div
-          className="contacts-list"
-          style={estilos.listaContactos}
-        >
+  className="contacts-list"
+  style={{
+    ...estilos.listaContactos,
+    maxHeight: "calc(100vh - 180px)",
+    overflowY: "auto",
+  }}
+>
           {contactos.length === 0 ? (
             <div style={estilos.sinContactos}>
               <div style={{ fontSize: 40 }}>
@@ -79,9 +83,10 @@ function Contacts({
               return (
                 <button
                   key={contacto.id}
-                  onClick={() =>
-                    abrirChatPrivado(contacto)
-                  }
+                  onClick={() => {
+  console.log("CONTACTO SELECCIONADO:", contacto);
+  abrirChatPrivado(contacto);
+}}
                   className="contact-item"
                   style={{
                     ...estilos.contacto,

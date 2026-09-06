@@ -1,55 +1,89 @@
-const API = `http://${window.location.hostname}:3000`;
-
-export async function obtenerUsuarios() {
-  const respuesta = await fetch(`${API}/api/usuarios`);
-
-  if (!respuesta.ok) {
-    throw new Error("No se pudieron cargar los usuarios");
-  }
-
-  return respuesta.json();
-}
+import { supabase } from "../lib/supabase";
 
 export async function iniciarLogin(usuario, password) {
-  const respuesta = await fetch(`${API}/api/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      usuario: usuario.trim(),
-      password,
-    }),
-  });
+  const usuarioLimpio = usuario.trim();
 
-  const datos = await respuesta.json();
+  // =========================================================
+  // BUSCAR USUARIO
+  // =========================================================
 
-  if (!respuesta.ok) {
-    throw new Error(datos.error || "Usuario o contraseña incorrectos");
-  }
+  const { data: perfil, error: errorPerfil } =
+    await supabase
+      .from("usuarios")
+      .select("*")
+      .eq("usuario", usuarioLimpio)
+      .single();
 
-  return datos;
-}
+  if (errorPerfil) {
+    console.error(
+      "ERROR REAL SUPABASE:",
+      errorPerfil
+    );
 
-export async function obtenerUsuariosAdministracion(usuarioId) {
-  const respuesta = await fetch(
-    `${API}/api/administracion/usuarios`,
-    {
-      headers: {
-        "x-usuario-id": String(usuarioId),
-      },
-    }
-  );
-
-  const datos = await respuesta.json();
-
-  if (!respuesta.ok) {
     throw new Error(
-      datos.error || "No se pudieron cargar los usuarios"
+      "Usuario o contraseña incorrectos"
     );
   }
 
-  return datos;
+  if (!perfil) {
+    throw new Error(
+      "Usuario o contraseña incorrectos"
+    );
+  }
+
+  // =========================================================
+  // BLOQUEAR USUARIO DESACTIVADO
+  // =========================================================
+
+  if (perfil.activo === false) {
+    throw new Error(
+      "Tu usuario está desactivado. Comunícate con el administrador."
+    );
+  }
+
+  // =========================================================
+  // AUTENTICACIÓN SUPABASE
+  // =========================================================
+
+  const emailAuth =
+    `${perfil.usuario}@chat-digital.online`;
+
+  const {
+    data: authData,
+    error: errorAuth,
+  } =
+    await supabase.auth.signInWithPassword({
+      email: emailAuth,
+      password,
+    });
+
+  if (errorAuth || !authData.user) {
+    throw new Error(
+      "Usuario o contraseña incorrectos"
+    );
+  }
+
+  // =========================================================
+  // VALIDAR QUE EL AUTH CORRESPONDA AL PERFIL
+  // =========================================================
+
+  if (
+    perfil.auth_user_id &&
+    authData.user.id !== perfil.auth_user_id
+  ) {
+    await supabase.auth.signOut();
+
+    throw new Error(
+      "La sesión de Supabase no corresponde con este usuario. Cierra sesión y vuelve a ingresar."
+    );
+  }
+
+  // =========================================================
+  // DEVOLVER USUARIO
+  // =========================================================
+
+  return {
+    usuario: perfil,
+  };
 }
 
-export { API };

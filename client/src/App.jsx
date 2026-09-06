@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { io } from "socket.io-client";
+import { supabase } from "./lib/supabase";
 import "./App.css";
 
 import Login from "./components/Login/Login";
@@ -7,18 +7,9 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import Contacts from "./components/Contacts/Contacts";
 import Chat from "./components/Chat/Chat";
 import Administration from "./components/Administration/Administration";
+import { iniciarLogin } from "./services/api";
 
-import {
-  obtenerUsuarios,
-  iniciarLogin,
-  obtenerUsuariosAdministracion,
-} from "./services/api";
 
-const API = `http://${window.location.hostname}:3000`;
-
-const socket = io(API, {
-  transports: ["websocket", "polling"],
-});
 
 function App() {
   const [usuario, setUsuario] = useState(null);
@@ -79,14 +70,21 @@ function App() {
   ===================================================== */
 
   async function cargarUsuarios() {
-    try {
-      const datos = await obtenerUsuarios();
+  try {
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .order("id", { ascending: true });
 
-      setUsuarios(datos);
-    } catch (error) {
-      console.error("Error cargando usuarios:", error);
+    if (error) {
+      throw error;
     }
+
+    setUsuarios(data || []);
+  } catch (error) {
+    console.error("Error cargando usuarios desde Supabase:", error);
   }
+}
 
   /* =====================================================
      NOTIFICACIONES
@@ -128,206 +126,204 @@ function App() {
     }, 5000);
   }
 
+    /* =====================================================
+     SUPABASE REALTIME - NOTIFICACIONES
+  ===================================================== */
+
+  useEffect(() => {
+    if (!usuario) return;
+
+    const canal = supabase
+      .channel(`notificaciones-${usuario.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "mensajes",
+        },
+        async (payload) => {
+          const mensaje = payload.new;
+
+          // Ignorar mensajes enviados por nosotros mismos
+          if (
+            Number(mensaje.emisor_id) ===
+            Number(usuario.id)
+          ) {
+            return;
+          }
+
+          /* ================================
+             MENSAJE PRIVADO
+          ================================= */
+
+          if (
+            mensaje.receptor_id &&
+            Number(mensaje.receptor_id) ===
+              Number(usuario.id)
+          ) {
+            const { data: emisor } = await supabase
+              .from("usuarios")
+              .select("nombre, usuario")
+              .eq("id", mensaje.emisor_id)
+              .single();
+
+            const nombreEmisor =
+              emisor?.nombre ||
+              emisor?.usuario ||
+              "Nuevo mensaje";
+
+            // Si NO estamos dentro de ese chat
+            if (
+              !(
+                seccion === "privado" &&
+                usuarioChat &&
+                Number(usuarioChat.id) ===
+                  Number(mensaje.emisor_id)
+              )
+            ) {
+              setNotificacionesPrivadas(
+                (cantidad) => cantidad + 1
+              );
+
+              setPendientesPorUsuario(
+                (anteriores) => ({
+                  ...anteriores,
+                  [mensaje.emisor_id]:
+                    (anteriores[mensaje.emisor_id] || 0) +
+                    1,
+                })
+              );
+
+              mostrarNotificacion(
+                "Nuevo mensaje",
+                `${nombreEmisor}: ${
+                  mensaje.texto || "📎 Archivo"
+                }`
+              );
+            }
+
+            // Si estamos dentro del chat, agregarlo directamente
+            if (
+              seccion === "privado" &&
+              usuarioChat &&
+              Number(usuarioChat.id) ===
+                Number(mensaje.emisor_id)
+            ) {
+              setMensajes((anteriores) => [
+                ...anteriores,
+                mensaje,
+              ]);
+            }
+
+            return;
+          }
+
+          /* ================================
+             INFORMACIÓN GENERAL
+          ================================= */
+
+          if (mensaje.grupo === "informacion") {
+            if (seccion !== "informacion") {
+              setNotificacionesInfo(
+                (cantidad) => cantidad + 1
+              );
+
+              mostrarNotificacion(
+                "Nueva información",
+                mensaje.texto ||
+                  "Hay un nuevo comunicado."
+              );
+            } else {
+              setMensajes((anteriores) => [
+                ...anteriores,
+                mensaje,
+              ]);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
+  }, [
+    usuario,
+    seccion,
+    usuarioChat,
+  ]);
+
   /* =====================================================
      ADMINISTRACIÓN - CARGAR USUARIOS
   ===================================================== */
 
   async function cargarUsuariosAdministracion() {
-    if (!usuario?.esSuperAdmin) {
-      return;
-    }
-
-    try {
-      setCargandoAdmin(true);
-
-      const datos = await obtenerUsuariosAdministracion(usuario.id);
-
-      setUsuariosAdmin(datos);
-    } catch (error) {
-      console.error(
-        "Error cargando usuarios de administración:",
-        error
-      );
-
-      setAlerta({
-        titulo: "Error",
-        mensaje: error.message,
-      });
-    } finally {
-      setCargandoAdmin(false);
-    }
+  if (
+    !usuario?.esSuperAdmin &&
+    usuario?.usuario !== "andres.cardozo"
+  ) {
+    return;
   }
+
+  try {
+    setCargandoAdmin(true);
+
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    setUsuariosAdmin(data || []);
+  } catch (error) {
+    console.error(
+      "ERROR CARGANDO USUARIOS:",
+      error
+    );
+
+    setAlerta({
+      titulo: "Error",
+      mensaje: error.message,
+    });
+  } finally {
+    setCargandoAdmin(false);
+  }
+}
 
   /* =====================================================
      LOGIN
   ===================================================== */
 
-  async function iniciarSesion(e) {
-    e.preventDefault();
+async function iniciarSesion(e) {
+  e.preventDefault();
 
-    setErrorLogin("");
+  setErrorLogin("");
 
-    try {
-      const datos = await iniciarLogin(
-        loginUsuario,
-        loginPassword
-      );
+  try {
+    const datos = await iniciarLogin(
+      loginUsuario,
+      loginPassword
+    );
 
-      setUsuario(datos.usuario);
+    setUsuario(datos.usuario);
 
-      await cargarUsuarios();
+    await cargarUsuarios();
 
-      solicitarNotificaciones();
+    solicitarNotificaciones();
+  } catch (error) {
+    console.error(error);
 
-      socket.emit("usuario:conectar", datos.usuario.id);
-    } catch (error) {
-      console.error(error);
-
-      setErrorLogin(
-        error.message || "No se pudo conectar con el servidor"
-      );
-    }
+    setErrorLogin(
+      error.message || "No se pudo conectar con el servidor"
+    );
   }
+}
 
-  /* =====================================================
-     SOCKET
-  ===================================================== */
 
-  useEffect(() => {
-    if (!usuario) {
-      return;
-    }
-
-    function conectarUsuario() {
-      socket.emit("usuario:conectar", usuario.id);
-    }
-
-    conectarUsuario();
-
-    socket.on("connect", conectarUsuario);
-
-    function recibirMensaje(mensaje) {
-      const miId = Number(usuario.id);
-      const emisorId = Number(mensaje.emisorId);
-
-      const receptorId = mensaje.receptorId
-        ? Number(mensaje.receptorId)
-        : null;
-
-      const textoNotificacion =
-        mensaje.texto ||
-        `📎 ${mensaje.archivo?.nombre || "Archivo adjunto"}`;
-
-      /* MENSAJE PRIVADO */
-
-      if (receptorId !== null) {
-        const esParaMi =
-          receptorId === miId &&
-          emisorId !== miId;
-
-        if (esParaMi) {
-          const chatAbierto =
-            seccion === "privado" &&
-            usuarioChat &&
-            Number(usuarioChat.id) === emisorId;
-
-          if (chatAbierto) {
-            setMensajes((anteriores) => {
-              if (
-                anteriores.some(
-                  (m) => m.id === mensaje.id
-                )
-              ) {
-                return anteriores;
-              }
-
-              return [...anteriores, mensaje];
-            });
-
-            return;
-          }
-
-          setNotificacionesPrivadas(
-            (cantidad) => cantidad + 1
-          );
-
-          setPendientesPorUsuario((anteriores) => ({
-            ...anteriores,
-            [emisorId]:
-              (anteriores[emisorId] || 0) + 1,
-          }));
-
-          mostrarNotificacion(
-            `💬 Nuevo mensaje de ${mensaje.nombre}`,
-            textoNotificacion
-          );
-
-          return;
-        }
-
-        return;
-      }
-
-      /* INFORMACIÓN GENERAL */
-
-      if (mensaje.grupo === "informacion") {
-        if (emisorId === miId) {
-          setMensajes((anteriores) => {
-            if (
-              anteriores.some(
-                (m) => m.id === mensaje.id
-              )
-            ) {
-              return anteriores;
-            }
-
-            return [...anteriores, mensaje];
-          });
-
-          return;
-        }
-
-        if (seccion === "informacion") {
-          setMensajes((anteriores) => {
-            if (
-              anteriores.some(
-                (m) => m.id === mensaje.id
-              )
-            ) {
-              return anteriores;
-            }
-
-            return [...anteriores, mensaje];
-          });
-
-          return;
-        }
-
-        setNotificacionesInfo(
-          (cantidad) => cantidad + 1
-        );
-
-        mostrarNotificacion(
-          `📢 Nueva información de ${mensaje.nombre}`,
-          textoNotificacion
-        );
-      }
-    }
-
-    socket.on("mensaje:nuevo", recibirMensaje);
-
-    return () => {
-      socket.off(
-        "mensaje:nuevo",
-        recibirMensaje
-      );
-
-      socket.off(
-        "connect",
-        conectarUsuario
-      );
-    };
-  }, [usuario, seccion, usuarioChat]);
 
   /* =====================================================
      CONTACTOS
@@ -385,306 +381,286 @@ function App() {
     busqueda,
   ]);
 
+
+
   /* =====================================================
      ABRIR INFORMACIÓN
   ===================================================== */
 
   async function abrirInformacion() {
-    setSeccion("informacion");
-    setUsuarioChat(null);
-    setTexto("");
-    setBusqueda("");
-    setNotificacionesInfo(0);
-    setArchivoSeleccionado(null);
+  setSeccion("informacion");
+  setUsuarioChat(null);
+  setTexto("");
+  setBusqueda("");
+  setNotificacionesInfo(0);
+  setArchivoSeleccionado(null);
 
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
-
-    try {
-      const respuesta = await fetch(
-        `${API}/api/mensajes/informacion`
-      );
-
-      const datos = await respuesta.json();
-
-      if (respuesta.ok) {
-        setMensajes(datos);
-      }
-    } catch (error) {
-      console.error(
-        "Error cargando información:",
-        error
-      );
-    }
+  if (archivoInputRef.current) {
+    archivoInputRef.current.value = "";
   }
 
-  /* =====================================================
-     ABRIR CONVERSACIONES
-  ===================================================== */
+  try {
+    const { data, error } = await supabase
+      .from("mensajes")
+      .select("*")
+      .eq("grupo", "informacion")
+      .order("created_at", { ascending: true });
+    if (error) {
+      throw error;
+    }
 
-  function abrirConversaciones() {
-    setSeccion("privado");
-    setUsuarioChat(null);
+    setMensajes(data || []);
+  } catch (error) {
+    console.error(
+      "Error cargando información desde Supabase:",
+      error
+    );
+  }
+}
+
+
+
+  /* =====================================================
+   ABRIR CONVERSACIONES
+===================================================== */
+
+async function abrirConversaciones() {
+  setSeccion("privado");
+  setUsuarioChat(null);
+  setMensajes([]);
+  setBusqueda("");
+  setTexto("");
+  setArchivoSeleccionado(null);
+
+  if (archivoInputRef.current) {
+    archivoInputRef.current.value = "";
+  }
+}
+
+async function abrirChatPrivado(contacto) {
+  console.log("ABRIENDO CHAT CON:", contacto);
+  console.log("USUARIO ACTUAL:", usuario);
+
+  setSeccion("privado");
+  setUsuarioChat(contacto);
+    setPendientesPorUsuario((anteriores) => {
+    const copia = { ...anteriores };
+    delete copia[contacto.id];
+    return copia;
+  });
+    setNotificacionesPrivadas((cantidad) =>
+    Math.max(
+      0,
+      cantidad -
+        (pendientesPorUsuario[contacto.id] || 0)
+    )
+  );
+
+  try {
+    const { data, error } = await supabase
+      .from("mensajes")
+      .select("*")
+      .is("grupo", null)
+      .or(
+        `and(emisor_id.eq.${usuario.id},receptor_id.eq.${contacto.id}),and(emisor_id.eq.${contacto.id},receptor_id.eq.${usuario.id})`
+      )
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    setMensajes(data || []);
+  } catch (error) {
+    console.error(
+      "Error cargando conversación:",
+      error
+    );
+
     setMensajes([]);
-    setTexto("");
-    setBusqueda("");
-    setArchivoSeleccionado(null);
-
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
   }
-
-  /* =====================================================
-     ABRIR CHAT PRIVADO
-  ===================================================== */
-
-  async function abrirChatPrivado(contacto) {
-    if (!usuario || !contacto) {
-      return;
-    }
-
-    setUsuarioChat(contacto);
-    setSeccion("privado");
-    setTexto("");
-    setArchivoSeleccionado(null);
-
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
-
-    const cantidadPendiente =
-      pendientesPorUsuario[contacto.id] || 0;
-
-    if (cantidadPendiente > 0) {
-      setNotificacionesPrivadas(
-        (cantidad) =>
-          Math.max(
-            0,
-            cantidad - cantidadPendiente
-          )
-      );
-
-      setPendientesPorUsuario(
-        (anteriores) => {
-          const nuevo = {
-            ...anteriores,
-          };
-
-          delete nuevo[contacto.id];
-
-          return nuevo;
-        }
-      );
-    }
-
-    try {
-      const respuesta = await fetch(
-        `${API}/api/conversacion/${usuario.id}/${contacto.id}`
-      );
-
-      const datos = await respuesta.json();
-
-      if (!respuesta.ok) {
-        alert(
-          datos.error ||
-            "No tienes permiso para esta conversación"
-        );
-
-        return;
-      }
-
-      setMensajes(datos);
-    } catch (error) {
-      console.error(
-        "Error cargando conversación:",
-        error
-      );
-    }
-  }
+}
 
   /* =====================================================
      ENVIAR MENSAJE
   ===================================================== */
 
-  async function enviarMensaje(e) {
-    e.preventDefault();
+ async function enviarMensaje(e) {
+  e.preventDefault();
 
-    const mensajeTexto = texto.trim();
+  const mensajeTexto = texto.trim();
 
-    if (
-      (!mensajeTexto && !archivoSeleccionado) ||
-      !usuario
-    ) {
-      return;
-    }
+  if (
+    (!mensajeTexto && !archivoSeleccionado) ||
+    !usuario
+  ) {
+    return;
+  }
 
-    if (
-      archivoSeleccionado &&
-      !(
-        seccion === "informacion" &&
-        usuario.rol === "Administrador"
-      )
-    ) {
-      alert(
-        "Los archivos solo pueden adjuntarse en Información."
-      );
-
-      return;
-    }
-
-    if (
+  if (
+    archivoSeleccionado &&
+    !(
       seccion === "informacion" &&
-      usuario.rol !== "Administrador"
-    ) {
-      alert(
-        "Solo los administradores pueden publicar información."
-      );
+      usuario.rol === "Administrador"
+    )
+  ) {
+    alert(
+      "Los archivos solo pueden adjuntarse en Información."
+    );
+    return;
+  }
 
-      return;
-    }
+  if (
+    seccion === "informacion" &&
+    usuario.rol !== "Administrador"
+  ) {
+    alert(
+      "Solo los administradores pueden publicar información."
+    );
+    return;
+  }
 
-    if (
-      seccion === "privado" &&
-      !usuarioChat
-    ) {
-      alert(
-        "Selecciona un contacto primero."
-      );
+  if (
+    seccion === "privado" &&
+    !usuarioChat
+  ) {
+    alert("Selecciona un contacto primero.");
+    return;
+  }
 
-      return;
-    }
+  try {
+    const { data: { user: authUser } } =
+  await supabase.auth.getUser();
 
-    try {
-      const cuerpo = {
-        emisorId: usuario.id,
-        nombre: usuario.nombre,
-        texto: mensajeTexto,
-      };
+console.log("AUTH USER:", authUser);
+console.log("AUTH UID:", authUser?.id);
+console.log("USUARIO APP:", usuario);
 
-      /* SUBIR ARCHIVO */
+    let archivoData = null;
 
-      if (archivoSeleccionado) {
-        setSubiendoArchivo(true);
+    /* =================================================
+       SUBIR ARCHIVO A SUPABASE STORAGE
+    ================================================= */
 
-        try {
-          const formData = new FormData();
+    if (archivoSeleccionado) {
+      setSubiendoArchivo(true);
 
-          formData.append(
-            "archivo",
+      const nombreArchivo =
+        `${usuario.id}_${Date.now()}_${archivoSeleccionado.name}`
+          .replace(/\s+/g, "_");
+
+      const rutaArchivo =
+        `mensajes/${nombreArchivo}`;
+
+      const { error: errorArchivo } =
+        await supabase.storage
+          .from("archivos")
+          .upload(
+            rutaArchivo,
             archivoSeleccionado
           );
 
-          formData.append(
-            "emisorId",
-            usuario.id
-          );
-
-          const respuestaArchivo =
-            await fetch(
-              `${API}/api/archivos`,
-              {
-                method: "POST",
-                body: formData,
-              }
-            );
-
-          const datosArchivo =
-            await respuestaArchivo.json();
-
-          if (!respuestaArchivo.ok) {
-            alert(
-              datosArchivo.error ||
-                "No se pudo subir el archivo"
-            );
-
-            return;
-          }
-
-          cuerpo.archivo =
-            datosArchivo.archivo;
-        } finally {
-          setSubiendoArchivo(false);
-        }
+      if (errorArchivo) {
+        throw errorArchivo;
       }
 
-      /* PRIVADO */
+      const { data: urlData } =
+        supabase.storage
+          .from("archivos")
+          .getPublicUrl(rutaArchivo);
 
-      if (
-        seccion === "privado" &&
-        usuarioChat
-      ) {
-        cuerpo.receptorId =
-          usuarioChat.id;
-      }
+      archivoData = {
+        nombre: archivoSeleccionado.name,
+        tipo: archivoSeleccionado.type,
+        url: urlData.publicUrl,
+      };
 
-      /* INFORMACIÓN */
+      setSubiendoArchivo(false);
+    }
 
-      if (seccion === "informacion") {
-        cuerpo.grupo = "informacion";
-      }
+    /* =================================================
+       PREPARAR MENSAJE
+    ================================================= */
 
-      const respuesta = await fetch(
-        `${API}/api/mensajes`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(cuerpo),
-        }
-      );
+   const nuevoMensaje = {
+  emisor_id: usuario.id,
+  texto: mensajeTexto || null,
+  grupo:
+    seccion === "informacion"
+      ? "informacion"
+      : null,
+  receptor_id:
+    seccion === "privado"
+      ? usuarioChat.id
+      : null,
+  archivo: archivoData,
+};
 
-      const datos = await respuesta.json();
+    /* =================================================
+       GUARDAR EN SUPABASE
+    ================================================= */
 
-      if (!respuesta.ok) {
-        alert(
-          datos.error ||
-            "No se pudo enviar el mensaje"
-        );
+    const { data, error } = await supabase
+      .from("mensajes")
+      .insert(nuevoMensaje)
+      .select()
+      .single();
 
-        return;
-      }
-
-      setTexto("");
-      setArchivoSeleccionado(null);
-
-      if (archivoInputRef.current) {
-        archivoInputRef.current.value = "";
-      }
-
-      setMensajes((anteriores) => {
-        if (
-          anteriores.some(
-            (m) => m.id === datos.id
-          )
-        ) {
-          return anteriores;
-        }
-
-        return [...anteriores, datos];
-      });
-    } catch (error) {
+    if (error) {
       console.error(
-        "Error enviando mensaje:",
+        "ERROR SUPABASE AL ENVIAR:",
         error
       );
 
-      alert(
-        "No se pudo conectar con el servidor"
-      );
+      throw error;
     }
+
+    /* =================================================
+       LIMPIAR
+    ================================================= */
+
+    setTexto("");
+    setArchivoSeleccionado(null);
+
+    if (archivoInputRef.current) {
+      archivoInputRef.current.value = "";
+    }
+
+    /* =================================================
+       MOSTRAR MENSAJE
+    ================================================= */
+
+    setMensajes((anteriores) => [
+      ...anteriores,
+      data,
+    ]);
+
+  } catch (error) {
+    console.error(
+      "Error enviando mensaje:",
+      error
+    );
+
+    setSubiendoArchivo(false);
+
+    alert(
+      error.message ||
+        "No se pudo enviar el mensaje"
+    );
   }
+}
 
   /* =====================================================
      ADMINISTRACIÓN
   ===================================================== */
 
   function abrirAdministracion() {
-    if (!usuario?.esSuperAdmin) {
-      return;
-    }
+    if (
+  !usuario?.esSuperAdmin &&
+  usuario?.usuario !== "andres.cardozo"
+) {
+  return;
+}
 
     setSeccion("administracion");
     setUsuarioChat(null);
@@ -719,80 +695,57 @@ function App() {
     setMostrarFormularioUsuario(true);
   }
 
-  async function guardarUsuario() {
-    try {
-      if (
-        !formUsuario.usuario.trim() ||
-        !formUsuario.nombre.trim()
-      ) {
-        alert(
-          "Usuario y nombre son obligatorios."
-        );
+ async function guardarUsuario() {
+  try {
+    if (!formUsuario.usuario.trim()) {
+      alert("Escribe el usuario.");
+      return;
+    }
 
-        return;
+    if (!formUsuario.nombre.trim()) {
+      alert("Escribe el nombre.");
+      return;
+    }
+
+    if (!usuarioEditando && !formUsuario.password.trim()) {
+      alert("Escribe la contraseña.");
+      return;
+    }
+
+    // CREAR USUARIO
+    if (!usuarioEditando) {
+      const {
+        data: sessionData,
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !sessionData.session) {
+        throw new Error("No hay una sesión activa de administrador.");
       }
-
-      if (
-        !usuarioEditando &&
-        !formUsuario.password.trim()
-      ) {
-        alert(
-          "La contraseña es obligatoria."
-        );
-
-        return;
-      }
-
-      const url = usuarioEditando
-        ? `${API}/api/administracion/usuarios/${usuarioEditando.id}`
-        : `${API}/api/administracion/usuarios`;
-
-      const metodo = usuarioEditando
-        ? "PUT"
-        : "POST";
-
-      const cuerpo = usuarioEditando
-        ? {
-            usuario:
-              formUsuario.usuario.trim(),
-            nombre:
-              formUsuario.nombre.trim(),
-            rol: formUsuario.rol,
-          }
-        : {
-            usuario:
-              formUsuario.usuario.trim(),
-            nombre:
-              formUsuario.nombre.trim(),
-            password:
-              formUsuario.password,
-            rol: formUsuario.rol,
-          };
 
       const respuesta = await fetch(
-        url,
+        "https://frghtzsodaivkxbzzbnk.supabase.co/functions/v1/admin-create-user",
         {
-          method: metodo,
+          method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
-            "x-usuario-id":
-              String(usuario.id),
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionData.session.access_token}`,
           },
-          body: JSON.stringify(cuerpo),
+          body: JSON.stringify({
+            usuario: formUsuario.usuario.trim(),
+            nombre: formUsuario.nombre.trim(),
+            password: formUsuario.password,
+            rol: formUsuario.rol,
+          }),
         }
       );
 
-      const datos =
-        await respuesta.json();
+      const datos = await respuesta.json();
 
       if (!respuesta.ok) {
-        alert(
-          datos.error ||
-            "No se pudo guardar el usuario."
+        throw new Error(
+          datos.error || "No se pudo crear el usuario."
         );
-
-        return;
       }
 
       limpiarFormularioUsuario();
@@ -800,99 +753,111 @@ function App() {
       await cargarUsuariosAdministracion();
       await cargarUsuarios();
 
-      alert(
-        usuarioEditando
-          ? "Usuario actualizado correctamente."
-          : "Usuario creado correctamente."
-      );
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        "No se pudo conectar con el servidor."
-      );
-    }
-  }
-
-  async function cambiarPassword() {
-    if (!nuevaPassword.trim()) {
-      alert(
-        "Escribe una nueva contraseña"
-      );
-
+      alert("Usuario creado correctamente.");
       return;
     }
 
-    try {
-      const respuesta =
-        await fetch(
-          `${API}/api/administracion/usuarios/${usuarioPassword.id}/password`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type":
-                "application/json",
-              "x-usuario-id":
-                String(usuario.id),
-            },
-            body: JSON.stringify({
-              password:
-                nuevaPassword,
-            }),
-          }
-        );
+    // EDITAR USUARIO
+    alert(
+      "La edición de usuarios todavía está pendiente de migración a Supabase."
+    );
+  } catch (error) {
+    console.error("ERROR GUARDANDO USUARIO:", error);
 
-      const datos =
-        await respuesta.json();
+    alert(
+      error.message || "No se pudo guardar el usuario."
+    );
+  }
+}
 
-      if (!respuesta.ok) {
-        throw new Error(
-          datos.error ||
-            "No se pudo cambiar la contraseña"
-        );
-      }
-
-      setUsuarioPassword(null);
-      setNuevaPassword("");
-
-      alert(
-        "Contraseña cambiada correctamente."
-      );
-    } catch (error) {
-      alert(error.message);
-    }
+  async function cambiarPassword() {
+  if (!nuevaPassword.trim()) {
+    alert("Escribe una nueva contraseña");
+    return;
   }
 
-  /* =====================================================
-     CERRAR SESIÓN
-  ===================================================== */
+  try {
+    const {
+      data: sessionData,
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-  function cerrarSesion() {
-    setUsuario(null);
-    setUsuarioChat(null);
-    setMensajes([]);
-    setTexto("");
-    setBusqueda("");
-    setLoginUsuario("");
-    setLoginPassword("");
-    setErrorLogin("");
-    setNotificacionesPrivadas(0);
-    setNotificacionesInfo(0);
-    setPendientesPorUsuario({});
-    setAlerta(null);
-    setArchivoSeleccionado(null);
-    setSubiendoArchivo(false);
+    if (sessionError || !sessionData.session) {
+      throw new Error(
+        "No hay una sesión activa de administrador."
+      );
+    }
 
-    setUsuariosAdmin([]);
-    setUsuarioEditando(null);
+    const respuesta = await fetch(
+      "https://frghtzsodaivkxbzzbnk.supabase.co/functions/v1/admin-update-password",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+        },
+        body: JSON.stringify({
+          usuario_id: usuarioPassword.id,
+          password: nuevaPassword,
+        }),
+      }
+    );
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok) {
+      throw new Error(
+        datos.error ||
+          "No se pudo cambiar la contraseña."
+      );
+    }
+
     setUsuarioPassword(null);
     setNuevaPassword("");
-    setMostrarFormularioUsuario(false);
 
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
+    alert("Contraseña cambiada correctamente.");
+  } catch (error) {
+    console.error(
+      "ERROR CAMBIANDO CONTRASEÑA:",
+      error
+    );
+
+    alert(error.message);
   }
+}
+
+ async function cerrarSesion() {
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error("Error cerrando sesión de Supabase:", error);
+  }
+
+  setUsuario(null);
+  setUsuarioChat(null);
+  setMensajes([]);
+  setTexto("");
+  setBusqueda("");
+  setLoginUsuario("");
+  setLoginPassword("");
+  setErrorLogin("");
+  setNotificacionesPrivadas(0);
+  setNotificacionesInfo(0);
+  setPendientesPorUsuario({});
+  setAlerta(null);
+  setArchivoSeleccionado(null);
+  setSubiendoArchivo(false);
+
+  setUsuariosAdmin([]);
+  setUsuarioEditando(null);
+  setUsuarioPassword(null);
+  setNuevaPassword("");
+  setMostrarFormularioUsuario(false);
+
+  if (archivoInputRef.current) {
+    archivoInputRef.current.value = "";
+  }
+}
 
   /* =====================================================
      LOGIN
@@ -1025,27 +990,17 @@ function App() {
           SIDEBAR
       ================================================= */}
 
-      <Sidebar
-        usuario={usuario}
-        seccion={seccion}
-        notificacionesInfo={
-          notificacionesInfo
-        }
-        notificacionesPrivadas={
-          notificacionesPrivadas
-        }
-        abrirInformacion={
-          abrirInformacion
-        }
-        abrirConversaciones={
-          abrirConversaciones
-        }
-        abrirAdministracion={
-          abrirAdministracion
-        }
-        cerrarSesion={cerrarSesion}
-        estilos={estilos}
-      />
+<Sidebar
+  usuario={usuario}
+  seccion={seccion}
+  notificacionesInfo={notificacionesInfo}
+  notificacionesPrivadas={notificacionesPrivadas}
+  abrirInformacion={abrirInformacion}
+  abrirConversaciones={abrirConversaciones}
+  abrirAdministracion={abrirAdministracion}
+  cerrarSesion={cerrarSesion}
+  estilos={estilos}
+/>
 
       {/* =================================================
           CONTACTOS
@@ -1260,7 +1215,7 @@ function App() {
                 mensajes.map((mensaje) => {
                   const propio =
                     Number(
-                      mensaje.emisorId
+                      mensaje.emisor_id
                     ) ===
                     Number(usuario.id);
 
@@ -1318,12 +1273,12 @@ function App() {
                           >
                             {esImagen ? (
                               <a
-                                href={`${API}${mensaje.archivo.url}`}
+                                href={mensaje.archivo.url}
                                 target="_blank"
                                 rel="noreferrer"
                               >
                                 <img
-                                  src={`${API}${mensaje.archivo.url}`}
+                                  src={mensaje.archivo.url}
                                   alt={
                                     mensaje
                                       .archivo
@@ -1343,7 +1298,7 @@ function App() {
                               </a>
                             ) : (
                               <a
-                                href={`${API}${mensaje.archivo.url}`}
+                                href={mensaje.archivo.url}
                                 target="_blank"
                                 rel="noreferrer"
                                 style={{
@@ -1378,15 +1333,14 @@ function App() {
                           }
                         >
                           {new Date(
-                            mensaje.fecha
-                          ).toLocaleTimeString(
-                            "es-CO",
-                            {
-                              hour: "2-digit",
-                              minute:
-                                "2-digit",
-                            }
-                          )}
+  mensaje.created_at
+).toLocaleTimeString(
+  "es-CO",
+  {
+    hour: "2-digit",
+    minute: "2-digit",
+  }
+)}
                         </div>
                       </div>
                     </div>
