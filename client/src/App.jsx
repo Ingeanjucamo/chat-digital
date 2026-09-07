@@ -86,6 +86,20 @@ function App() {
   }
 }
 
+function obtenerNombreUsuario(id) {
+  const encontrado = usuarios.find(
+    (u) => Number(u.id) === Number(id)
+  );
+
+  return (
+    encontrado?.nombre ||
+    encontrado?.usuario ||
+    "Usuario"
+  );
+}
+
+
+
   /* =====================================================
      NOTIFICACIONES
   ===================================================== */
@@ -130,129 +144,176 @@ function App() {
      SUPABASE REALTIME - NOTIFICACIONES
   ===================================================== */
 
-  useEffect(() => {
-    if (!usuario) return;
+  
+useEffect(() => {
+  if (!usuario) return;
 
-    const canal = supabase
-      .channel(`notificaciones-${usuario.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "mensajes",
-        },
-        async (payload) => {
-          const mensaje = payload.new;
+  const canal = supabase
+    .channel(`notificaciones-${usuario.id}`)
+    .on(
+      "postgres_changes",
+      {
+        event: "INSERT",
+        schema: "public",
+        table: "mensajes",
+      },
+      async (payload) => {
+        const mensaje = payload.new;
 
-          // Ignorar mensajes enviados por nosotros mismos
-          if (
-            Number(mensaje.emisor_id) ===
-            Number(usuario.id)
-          ) {
-            return;
-          }
-
-          /* ================================
-             MENSAJE PRIVADO
-          ================================= */
-
-          if (
-            mensaje.receptor_id &&
-            Number(mensaje.receptor_id) ===
-              Number(usuario.id)
-          ) {
-            const { data: emisor } = await supabase
-              .from("usuarios")
-              .select("nombre, usuario")
-              .eq("id", mensaje.emisor_id)
-              .single();
-
-            const nombreEmisor =
-              emisor?.nombre ||
-              emisor?.usuario ||
-              "Nuevo mensaje";
-
-            // Si NO estamos dentro de ese chat
-            if (
-              !(
-                seccion === "privado" &&
-                usuarioChat &&
-                Number(usuarioChat.id) ===
-                  Number(mensaje.emisor_id)
-              )
-            ) {
-              setNotificacionesPrivadas(
-                (cantidad) => cantidad + 1
-              );
-
-              setPendientesPorUsuario(
-                (anteriores) => ({
-                  ...anteriores,
-                  [mensaje.emisor_id]:
-                    (anteriores[mensaje.emisor_id] || 0) +
-                    1,
-                })
-              );
-
-              mostrarNotificacion(
-                "Nuevo mensaje",
-                `${nombreEmisor}: ${
-                  mensaje.texto || "📎 Archivo"
-                }`
-              );
-            }
-
-            // Si estamos dentro del chat, agregarlo directamente
-            if (
-              seccion === "privado" &&
-              usuarioChat &&
-              Number(usuarioChat.id) ===
-                Number(mensaje.emisor_id)
-            ) {
-              setMensajes((anteriores) => [
-                ...anteriores,
-                mensaje,
-              ]);
-            }
-
-            return;
-          }
-
-          /* ================================
-             INFORMACIÓN GENERAL
-          ================================= */
-
-          if (mensaje.grupo === "informacion") {
-            if (seccion !== "informacion") {
-              setNotificacionesInfo(
-                (cantidad) => cantidad + 1
-              );
-
-              mostrarNotificacion(
-                "Nueva información",
-                mensaje.texto ||
-                  "Hay un nuevo comunicado."
-              );
-            } else {
-              setMensajes((anteriores) => [
-                ...anteriores,
-                mensaje,
-              ]);
-            }
-          }
+        // No procesar nuestros propios mensajes
+        if (
+          Number(mensaje.emisor_id) ===
+          Number(usuario.id)
+        ) {
+          return;
         }
-      )
-      .subscribe();
 
-    return () => {
-      supabase.removeChannel(canal);
-    };
-  }, [
-    usuario,
-    seccion,
-    usuarioChat,
-  ]);
+        // Buscar quién envió el mensaje
+        const { data: emisor } = await supabase
+          .from("usuarios")
+          .select("id, nombre, usuario")
+          .eq("id", mensaje.emisor_id)
+          .single();
+
+        const nombreEmisor =
+          emisor?.nombre ||
+          emisor?.usuario ||
+          "Usuario";
+
+        const mensajeConNombre = {
+          ...mensaje,
+          nombre: nombreEmisor,
+        };
+
+        // =====================================================
+        // MENSAJE PRIVADO
+        // =====================================================
+
+        if (mensaje.receptor_id) {
+          const esParaMi =
+            Number(mensaje.receptor_id) ===
+            Number(usuario.id);
+
+          if (!esParaMi) {
+            return;
+          }
+
+          const chatAbierto =
+            seccion === "privado" &&
+            usuarioChat &&
+            Number(usuarioChat.id) ===
+              Number(mensaje.emisor_id);
+
+          // Si estoy dentro del chat con esa persona,
+          // mostrar el mensaje directamente.
+          if (chatAbierto) {
+            setMensajes((anteriores) => {
+              if (
+                anteriores.some(
+                  (m) =>
+                    Number(m.id) ===
+                    Number(mensaje.id)
+                )
+              ) {
+                return anteriores;
+              }
+
+              return [
+                ...anteriores,
+                mensajeConNombre,
+              ];
+            });
+
+            return;
+          }
+
+          // =====================================================
+          // SI EL CHAT NO ESTÁ ABIERTO
+          // AUMENTAR CONTADOR: 1, 2, 3...
+          // =====================================================
+
+          setNotificacionesPrivadas(
+            (cantidad) => cantidad + 1
+          );
+
+          setPendientesPorUsuario(
+            (anteriores) => ({
+              ...anteriores,
+
+              [mensaje.emisor_id]:
+                (anteriores[mensaje.emisor_id] ||
+                  0) + 1,
+            })
+          );
+
+          mostrarNotificacion(
+            "💬 Nuevo mensaje",
+            `${nombreEmisor}: ${
+              mensaje.texto ||
+              "📎 Archivo adjunto"
+            }`
+          );
+
+          return;
+        }
+
+        // =====================================================
+        // INFORMACIÓN GENERAL
+        // =====================================================
+
+        if (
+          mensaje.grupo ===
+          "informacion"
+        ) {
+          if (
+            seccion === "informacion"
+          ) {
+            setMensajes((anteriores) => {
+              if (
+                anteriores.some(
+                  (m) =>
+                    Number(m.id) ===
+                    Number(mensaje.id)
+                )
+              ) {
+                return anteriores;
+              }
+
+              return [
+                ...anteriores,
+                mensajeConNombre,
+              ];
+            });
+
+            return;
+          }
+
+          setNotificacionesInfo(
+            (cantidad) => cantidad + 1
+          );
+
+          mostrarNotificacion(
+            "📢 Nueva información",
+            `${nombreEmisor}: ${
+              mensaje.texto ||
+              "Hay un nuevo comunicado."
+            }`
+          );
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(canal);
+  };
+}, [
+  usuario,
+  seccion,
+  usuarioChat,
+]);
+
+
 
   /* =====================================================
      ADMINISTRACIÓN - CARGAR USUARIOS
@@ -383,103 +444,145 @@ async function iniciarSesion(e) {
 
 
 
-  /* =====================================================
+    /* =====================================================
      ABRIR INFORMACIÓN
   ===================================================== */
 
   async function abrirInformacion() {
-  setSeccion("informacion");
-  setUsuarioChat(null);
-  setTexto("");
-  setBusqueda("");
-  setNotificacionesInfo(0);
-  setArchivoSeleccionado(null);
+    setSeccion("informacion");
+    setUsuarioChat(null);
+    setTexto("");
+    setBusqueda("");
+    setNotificacionesInfo(0);
+    setArchivoSeleccionado(null);
 
-  if (archivoInputRef.current) {
-    archivoInputRef.current.value = "";
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from("mensajes")
-      .select("*")
-      .eq("grupo", "informacion")
-      .order("created_at", { ascending: true });
-    if (error) {
-      throw error;
+    if (archivoInputRef.current) {
+      archivoInputRef.current.value = "";
     }
 
-    setMensajes(data || []);
-  } catch (error) {
-    console.error(
-      "Error cargando información desde Supabase:",
-      error
-    );
-  }
-}
+    try {
+      const { data, error } = await supabase
+        .from("mensajes")
+        .select("*")
+        .eq("grupo", "informacion")
+        .order("created_at", { ascending: true });
 
+      if (error) {
+        throw error;
+      }
+
+      setMensajes(
+        (data || []).map((mensaje) => ({
+          ...mensaje,
+          nombre: obtenerNombreUsuario(
+            mensaje.emisor_id
+          ),
+        }))
+      );
+    } catch (error) {
+      console.error(
+        "Error cargando información:",
+        error
+      );
+
+      setMensajes([]);
+    }
+  }
 
 
   /* =====================================================
-   ABRIR CONVERSACIONES
-===================================================== */
+     ABRIR CONVERSACIONES
+  ===================================================== */
 
-async function abrirConversaciones() {
-  setSeccion("privado");
-  setUsuarioChat(null);
-  setMensajes([]);
-  setBusqueda("");
-  setTexto("");
-  setArchivoSeleccionado(null);
+  async function abrirConversaciones() {
+    setSeccion("privado");
+    setUsuarioChat(null);
+    setMensajes([]);
+    setBusqueda("");
+    setTexto("");
+    setArchivoSeleccionado(null);
 
-  if (archivoInputRef.current) {
-    archivoInputRef.current.value = "";
-  }
-}
-
-async function abrirChatPrivado(contacto) {
-  console.log("ABRIENDO CHAT CON:", contacto);
-  console.log("USUARIO ACTUAL:", usuario);
-
-  setSeccion("privado");
-  setUsuarioChat(contacto);
-    setPendientesPorUsuario((anteriores) => {
-    const copia = { ...anteriores };
-    delete copia[contacto.id];
-    return copia;
-  });
-    setNotificacionesPrivadas((cantidad) =>
-    Math.max(
-      0,
-      cantidad -
-        (pendientesPorUsuario[contacto.id] || 0)
-    )
-  );
-
-  try {
-    const { data, error } = await supabase
-      .from("mensajes")
-      .select("*")
-      .is("grupo", null)
-      .or(
-        `and(emisor_id.eq.${usuario.id},receptor_id.eq.${contacto.id}),and(emisor_id.eq.${contacto.id},receptor_id.eq.${usuario.id})`
-      )
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      throw error;
+    if (archivoInputRef.current) {
+      archivoInputRef.current.value = "";
     }
+  }
 
-    setMensajes(data || []);
-  } catch (error) {
-    console.error(
-      "Error cargando conversación:",
-      error
+
+  /* =====================================================
+     ABRIR CHAT PRIVADO
+  ===================================================== */
+
+  async function abrirChatPrivado(contacto) {
+    console.log(
+      "ABRIENDO CHAT CON:",
+      contacto
     );
 
-    setMensajes([]);
+    console.log(
+      "USUARIO ACTUAL:",
+      usuario
+    );
+
+    setSeccion("privado");
+    setUsuarioChat(contacto);
+
+    setPendientesPorUsuario(
+      (anteriores) => {
+        const copia = { ...anteriores };
+
+        delete copia[contacto.id];
+
+        return copia;
+      }
+    );
+
+    setNotificacionesPrivadas(
+      (cantidad) =>
+        Math.max(
+          0,
+          cantidad -
+            (pendientesPorUsuario[
+              contacto.id
+            ] || 0)
+        )
+    );
+
+    try {
+      const { data, error } =
+        await supabase
+          .from("mensajes")
+          .select("*")
+          .is("grupo", null)
+          .or(
+            `and(emisor_id.eq.${usuario.id},receptor_id.eq.${contacto.id}),and(emisor_id.eq.${contacto.id},receptor_id.eq.${usuario.id})`
+          )
+          .order("created_at", {
+            ascending: true,
+          });
+
+      if (error) {
+        throw error;
+      }
+
+      setMensajes(
+        (data || []).map((mensaje) => ({
+          ...mensaje,
+          nombre:
+            obtenerNombreUsuario(
+              mensaje.emisor_id
+            ),
+        }))
+      );
+    } catch (error) {
+      console.error(
+        "Error cargando conversación:",
+        error
+      );
+
+      setMensajes([]);
+    }
   }
-}
+
 
   /* =====================================================
      ENVIAR MENSAJE
@@ -497,18 +600,30 @@ async function abrirChatPrivado(contacto) {
     return;
   }
 
+if (archivoSeleccionado) {
+  const esImagen =
+    archivoSeleccionado.type?.startsWith("image/");
+
+  const puedeEnviarImagenPrivada =
+    seccion === "privado" &&
+    usuarioChat &&
+    usuarioChat.rol !== usuario.rol &&
+    esImagen;
+
+  const puedeEnviarArchivoInformacion =
+    seccion === "informacion" &&
+    usuario.rol === "Administrador";
+
   if (
-    archivoSeleccionado &&
-    !(
-      seccion === "informacion" &&
-      usuario.rol === "Administrador"
-    )
+    !puedeEnviarImagenPrivada &&
+    !puedeEnviarArchivoInformacion
   ) {
     alert(
-      "Los archivos solo pueden adjuntarse en Información."
+      "En chats privados solo se pueden enviar imágenes entre Asesor y Administrador."
     );
     return;
   }
+}
 
   if (
     seccion === "informacion" &&
@@ -630,10 +745,16 @@ console.log("USUARIO APP:", usuario);
        MOSTRAR MENSAJE
     ================================================= */
 
-    setMensajes((anteriores) => [
-      ...anteriores,
-      data,
-    ]);
+ setMensajes((anteriores) => [
+  ...anteriores,
+  {
+    ...mensaje,
+    nombre:
+      emisor?.nombre ||
+      emisor?.usuario ||
+      "Usuario",
+  },
+]);
 
   } catch (error) {
     console.error(
@@ -1006,509 +1127,78 @@ console.log("USUARIO APP:", usuario);
           CONTACTOS
       ================================================= */}
 
-      <Contacts
-        usuario={usuario}
-        seccion={seccion}
-        busqueda={busqueda}
-        setBusqueda={setBusqueda}
-        contactos={contactos}
-        pendientesPorUsuario={
-          pendientesPorUsuario
-        }
-        usuarioChat={usuarioChat}
-        abrirChatPrivado={
-          abrirChatPrivado
-        }
-        estilos={estilos}
-      />
+     <Contacts
+  usuario={usuario}
+  seccion={seccion}
+  busqueda={busqueda}
+  setBusqueda={setBusqueda}
+  contactos={contactos}
+  pendientesPorUsuario={pendientesPorUsuario}
+  usuarioChat={usuarioChat}
+  abrirChatPrivado={abrirChatPrivado}
+  estilos={estilos}
+/>
+
 
       {/* =================================================
           PANEL PRINCIPAL
       ================================================= */}
 
-      <main
-        className="chat-panel"
-        style={estilos.chat}
-      >
-        {/* HEADER */}
-
-        <header
-          className="chat-header"
-          style={estilos.chatHeader}
+      {seccion === "administracion" ? (
+        <main
+          className="chat-panel"
+          style={estilos.chat}
         >
-          {seccion === "privado" &&
-          usuarioChat ? (
-            <>
-              <div
-                className="chat-avatar"
-                style={estilos.avatarChat}
-              >
-                {usuarioChat.nombre
-                  ? usuarioChat.nombre
-                      .charAt(0)
-                      .toUpperCase()
-                  : "U"}
-              </div>
+          <Administration
+            usuario={usuario}
+            usuarios={usuariosAdmin}
+            cargando={cargandoAdmin}
+            usuarioEditando={usuarioEditando}
+            setUsuarioEditando={setUsuarioEditando}
+            usuarioPassword={usuarioPassword}
+            setUsuarioPassword={setUsuarioPassword}
+            nuevaPassword={nuevaPassword}
+            setNuevaPassword={setNuevaPassword}
+            mostrarFormularioUsuario={
+              mostrarFormularioUsuario
+            }
+            setMostrarFormularioUsuario={
+              setMostrarFormularioUsuario
+            }
+            formUsuario={formUsuario}
+            setFormUsuario={setFormUsuario}
+            cargarUsuariosAdministracion={
+              cargarUsuariosAdministracion
+            }
+            limpiarFormularioUsuario={
+              limpiarFormularioUsuario
+            }
+            editarUsuario={editarUsuario}
+            guardarUsuario={guardarUsuario}
+            cambiarPassword={cambiarPassword}
+            estilos={estilos}
+          />
+        </main>
+      ) : (
+        <Chat
+          usuario={usuario}
+          seccion={seccion}
+          usuarioChat={usuarioChat}
+          mensajes={mensajes}
+          texto={texto}
+          setTexto={setTexto}
+          enviarMensaje={enviarMensaje}
+          archivoInputRef={archivoInputRef}
+          archivoSeleccionado={archivoSeleccionado}
+          setArchivoSeleccionado={
+            setArchivoSeleccionado
+          }
+          subiendoArchivo={subiendoArchivo}
+          estilos={estilos}
+          API=""
+        />
+      )}
 
-              <div>
-                <div
-                  className="chat-name"
-                  style={
-                    estilos.chatNombre
-                  }
-                >
-                  {usuarioChat.nombre}
-                </div>
-
-                <div
-                  className="chat-status"
-                  style={
-                    estilos.chatEstado
-                  }
-                >
-                  {usuarioChat.rol}
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div
-                className="chat-avatar"
-                style={estilos.avatarChat}
-              >
-                {seccion ===
-                "informacion"
-                  ? "📢"
-                  : seccion ===
-                    "administracion"
-                  ? "⚙️"
-                  : "💬"}
-              </div>
-
-              <div>
-                <div
-                  className="chat-name"
-                  style={
-                    estilos.chatNombre
-                  }
-                >
-                  {seccion ===
-                  "informacion"
-                    ? "Información general"
-                    : seccion ===
-                      "administracion"
-                    ? "Administración"
-                    : "Conversaciones"}
-                </div>
-
-                <div
-                  className="chat-status"
-                  style={
-                    estilos.chatEstado
-                  }
-                >
-                  {seccion ===
-                  "informacion"
-                    ? "Comunicados para todo el equipo"
-                    : seccion ===
-                      "administracion"
-                    ? "Gestión de usuarios"
-                    : "Selecciona un contacto"}
-                </div>
-              </div>
-            </>
-          )}
-        </header>
-
-        {/* =================================================
-            ADMINISTRACIÓN
-        ================================================= */}
-
-   {seccion === "administracion" ? (
-  <Administration
-    usuario={usuario}
-    usuarios={usuariosAdmin}
-    cargando={cargandoAdmin}
-    usuarioEditando={usuarioEditando}
-    setUsuarioEditando={setUsuarioEditando}
-    usuarioPassword={usuarioPassword}
-    setUsuarioPassword={setUsuarioPassword}
-    nuevaPassword={nuevaPassword}
-    setNuevaPassword={setNuevaPassword}
-    mostrarFormularioUsuario={mostrarFormularioUsuario}
-    setMostrarFormularioUsuario={
-      setMostrarFormularioUsuario
-    }
-    formUsuario={formUsuario}
-    setFormUsuario={setFormUsuario}
-    cargarUsuariosAdministracion={
-      cargarUsuariosAdministracion
-    }
-    limpiarFormularioUsuario={
-      limpiarFormularioUsuario
-    }
-    editarUsuario={editarUsuario}
-    guardarUsuario={guardarUsuario}
-    cambiarPassword={cambiarPassword}
-    estilos={estilos}
-  />
-) : (
-  <>
-          
-            {/* =================================================
-                MENSAJES
-            ================================================= */}
-
-            <div
-              className="messages-area"
-              style={estilos.mensajes}
-            >
-              {mensajes.length === 0 ? (
-                <div
-                  style={
-                    estilos.pantallaCentro
-                  }
-                >
-                  <div
-                    style={{
-                      ...estilos.centroIcono,
-                      background:
-                        seccion ===
-                        "informacion"
-                          ? "#eaf4ff"
-                          : "#edf2ff",
-                    }}
-                  >
-                    {seccion ===
-                    "informacion"
-                      ? "📢"
-                      : "💬"}
-                  </div>
-
-                  <h2
-                    style={
-                      estilos.centroTitulo
-                    }
-                  >
-                    {seccion ===
-                    "privado"
-                      ? usuarioChat
-                        ? "Nueva conversación"
-                        : "Selecciona un contacto"
-                      : "Información general"}
-                  </h2>
-
-                  <p
-                    style={
-                      estilos.centroTexto
-                    }
-                  >
-                    {seccion ===
-                    "privado"
-                      ? usuarioChat
-                        ? "Envía el primer mensaje."
-                        : "Selecciona un asesor o administrador."
-                      : "Aquí aparecerán los comunicados."}
-                  </p>
-                </div>
-              ) : (
-                mensajes.map((mensaje) => {
-                  const propio =
-                    Number(
-                      mensaje.emisor_id
-                    ) ===
-                    Number(usuario.id);
-
-                  const esImagen =
-                    mensaje.archivo?.tipo?.startsWith(
-                      "image/"
-                    );
-
-                  return (
-                    <div
-                      key={mensaje.id}
-                      className="message-row"
-                      style={{
-                        ...estilos.mensajeFila,
-                        justifyContent:
-                          propio
-                            ? "flex-end"
-                            : "flex-start",
-                      }}
-                    >
-                      <div
-                        className="message-bubble"
-                        style={{
-                          ...estilos.mensaje,
-                          ...(propio
-                            ? estilos.mensajePropio
-                            : estilos.mensajeOtro),
-                        }}
-                      >
-                        {!propio && (
-                          <div
-                            className="message-author"
-                            style={
-                              estilos.nombreMensaje
-                            }
-                          >
-                            {mensaje.nombre}
-                          </div>
-                        )}
-
-                        {mensaje.texto && (
-                          <div>
-                            {mensaje.texto}
-                          </div>
-                        )}
-
-                        {mensaje.archivo && (
-                          <div
-                            style={{
-                              marginTop:
-                                mensaje.texto
-                                  ? 8
-                                  : 0,
-                            }}
-                          >
-                            {esImagen ? (
-                              <a
-                                href={mensaje.archivo.url}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                <img
-                                  src={mensaje.archivo.url}
-                                  alt={
-                                    mensaje
-                                      .archivo
-                                      .nombre
-                                  }
-                                  style={{
-                                    maxWidth:
-                                      "100%",
-                                    maxHeight: 250,
-                                    borderRadius: 10,
-                                    display:
-                                      "block",
-                                    cursor:
-                                      "pointer",
-                                  }}
-                                />
-                              </a>
-                            ) : (
-                              <a
-                                href={mensaje.archivo.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{
-                                  color: propio
-                                    ? "#ffffff"
-                                    : "#1769e8",
-                                  textDecoration:
-                                    "none",
-                                  fontWeight:
-                                    "bold",
-                                  display:
-                                    "inline-block",
-                                  wordBreak:
-                                    "break-word",
-                                }}
-                              >
-                                📎{" "}
-                                {
-                                  mensaje
-                                    .archivo
-                                    .nombre
-                                }
-                              </a>
-                            )}
-                          </div>
-                        )}
-
-                        <div
-                          className="message-time"
-                          style={
-                            estilos.horaMensaje
-                          }
-                        >
-                          {new Date(
-  mensaje.created_at
-).toLocaleTimeString(
-  "es-CO",
-  {
-    hour: "2-digit",
-    minute: "2-digit",
-  }
-)}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* =================================================
-                ESCRIBIR
-            ================================================= */}
-
-            {(seccion === "privado" ||
-              seccion === "informacion") && (
-              <>
-                {seccion ===
-                  "informacion" &&
-                usuario.rol !==
-                  "Administrador" ? (
-                  <div
-                    className="read-only"
-                    style={
-                      estilos.soloLectura
-                    }
-                  >
-                    👁 Los asesores pueden
-                    leer la información,
-                    pero solo los
-                    administradores pueden
-                    publicar.
-                  </div>
-                ) : (
-                  <form
-                    onSubmit={enviarMensaje}
-                    className="message-form"
-                    style={
-                      estilos.formMensaje
-                    }
-                  >
-                    {seccion ===
-                      "informacion" &&
-                      usuario.rol ===
-                        "Administrador" && (
-                        <>
-                          <input
-                            ref={archivoInputRef}
-                            type="file"
-                            style={{
-                              display: "none",
-                            }}
-                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                            onChange={(e) => {
-                              const archivo =
-                                e.target
-                                  .files?.[0] ||
-                                null;
-
-                              setArchivoSeleccionado(
-                                archivo
-                              );
-                            }}
-                          />
-
-                          <button
-                            type="button"
-                            onClick={() =>
-                              archivoInputRef.current?.click()
-                            }
-                            style={
-                              estilos.botonAdjuntar
-                            }
-                            title="Adjuntar archivo"
-                            disabled={
-                              subiendoArchivo
-                            }
-                          >
-                            📎
-                          </button>
-                        </>
-                      )}
-
-                    {archivoSeleccionado && (
-                      <div
-                        style={
-                          estilos.archivoSeleccionado
-                        }
-                        title={
-                          archivoSeleccionado.name
-                        }
-                      >
-                        📎{" "}
-                        {
-                          archivoSeleccionado.name
-                        }
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setArchivoSeleccionado(
-                              null
-                            );
-
-                            if (
-                              archivoInputRef.current
-                            ) {
-                              archivoInputRef.current.value =
-                                "";
-                            }
-                          }}
-                          style={
-                            estilos.botonQuitarArchivo
-                          }
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
-
-                    <input
-                      type="text"
-                      value={texto}
-                      onChange={(e) =>
-                        setTexto(
-                          e.target.value
-                        )
-                      }
-                      placeholder={
-                        seccion ===
-                        "informacion"
-                          ? "Escribe un comunicado..."
-                          : "Escribe un mensaje..."
-                      }
-                      className="message-input"
-                      style={
-                        estilos.inputMensaje
-                      }
-                    />
-
-                    <button
-                      type="submit"
-                      className="send-button"
-                      style={{
-                        ...estilos.botonEnviar,
-                        opacity:
-                          subiendoArchivo
-                            ? 0.6
-                            : 1,
-                      }}
-                      disabled={
-                        subiendoArchivo
-                      }
-                      title={
-                        subiendoArchivo
-                          ? "Subiendo archivo..."
-                          : "Enviar"
-                      }
-                    >
-                      {subiendoArchivo
-                        ? "⏳"
-                        : "➤"}
-                    </button>
-                  </form>
-                )}
-              </>
-            )}
-          </>
-        )}
-      </main>
 
       {/* =====================================================
           MODAL CREAR / EDITAR USUARIO

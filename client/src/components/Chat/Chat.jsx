@@ -15,6 +15,22 @@ function Chat({
   estilos,
   API,
 }) {
+  // En chat privado solamente se permiten imágenes.
+  const puedeAdjuntarImagenPrivada =
+    seccion === "privado" &&
+    usuarioChat &&
+    usuarioChat.rol !== usuario.rol;
+
+  // En Información solamente los administradores
+  // pueden adjuntar cualquier tipo de archivo.
+  const puedeAdjuntarInformacion =
+    seccion === "informacion" &&
+    usuario.rol === "Administrador";
+
+  const puedeAdjuntar =
+    puedeAdjuntarImagenPrivada ||
+    puedeAdjuntarInformacion;
+
   return (
     <main
       className="chat-panel"
@@ -96,7 +112,9 @@ function Chat({
         {mensajes.length === 0 ? (
           <div style={estilos.pantallaCentro}>
             <div style={{ fontSize: 55 }}>
-              {seccion === "informacion" ? "📢" : "💬"}
+              {seccion === "informacion"
+                ? "📢"
+                : "💬"}
             </div>
 
             <h2>
@@ -118,10 +136,23 @@ function Chat({
         ) : (
           mensajes.map((mensaje) => {
             const propio =
-              Number(mensaje.emisorId) === Number(usuario.id);
+  Number(mensaje.emisor_id) ===
+  Number(usuario.id);
+
+const fechaMensaje =
+  mensaje.created_at || mensaje.fecha;
+
+const nombreEmisor =
+  mensaje.nombre ||
+  (propio
+    ? usuario.nombre
+    : usuarioChat?.nombre) ||
+  "Usuario";
 
             const esImagen =
-              mensaje.archivo?.tipo?.startsWith("image/");
+              mensaje.archivo?.tipo?.startsWith(
+                "image/"
+              );
 
             return (
               <div
@@ -143,23 +174,32 @@ function Chat({
                       : estilos.mensajeOtro),
                   }}
                 >
-                  {!propio && (
-                    <div
-                      className="message-author"
-                      style={estilos.nombreMensaje}
-                    >
-                      {mensaje.nombre}
-                    </div>
-                  )}
+                  <div
+  className="message-author"
+  style={{
+    ...estilos.nombreMensaje,
+    color: propio
+      ? "rgba(255,255,255,0.85)"
+      : "#1769e8",
+  }}
+>
+  {nombreEmisor}
+</div>
+
+                  {/* TEXTO */}
 
                   {mensaje.texto && (
                     <div>{mensaje.texto}</div>
                   )}
 
+                  {/* ARCHIVO */}
+
                   {mensaje.archivo && (
                     <div
                       style={{
-                        marginTop: mensaje.texto ? 8 : 0,
+                        marginTop: mensaje.texto
+                          ? 8
+                          : 0,
                       }}
                     >
                       {esImagen ? (
@@ -170,7 +210,9 @@ function Chat({
                         >
                           <img
                             src={`${API}${mensaje.archivo.url}`}
-                            alt={mensaje.archivo.nombre}
+                            alt={
+                              mensaje.archivo.nombre
+                            }
                             style={{
                               maxWidth: "100%",
                               maxHeight: 250,
@@ -189,29 +231,40 @@ function Chat({
                             color: propio
                               ? "#ffffff"
                               : "#2563eb",
-                            textDecoration: "none",
+                            textDecoration:
+                              "none",
                             fontWeight: "bold",
-                            display: "inline-block",
-                            wordBreak: "break-word",
+                            display:
+                              "inline-block",
+                            wordBreak:
+                              "break-word",
                           }}
                         >
-                          📎 {mensaje.archivo.nombre}
+                          📎{" "}
+                          {mensaje.archivo.nombre}
                         </a>
                       )}
                     </div>
                   )}
 
-                  <div
-                    className="message-time"
-                    style={estilos.horaMensaje}
-                  >
-                    {new Date(
-                      mensaje.fecha
-                    ).toLocaleTimeString("es-CO", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
+                  {/* HORA */}
+
+               <div
+  className="message-time"
+  style={estilos.horaMensaje}
+>
+  {fechaMensaje
+    ? new Date(
+        fechaMensaje
+      ).toLocaleTimeString(
+        "es-CO",
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+        }
+      )
+    : ""}
+</div>
                 </div>
               </div>
             );
@@ -224,14 +277,17 @@ function Chat({
       {(seccion === "privado" ||
         seccion === "informacion") && (
         <>
+          {/* INFORMACIÓN: SOLO LECTURA PARA ASESORES */}
+
           {seccion === "informacion" &&
           usuario.rol !== "Administrador" ? (
             <div
               className="read-only"
               style={estilos.soloLectura}
             >
-              👁 Los asesores pueden leer la información,
-              pero solo los administradores pueden publicar.
+              👁 Los asesores pueden leer la
+              información, pero solo los
+              administradores pueden publicar.
             </div>
           ) : (
             <form
@@ -239,63 +295,95 @@ function Chat({
               className="message-form"
               style={estilos.formMensaje}
             >
-              {seccion === "informacion" &&
-                usuario.rol === "Administrador" && (
-                  <>
-                    <input
-                      ref={archivoInputRef}
-                      type="file"
-                      style={{ display: "none" }}
-                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                      onChange={(e) => {
-                        const archivo =
-                          e.target.files?.[0] || null;
+              {/* BOTÓN ADJUNTAR */}
 
-                        setArchivoSeleccionado(archivo);
-                      }}
-                    />
+              {puedeAdjuntar && (
+                <>
+                  <input
+                    ref={archivoInputRef}
+                    type="file"
+                    style={{ display: "none" }}
+                    accept={
+                      seccion === "privado"
+                        ? "image/*"
+                        : "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                    }
+                    onChange={(e) => {
+                      const archivo =
+                        e.target.files?.[0] ||
+                        null;
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        archivoInputRef.current?.click()
-                      }
-                      style={estilos.botonAdjuntar}
-                      title="Adjuntar archivo"
-                      disabled={subiendoArchivo}
-                    >
-                      📎
-                    </button>
-                  </>
-                )}
+                      setArchivoSeleccionado(
+                        archivo
+                      );
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      archivoInputRef.current?.click()
+                    }
+                    style={
+                      estilos.botonAdjuntar
+                    }
+                    title={
+                      seccion === "privado"
+                        ? "Enviar imagen"
+                        : "Adjuntar archivo"
+                    }
+                    disabled={subiendoArchivo}
+                  >
+                    📎
+                  </button>
+                </>
+              )}
+
+              {/* ARCHIVO SELECCIONADO */}
 
               {archivoSeleccionado && (
                 <div
-                  style={estilos.archivoSeleccionado}
-                  title={archivoSeleccionado.name}
+                  style={
+                    estilos.archivoSeleccionado
+                  }
+                  title={
+                    archivoSeleccionado.name
+                  }
                 >
-                  📎 {archivoSeleccionado.name}
+                  📎{" "}
+                  {archivoSeleccionado.name}
 
                   <button
                     type="button"
                     onClick={() => {
-                      setArchivoSeleccionado(null);
+                      setArchivoSeleccionado(
+                        null
+                      );
 
-                      if (archivoInputRef.current) {
-                        archivoInputRef.current.value = "";
+                      if (
+                        archivoInputRef.current
+                      ) {
+                        archivoInputRef.current.value =
+                          "";
                       }
                     }}
-                    style={estilos.botonQuitarArchivo}
+                    style={
+                      estilos.botonQuitarArchivo
+                    }
                   >
                     ✕
                   </button>
                 </div>
               )}
 
+              {/* CAMPO DE MENSAJE */}
+
               <input
                 type="text"
                 value={texto}
-                onChange={(e) => setTexto(e.target.value)}
+                onChange={(e) =>
+                  setTexto(e.target.value)
+                }
                 placeholder={
                   seccion === "informacion"
                     ? "Escribe un comunicado..."
@@ -305,12 +393,16 @@ function Chat({
                 style={estilos.inputMensaje}
               />
 
+              {/* BOTÓN ENVIAR */}
+
               <button
                 type="submit"
                 className="send-button"
                 style={{
                   ...estilos.botonEnviar,
-                  opacity: subiendoArchivo ? 0.6 : 1,
+                  opacity: subiendoArchivo
+                    ? 0.6
+                    : 1,
                 }}
                 disabled={subiendoArchivo}
                 title={
@@ -319,7 +411,9 @@ function Chat({
                     : "Enviar"
                 }
               >
-                {subiendoArchivo ? "⏳" : "➤"}
+                {subiendoArchivo
+                  ? "⏳"
+                  : "➤"}
               </button>
             </form>
           )}
