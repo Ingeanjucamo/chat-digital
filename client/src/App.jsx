@@ -745,16 +745,26 @@ console.log("USUARIO APP:", usuario);
        MOSTRAR MENSAJE
     ================================================= */
 
- setMensajes((anteriores) => [
-  ...anteriores,
-  {
-    ...mensaje,
-    nombre:
-      emisor?.nombre ||
-      emisor?.usuario ||
-      "Usuario",
-  },
-]);
+setMensajes((anteriores) => {
+  if (
+    anteriores.some(
+      (m) => Number(m.id) === Number(data.id)
+    )
+  ) {
+    return anteriores;
+  }
+
+  return [
+    ...anteriores,
+    {
+      ...data,
+      nombre:
+        usuario.nombre ||
+        usuario.usuario ||
+        "Usuario",
+    },
+  ];
+});
 
   } catch (error) {
     console.error(
