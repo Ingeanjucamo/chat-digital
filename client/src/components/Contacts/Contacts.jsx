@@ -208,7 +208,27 @@ function Contacts({
             ✦
           </span>
 
-        
+          <div>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: "#334155",
+              }}
+            >
+              Hecho por Anjucamo
+            </div>
+
+            <div
+              style={{
+                marginTop: 2,
+                fontSize: 9,
+                color: "#94a3b8",
+              }}
+            >
+              Diseño y desarrollo
+            </div>
+          </div>
         </div>
       </div>
     </section>
