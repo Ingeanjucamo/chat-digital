@@ -16,11 +16,23 @@ function Chat({
   estilos,
   API,
 }) {
-  const mensajesAreaRef = useRef(null);
+    const mensajesAreaRef = useRef(null);
 
-  // Pegar imágenes directamente en el chat
+  useEffect(() => {
+    const elemento = mensajesAreaRef.current;
+
+    if (!elemento) return;
+
+    elemento.scrollTop = elemento.scrollHeight;
+  }, [mensajes, usuarioChat, seccion]);
+
+    // =====================================================
+  // PEGAR IMAGEN DESDE EL PORTAPAPELES
+  // =====================================================
+
   useEffect(() => {
     const manejarPegado = (e) => {
+      // Solo permitir pegar imágenes en chats privados
       if (
         seccion !== "privado" ||
         !usuarioChat ||
@@ -457,36 +469,31 @@ function Chat({
               )}
 
               <textarea
-                value={texto}
-                onChange={(e) =>
-                  setTexto(e.target.value)
-                }
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    !e.shiftKey
-                  ) {
-                    e.preventDefault();
-                    enviarMensaje(e);
-                  }
-                }}
-                placeholder={
-                  seccion === "informacion"
-                    ? "Escribe un comunicado..."
-                    : "Escribe un mensaje..."
-                }
-                className="message-input"
-                style={{
-                  ...estilos.inputMensaje,
-                  resize: "none",
-                  minHeight: 43,
-                  maxHeight: 120,
-                  overflowY: "auto",
-                  fontFamily: "inherit",
-                  lineHeight: 1.4,
-                }}
-                rows={1}
-              />
+  value={texto}
+  onChange={(e) => setTexto(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      enviarMensaje(e);
+    }
+  }}
+  placeholder={
+    seccion === "informacion"
+      ? "Escribe un comunicado..."
+      : "Escribe un mensaje..."
+  }
+  className="message-input"
+  style={{
+    ...estilos.inputMensaje,
+    resize: "none",
+    minHeight: 43,
+    maxHeight: 120,
+    overflowY: "auto",
+    fontFamily: "inherit",
+    lineHeight: 1.4,
+  }}
+  rows={1}
+/>
 
               <button
                 type="submit"
