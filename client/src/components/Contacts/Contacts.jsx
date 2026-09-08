@@ -1,3 +1,4 @@
+
 import React from "react";
 
 function Contacts({
@@ -12,17 +13,42 @@ function Contacts({
   estilos,
 }) {
   return (
-   <section
-  
->
-  {/* INFORMACIÓN */}
+    <section
+      className="contacts-panel"
+      style={estilos.contactos}
+    >
+      {/* =====================================================
+          ENCABEZADO
+      ===================================================== */}
 
-{seccion === "informacion" && (
-  <div className="contacts-empty">
-  </div>
-)}
+      <div style={estilos.contactosTitulo}>
+        <h2 style={estilos.tituloContactos}>
+          {seccion === "privado"
+            ? "Conversaciones"
+            : "Información"}
+        </h2>
 
-      {/* BUSCADOR */}
+        <p style={estilos.subtituloContactos}>
+          {usuario?.rol === "Asesor"
+            ? "Administradores disponibles"
+            : "Asesores disponibles"}
+        </p>
+      </div>
+
+      {/* =====================================================
+          INFORMACIÓN
+      ===================================================== */}
+
+      {seccion === "informacion" && (
+        <div
+          className="contacts-empty"
+          style={{ flex: 1 }}
+        />
+      )}
+
+      {/* =====================================================
+          BUSCADOR
+      ===================================================== */}
 
       {seccion === "privado" && (
         <div
@@ -52,17 +78,20 @@ function Contacts({
         </div>
       )}
 
-      {/* LISTA CONTACTOS */}
+      {/* =====================================================
+          LISTA CONTACTOS
+      ===================================================== */}
 
       {seccion === "privado" && (
         <div
-  className="contacts-list"
-  style={{
-    ...estilos.listaContactos,
-    maxHeight: "calc(100vh - 180px)",
-    overflowY: "auto",
-  }}
->
+          className="contacts-list"
+          style={{
+            ...estilos.listaContactos,
+            flex: 1,
+            minHeight: 0,
+            overflowY: "auto",
+          }}
+        >
           {contactos.length === 0 ? (
             <div style={estilos.sinContactos}>
               <div style={{ fontSize: 40 }}>
@@ -84,9 +113,13 @@ function Contacts({
                 <button
                   key={contacto.id}
                   onClick={() => {
-  console.log("CONTACTO SELECCIONADO:", contacto);
-  abrirChatPrivado(contacto);
-}}
+                    console.log(
+                      "CONTACTO SELECCIONADO:",
+                      contacto
+                    );
+
+                    abrirChatPrivado(contacto);
+                  }}
                   className="contact-item"
                   style={{
                     ...estilos.contacto,
@@ -138,8 +171,70 @@ function Contacts({
           )}
         </div>
       )}
+
+      {/* =====================================================
+          CRÉDITO
+      ===================================================== */}
+
+      <div
+        className="contacts-credit"
+        style={{
+          flexShrink: 0,
+          padding: "12px 18px 14px",
+          borderTop: "1px solid #edf0f4",
+          background: "#ffffff",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 9,
+          }}
+        >
+          <span
+            style={{
+              width: 27,
+              height: 27,
+              borderRadius: 8,
+              background: "#eaf4ff",
+              color: "#1769e8",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+              fontWeight: 800,
+            }}
+          >
+            ✦
+          </span>
+
+          <div>
+            <div
+              style={{
+                fontSize: 10,
+                fontWeight: 800,
+                color: "#334155",
+              }}
+            >
+              Hecho por Anjucamo
+            </div>
+
+            <div
+              style={{
+                marginTop: 2,
+                fontSize: 9,
+                color: "#94a3b8",
+              }}
+            >
+              Diseño y desarrollo
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
 
 export default Contacts;
+

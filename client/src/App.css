@@ -1353,3 +1353,55 @@ select:focus-visible {
   margin: 0 !important;
   padding-top: 20px !important;
 }
+
+
+
+.app-credit {
+  position: fixed;
+  right: 24px;
+  bottom: 14px;
+
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  padding: 7px 12px;
+
+  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+
+  color: rgba(20, 32, 51, 0.48);
+
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(20, 32, 51, 0.07);
+  border-radius: 999px;
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  box-shadow: 0 4px 14px rgba(20, 32, 51, 0.05);
+
+  pointer-events: none;
+
+  z-index: 50;
+}
+
+.app-credit-icon {
+  font-size: 12px;
+  color: #1769e8;
+  opacity: 0.8;
+}
+
+.app-credit-separator {
+  opacity: 0.45;
+}
+
+@media (max-width: 700px) {
+  .app-credit {
+    right: 12px;
+    bottom: 8px;
+    font-size: 9px;
+    padding: 5px 9px;
+  }
+}
