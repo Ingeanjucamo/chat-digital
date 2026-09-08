@@ -45,6 +45,7 @@ function App() {
 
   const [mensajes, setMensajes] = useState([]);
   const [texto, setTexto] = useState("");
+  const [mensajeRespondido, setMensajeRespondido] = useState(null);
 
   /* ARCHIVOS */
   const [archivoSeleccionado, setArchivoSeleccionado] = useState(null);
@@ -720,7 +721,7 @@ console.log("USUARIO APP:", usuario);
        PREPARAR MENSAJE
     ================================================= */
 
-   const nuevoMensaje = {
+const nuevoMensaje = {
   emisor_id: usuario.id,
   texto: mensajeTexto || null,
   grupo:
@@ -732,6 +733,8 @@ console.log("USUARIO APP:", usuario);
       ? usuarioChat.id
       : null,
   archivo: archivoData,
+  mensaje_respondido_id:
+    mensajeRespondido?.id || null,
 };
 
     /* =================================================
@@ -758,7 +761,8 @@ console.log("USUARIO APP:", usuario);
     ================================================= */
 
     setTexto("");
-    setArchivoSeleccionado(null);
+setArchivoSeleccionado(null);
+setMensajeRespondido(null);
 
     if (archivoInputRef.current) {
       archivoInputRef.current.value = "";
@@ -1221,6 +1225,8 @@ setMensajes((anteriores) => {
           texto={texto}
           setTexto={setTexto}
           enviarMensaje={enviarMensaje}
+            mensajeRespondido={mensajeRespondido}
+  setMensajeRespondido={setMensajeRespondido}
           archivoInputRef={archivoInputRef}
           archivoSeleccionado={archivoSeleccionado}
           setArchivoSeleccionado={

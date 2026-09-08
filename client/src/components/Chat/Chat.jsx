@@ -14,6 +14,8 @@ function Chat({
   subiendoArchivo,
   estilos,
   API,
+  mensajeRespondido,
+  setMensajeRespondido,
 }) {
   const mensajesAreaRef = useRef(null);
 
@@ -35,8 +37,6 @@ function Chat({
 
   useEffect(() => {
     const manejarPegado = (e) => {
-      // Solo permitir pegar imágenes en chats privados
-      // entre Asesor y Administrador
       if (
         seccion !== "privado" ||
         !usuarioChat ||
@@ -92,6 +92,70 @@ function Chat({
     usuario,
     setArchivoSeleccionado,
   ]);
+
+  // =====================================================
+  // RESPONDER UN MENSAJE
+  // =====================================================
+
+  function seleccionarMensajeParaResponder(mensaje) {
+    setMensajeRespondido(mensaje);
+
+    setTimeout(() => {
+      const input = document.querySelector(
+        ".message-input"
+      );
+
+      if (input) {
+        input.focus();
+      }
+    }, 50);
+  }
+
+  // =====================================================
+  // CANCELAR RESPUESTA
+  // =====================================================
+
+  function cancelarRespuesta() {
+    setMensajeRespondido(null);
+  }
+
+  // =====================================================
+  // OBTENER TEXTO DEL MENSAJE RESPONDIDO
+  // =====================================================
+
+  function obtenerTextoMensaje(mensaje) {
+    if (!mensaje) return "";
+
+    if (mensaje.texto) {
+      return mensaje.texto;
+    }
+
+    if (mensaje.archivo?.tipo?.startsWith("image/")) {
+      return "📷 Imagen";
+    }
+
+    if (mensaje.archivo) {
+      return `📎 ${mensaje.archivo.nombre || "Archivo"}`;
+    }
+
+    return "Mensaje";
+  }
+
+  // =====================================================
+  // BUSCAR MENSAJE ORIGINAL
+  // =====================================================
+
+  function obtenerMensajeOriginal(mensaje) {
+    if (!mensaje?.mensaje_respondido_id) {
+      return null;
+    }
+
+    return mensajes.find(
+      (m) =>
+        Number(m.id) ===
+        Number(mensaje.mensaje_respondido_id)
+    );
+  }
 
   // =====================================================
   // INTERFAZ
@@ -225,10 +289,14 @@ function Chat({
                 "image/"
               );
 
+            const mensajeOriginal =
+              obtenerMensajeOriginal(mensaje);
+
             return (
               <div
-                key={mensaje.id}
-                className="message-row"
+  key={mensaje.id}
+  id={`mensaje-${mensaje.id}`}
+  className="message-row"
                 style={{
                   ...estilos.mensajeFila,
                   justifyContent: propio
@@ -243,6 +311,7 @@ function Chat({
                     ...(propio
                       ? estilos.mensajePropio
                       : estilos.mensajeOtro),
+                    position: "relative",
                   }}
                 >
                   {!propio && (
@@ -256,6 +325,77 @@ function Chat({
                     </div>
                   )}
 
+                  {/* =====================================================
+                      MENSAJE AL QUE SE ESTÁ RESPONDIENDO
+                  ===================================================== */}
+
+                  {mensajeOriginal && (
+                  <div
+  onClick={() => {
+    const elemento = document.getElementById(
+      `mensaje-${mensajeOriginal.id}`
+    );
+
+    if (elemento) {
+      elemento.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      elemento.classList.add("mensaje-destacado");
+
+setTimeout(() => {
+  elemento.classList.remove("mensaje-destacado");
+}, 2000);
+    }
+  }}
+  style={{
+    borderLeft: "4px solid rgba(255,255,255,0.7)",
+                        background:
+                          propio
+                            ? "rgba(0,0,0,0.15)"
+                            : "rgba(0,0,0,0.05)",
+                        borderRadius: 6,
+                        padding:
+                          "6px 8px",
+                        marginBottom: 8,
+                        fontSize: 12,
+                        opacity: 0.9,
+                        cursor: "pointer",
+                      }}
+                      title="Mensaje respondido"
+                    >
+                      <div
+                        style={{
+                          fontWeight: "bold",
+                          marginBottom: 2,
+                        }}
+                      >
+                        {mensajeOriginal.nombre ||
+                          obtenerTextoMensaje(
+                            mensajeOriginal
+                          )}
+                      </div>
+
+                      <div
+                        style={{
+                          overflow: "hidden",
+                          textOverflow:
+                            "ellipsis",
+                          whiteSpace:
+                            "nowrap",
+                        }}
+                      >
+                        {obtenerTextoMensaje(
+                          mensajeOriginal
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* =====================================================
+                      TEXTO
+                  ===================================================== */}
+
                   {mensaje.texto && (
                     <div
                       style={{
@@ -266,6 +406,10 @@ function Chat({
                       {mensaje.texto}
                     </div>
                   )}
+
+                  {/* =====================================================
+                      ARCHIVO / IMAGEN
+                  ===================================================== */}
 
                   {mensaje.archivo && (
                     <div
@@ -327,22 +471,65 @@ function Chat({
                     </div>
                   )}
 
+                  {/* =====================================================
+                      HORA + RESPONDER
+                  ===================================================== */}
+
                   <div
-                    className="message-time"
-                    style={
-                      estilos.horaMensaje
-                    }
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent:
+                        "space-between",
+                      gap: 8,
+                      marginTop: 5,
+                    }}
                   >
-                    {new Date(
-                      mensaje.created_at ??
-                        mensaje.fecha
-                    ).toLocaleTimeString(
-                      "es-CO",
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
+                    <div
+                      className="message-time"
+                      style={
+                        estilos.horaMensaje
                       }
-                    )}
+                    >
+                      {new Date(
+                        mensaje.created_at ??
+                          mensaje.fecha
+                      ).toLocaleTimeString(
+                        "es-CO",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
+                    </div>
+
+                    {/* RESPONDER SOLO EN CHAT PRIVADO */}
+
+                    {seccion === "privado" &&
+                      usuarioChat && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            seleccionarMensajeParaResponder(
+                              mensaje
+                            )
+                          }
+                          style={{
+                            border: "none",
+                            background:
+                              "transparent",
+                            color: propio
+                              ? "rgba(255,255,255,0.85)"
+                              : "#2563eb",
+                            cursor: "pointer",
+                            fontSize: 12,
+                            padding: 0,
+                          }}
+                          title="Responder este mensaje"
+                        >
+                          ↩️ Responder
+                        </button>
+                      )}
                   </div>
                 </div>
               </div>
@@ -359,6 +546,7 @@ function Chat({
         seccion === "informacion") && (
         <>
           {/* SOLO INFORMACIÓN PARA ASESORES */}
+
           {seccion === "informacion" &&
           usuario.rol !== "Administrador" ? (
             <div
@@ -370,181 +558,256 @@ function Chat({
               administradores pueden publicar.
             </div>
           ) : (
-            <form
-              onSubmit={enviarMensaje}
-              className="message-form"
-              style={estilos.formMensaje}
-            >
+            <>
               {/* =====================================================
-                  BOTÓN ADJUNTAR
-                  
-                  ADMINISTRADOR:
-                  - Puede adjuntar en Información.
-
-                  CHAT PRIVADO:
-                  - Asesor ↔ Administrador.
-                  - No Asesor ↔ Asesor.
+                  MENSAJE QUE ESTAMOS RESPONDIENDO
               ===================================================== */}
 
-              {(
-                (
-                  seccion === "informacion" &&
-                  usuario.rol === "Administrador"
-                ) ||
-                (
-                  seccion === "privado" &&
-                  usuarioChat &&
-                  usuarioChat.rol !== usuario.rol
-                )
-              ) && (
-                <>
-                  <input
-                    ref={archivoInputRef}
-                    type="file"
+              {mensajeRespondido &&
+                seccion === "privado" && (
+                  <div
                     style={{
-                      display: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 10,
+                      padding:
+                        "8px 12px",
+                      margin:
+                        "0 10px 6px 10px",
+                      borderRadius: 8,
+                      background:
+                        "rgba(37, 99, 235, 0.08)",
+                      borderLeft:
+                        "4px solid #2563eb",
                     }}
-                    accept={
-                      seccion === "privado"
-                        ? "image/*"
-                        : "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                    }
-                    onChange={(e) => {
-                      const archivo =
-                        e.target.files?.[0] ||
-                        null;
+                  >
+                    <div
+                      style={{
+                        flex: 1,
+                        minWidth: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: "bold",
+                          color: "#2563eb",
+                          marginBottom: 2,
+                        }}
+                      >
+                        Respondiendo a{" "}
+                        {mensajeRespondido.nombre ||
+                          "Usuario"}
+                      </div>
 
-                      setArchivoSeleccionado(
-                        archivo
-                      );
-                    }}
-                  />
+                      <div
+                        style={{
+                          fontSize: 13,
+                          whiteSpace:
+                            "nowrap",
+                          overflow:
+                            "hidden",
+                          textOverflow:
+                            "ellipsis",
+                        }}
+                      >
+                        {obtenerTextoMensaje(
+                          mensajeRespondido
+                        )}
+                      </div>
+                    </div>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      archivoInputRef.current?.click()
-                    }
+                    <button
+                      type="button"
+                      onClick={
+                        cancelarRespuesta
+                      }
+                      style={{
+                        border: "none",
+                        background:
+                          "transparent",
+                        cursor: "pointer",
+                        fontSize: 18,
+                        padding: 4,
+                      }}
+                      title="Cancelar respuesta"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+              <form
+                onSubmit={enviarMensaje}
+                className="message-form"
+                style={estilos.formMensaje}
+              >
+                {/* =====================================================
+                    BOTÓN ADJUNTAR
+                ===================================================== */}
+
+                {(
+                  (
+                    seccion === "informacion" &&
+                    usuario.rol === "Administrador"
+                  ) ||
+                  (
+                    seccion === "privado" &&
+                    usuarioChat &&
+                    usuarioChat.rol !== usuario.rol
+                  )
+                ) && (
+                  <>
+                    <input
+                      ref={archivoInputRef}
+                      type="file"
+                      style={{
+                        display: "none",
+                      }}
+                      accept={
+                        seccion === "privado"
+                          ? "image/*"
+                          : "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                      }
+                      onChange={(e) => {
+                        const archivo =
+                          e.target.files?.[0] ||
+                          null;
+
+                        setArchivoSeleccionado(
+                          archivo
+                        );
+                      }}
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        archivoInputRef.current?.click()
+                      }
+                      style={
+                        estilos.botonAdjuntar
+                      }
+                      title={
+                        seccion === "privado"
+                          ? "Adjuntar imagen"
+                          : "Adjuntar archivo"
+                      }
+                      disabled={
+                        subiendoArchivo
+                      }
+                    >
+                      📎
+                    </button>
+                  </>
+                )}
+
+                {/* =====================================================
+                    ARCHIVO SELECCIONADO
+                ===================================================== */}
+
+                {archivoSeleccionado && (
+                  <div
                     style={
-                      estilos.botonAdjuntar
+                      estilos.archivoSeleccionado
                     }
                     title={
-                      seccion === "privado"
-                        ? "Adjuntar imagen"
-                        : "Adjuntar archivo"
-                    }
-                    disabled={
-                      subiendoArchivo
+                      archivoSeleccionado.name
                     }
                   >
-                    📎
-                  </button>
-                </>
-              )}
+                    📎{" "}
+                    {archivoSeleccionado.name}
 
-              {/* =====================================================
-                  ARCHIVO SELECCIONADO
-              ===================================================== */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setArchivoSeleccionado(
+                          null
+                        );
 
-              {archivoSeleccionado && (
-                <div
-                  style={
-                    estilos.archivoSeleccionado
+                        if (
+                          archivoInputRef.current
+                        ) {
+                          archivoInputRef.current.value =
+                            "";
+                        }
+                      }}
+                      style={
+                        estilos.botonQuitarArchivo
+                      }
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                {/* =====================================================
+                    CAMPO DE TEXTO
+                ===================================================== */}
+
+                <textarea
+                  value={texto}
+                  onChange={(e) =>
+                    setTexto(e.target.value)
+                  }
+                  onKeyDown={(e) => {
+                    if (
+                      e.key === "Enter" &&
+                      !e.shiftKey
+                    ) {
+                      e.preventDefault();
+                      enviarMensaje(e);
+                    }
+                  }}
+                  placeholder={
+                    seccion === "informacion"
+                      ? "Escribe un comunicado..."
+                      : mensajeRespondido
+                      ? "Escribe tu respuesta..."
+                      : "Escribe un mensaje..."
+                  }
+                  className="message-input"
+                  style={{
+                    ...estilos.inputMensaje,
+                    resize: "none",
+                    minHeight: 43,
+                    maxHeight: 120,
+                    overflowY: "auto",
+                    fontFamily: "inherit",
+                    lineHeight: 1.4,
+                  }}
+                  rows={1}
+                />
+
+                {/* =====================================================
+                    BOTÓN ENVIAR
+                ===================================================== */}
+
+                <button
+                  type="submit"
+                  className="send-button"
+                  style={{
+                    ...estilos.botonEnviar,
+                    opacity:
+                      subiendoArchivo
+                        ? 0.6
+                        : 1,
+                  }}
+                  disabled={
+                    subiendoArchivo
                   }
                   title={
-                    archivoSeleccionado.name
+                    subiendoArchivo
+                      ? "Subiendo archivo..."
+                      : "Enviar"
                   }
                 >
-                  📎{" "}
-                  {archivoSeleccionado.name}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setArchivoSeleccionado(
-                        null
-                      );
-
-                      if (
-                        archivoInputRef.current
-                      ) {
-                        archivoInputRef.current.value =
-                          "";
-                      }
-                    }}
-                    style={
-                      estilos.botonQuitarArchivo
-                    }
-                  >
-                    ✕
-                  </button>
-                </div>
-              )}
-
-              {/* =====================================================
-                  CAMPO DE TEXTO
-              ===================================================== */}
-
-              <textarea
-                value={texto}
-                onChange={(e) =>
-                  setTexto(e.target.value)
-                }
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" &&
-                    !e.shiftKey
-                  ) {
-                    e.preventDefault();
-                    enviarMensaje(e);
-                  }
-                }}
-                placeholder={
-                  seccion === "informacion"
-                    ? "Escribe un comunicado..."
-                    : "Escribe un mensaje..."
-                }
-                className="message-input"
-                style={{
-                  ...estilos.inputMensaje,
-                  resize: "none",
-                  minHeight: 43,
-                  maxHeight: 120,
-                  overflowY: "auto",
-                  fontFamily: "inherit",
-                  lineHeight: 1.4,
-                }}
-                rows={1}
-              />
-
-              {/* =====================================================
-                  BOTÓN ENVIAR
-              ===================================================== */}
-
-              <button
-                type="submit"
-                className="send-button"
-                style={{
-                  ...estilos.botonEnviar,
-                  opacity:
-                    subiendoArchivo
-                      ? 0.6
-                      : 1,
-                }}
-                disabled={
-                  subiendoArchivo
-                }
-                title={
-                  subiendoArchivo
-                    ? "Subiendo archivo..."
-                    : "Enviar"
-                }
-              >
-                {subiendoArchivo
-                  ? "⏳"
-                  : "➤"}
-              </button>
-            </form>
+                  {subiendoArchivo
+                    ? "⏳"
+                    : "➤"}
+                </button>
+              </form>
+            </>
           )}
         </>
       )}
@@ -552,4 +815,7 @@ function Chat({
   );
 }
 
+
+
 export default Chat;
+
