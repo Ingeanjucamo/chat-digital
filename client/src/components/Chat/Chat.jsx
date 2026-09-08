@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 
 function Chat({
@@ -16,7 +15,11 @@ function Chat({
   estilos,
   API,
 }) {
-    const mensajesAreaRef = useRef(null);
+  const mensajesAreaRef = useRef(null);
+
+  // =====================================================
+  // BAJAR AUTOMÁTICAMENTE AL ÚLTIMO MENSAJE
+  // =====================================================
 
   useEffect(() => {
     const elemento = mensajesAreaRef.current;
@@ -26,13 +29,14 @@ function Chat({
     elemento.scrollTop = elemento.scrollHeight;
   }, [mensajes, usuarioChat, seccion]);
 
-    // =====================================================
+  // =====================================================
   // PEGAR IMAGEN DESDE EL PORTAPAPELES
   // =====================================================
 
   useEffect(() => {
     const manejarPegado = (e) => {
       // Solo permitir pegar imágenes en chats privados
+      // entre Asesor y Administrador
       if (
         seccion !== "privado" ||
         !usuarioChat ||
@@ -74,10 +78,7 @@ function Chat({
       }
     };
 
-    window.addEventListener(
-      "paste",
-      manejarPegado
-    );
+    window.addEventListener("paste", manejarPegado);
 
     return () => {
       window.removeEventListener(
@@ -92,34 +93,24 @@ function Chat({
     setArchivoSeleccionado,
   ]);
 
-  // Bajar automáticamente al último mensaje
-  useEffect(() => {
-    const elemento =
-      mensajesAreaRef.current;
-
-    if (!elemento) return;
-
-    elemento.scrollTop =
-      elemento.scrollHeight;
-  }, [
-    mensajes,
-    usuarioChat,
-    seccion,
-  ]);
+  // =====================================================
+  // INTERFAZ
+  // =====================================================
 
   return (
     <main
       className="chat-panel"
       style={estilos.chat}
     >
-      {/* HEADER */}
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
 
       <header
         className="chat-header"
         style={estilos.chatHeader}
       >
-        {seccion === "privado" &&
-        usuarioChat ? (
+        {seccion === "privado" && usuarioChat ? (
           <>
             <div
               className="chat-avatar"
@@ -182,7 +173,9 @@ function Chat({
         )}
       </header>
 
-      {/* MENSAJES */}
+      {/* =====================================================
+          MENSAJES
+      ===================================================== */}
 
       <div
         ref={mensajesAreaRef}
@@ -191,9 +184,7 @@ function Chat({
       >
         {mensajes.length === 0 ? (
           <div
-            style={
-              estilos.pantallaCentro
-            }
+            style={estilos.pantallaCentro}
           >
             <div
               style={{
@@ -269,8 +260,7 @@ function Chat({
                     <div
                       style={{
                         whiteSpace: "pre-wrap",
-                        wordBreak:
-                          "break-word",
+                        wordBreak: "break-word",
                       }}
                     >
                       {mensaje.texto}
@@ -299,18 +289,14 @@ function Chat({
                               mensaje.archivo.url
                             }
                             alt={
-                              mensaje.archivo
-                                .nombre
+                              mensaje.archivo.nombre
                             }
                             style={{
-                              maxWidth:
-                                "100%",
+                              maxWidth: "100%",
                               maxHeight: 250,
                               borderRadius: 8,
-                              display:
-                                "block",
-                              cursor:
-                                "pointer",
+                              display: "block",
+                              cursor: "pointer",
                             }}
                           />
                         </a>
@@ -327,8 +313,7 @@ function Chat({
                               : "#2563eb",
                             textDecoration:
                               "none",
-                            fontWeight:
-                              "bold",
+                            fontWeight: "bold",
                             display:
                               "inline-block",
                             wordBreak:
@@ -336,10 +321,7 @@ function Chat({
                           }}
                         >
                           📎{" "}
-                          {
-                            mensaje.archivo
-                              .nombre
-                          }
+                          {mensaje.archivo.nombre}
                         </a>
                       )}
                     </div>
@@ -369,18 +351,19 @@ function Chat({
         )}
       </div>
 
-      {/* ESCRIBIR */}
+      {/* =====================================================
+          ZONA PARA ESCRIBIR
+      ===================================================== */}
 
       {(seccion === "privado" ||
         seccion === "informacion") && (
         <>
+          {/* SOLO INFORMACIÓN PARA ASESORES */}
           {seccion === "informacion" &&
           usuario.rol !== "Administrador" ? (
             <div
               className="read-only"
-              style={
-                estilos.soloLectura
-              }
+              style={estilos.soloLectura}
             >
               👁 Los asesores pueden leer la
               información, pero solo los
@@ -392,46 +375,76 @@ function Chat({
               className="message-form"
               style={estilos.formMensaje}
             >
-              {seccion ===
-                "informacion" &&
-                usuario.rol ===
-                  "Administrador" && (
-                  <>
-                    <input
-                      ref={archivoInputRef}
-                      type="file"
-                      style={{
-                        display: "none",
-                      }}
-                      accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
-                      onChange={(e) => {
-                        const archivo =
-                          e.target.files?.[0] ||
-                          null;
+              {/* =====================================================
+                  BOTÓN ADJUNTAR
+                  
+                  ADMINISTRADOR:
+                  - Puede adjuntar en Información.
 
-                        setArchivoSeleccionado(
-                          archivo
-                        );
-                      }}
-                    />
+                  CHAT PRIVADO:
+                  - Asesor ↔ Administrador.
+                  - No Asesor ↔ Asesor.
+              ===================================================== */}
 
-                    <button
-                      type="button"
-                      onClick={() =>
-                        archivoInputRef.current?.click()
-                      }
-                      style={
-                        estilos.botonAdjuntar
-                      }
-                      title="Adjuntar archivo"
-                      disabled={
-                        subiendoArchivo
-                      }
-                    >
-                      📎
-                    </button>
-                  </>
-                )}
+              {(
+                (
+                  seccion === "informacion" &&
+                  usuario.rol === "Administrador"
+                ) ||
+                (
+                  seccion === "privado" &&
+                  usuarioChat &&
+                  usuarioChat.rol !== usuario.rol
+                )
+              ) && (
+                <>
+                  <input
+                    ref={archivoInputRef}
+                    type="file"
+                    style={{
+                      display: "none",
+                    }}
+                    accept={
+                      seccion === "privado"
+                        ? "image/*"
+                        : "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                    }
+                    onChange={(e) => {
+                      const archivo =
+                        e.target.files?.[0] ||
+                        null;
+
+                      setArchivoSeleccionado(
+                        archivo
+                      );
+                    }}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() =>
+                      archivoInputRef.current?.click()
+                    }
+                    style={
+                      estilos.botonAdjuntar
+                    }
+                    title={
+                      seccion === "privado"
+                        ? "Adjuntar imagen"
+                        : "Adjuntar archivo"
+                    }
+                    disabled={
+                      subiendoArchivo
+                    }
+                  >
+                    📎
+                  </button>
+                </>
+              )}
+
+              {/* =====================================================
+                  ARCHIVO SELECCIONADO
+              ===================================================== */}
 
               {archivoSeleccionado && (
                 <div
@@ -468,32 +481,45 @@ function Chat({
                 </div>
               )}
 
+              {/* =====================================================
+                  CAMPO DE TEXTO
+              ===================================================== */}
+
               <textarea
-  value={texto}
-  onChange={(e) => setTexto(e.target.value)}
-  onKeyDown={(e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      enviarMensaje(e);
-    }
-  }}
-  placeholder={
-    seccion === "informacion"
-      ? "Escribe un comunicado..."
-      : "Escribe un mensaje..."
-  }
-  className="message-input"
-  style={{
-    ...estilos.inputMensaje,
-    resize: "none",
-    minHeight: 43,
-    maxHeight: 120,
-    overflowY: "auto",
-    fontFamily: "inherit",
-    lineHeight: 1.4,
-  }}
-  rows={1}
-/>
+                value={texto}
+                onChange={(e) =>
+                  setTexto(e.target.value)
+                }
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" &&
+                    !e.shiftKey
+                  ) {
+                    e.preventDefault();
+                    enviarMensaje(e);
+                  }
+                }}
+                placeholder={
+                  seccion === "informacion"
+                    ? "Escribe un comunicado..."
+                    : "Escribe un mensaje..."
+                }
+                className="message-input"
+                style={{
+                  ...estilos.inputMensaje,
+                  resize: "none",
+                  minHeight: 43,
+                  maxHeight: 120,
+                  overflowY: "auto",
+                  fontFamily: "inherit",
+                  lineHeight: 1.4,
+                }}
+                rows={1}
+              />
+
+              {/* =====================================================
+                  BOTÓN ENVIAR
+              ===================================================== */}
 
               <button
                 type="submit"
@@ -527,4 +553,3 @@ function Chat({
 }
 
 export default Chat;
-
