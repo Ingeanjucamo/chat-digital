@@ -5,6 +5,11 @@ function Contacts({
   seccion,
   busqueda,
   setBusqueda,
+  busquedaMensajes,
+  setBusquedaMensajes,
+  resultadosMensajes,
+  buscarMensajes,
+  buscandoMensajes,
   contactos,
   pendientesPorUsuario,
   usuarioChat,
@@ -60,9 +65,18 @@ function Contacts({
             type="text"
             placeholder="Buscar asesor o administrador..."
             value={busqueda}
-            onChange={(e) =>
-              setBusqueda(e.target.value)
-            }
+            onChange={(e) => {
+  const valor = e.target.value;
+
+  setBusqueda(valor);
+  setBusquedaMensajes(valor);
+}}
+onKeyDown={(e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    buscarMensajes();
+  }
+}}
             style={estilos.inputBusqueda}
           />
 
@@ -76,6 +90,106 @@ function Contacts({
           )}
         </div>
       )}
+
+      {/* =====================================================
+    RESULTADOS DE MENSAJES
+===================================================== */}
+
+{seccion === "privado" &&
+  busquedaMensajes.trim() !== "" &&
+  resultadosMensajes.length > 0 && (
+    <div
+      style={{
+        margin: "0 16px 10px",
+        maxHeight: 260,
+        overflowY: "auto",
+        border: "1px solid #e5e7eb",
+        borderRadius: 10,
+        background: "#ffffff",
+      }}
+    >
+      <div
+        style={{
+          padding: "10px 12px",
+          fontSize: 11,
+          fontWeight: 800,
+          color: "#64748b",
+          borderBottom: "1px solid #f1f5f9",
+        }}
+      >
+        💬 MENSAJES ENCONTRADOS
+      </div>
+
+      {resultadosMensajes.map((mensaje) => (
+        <button
+          key={mensaje.id}
+          type="button"
+          onClick={() => {
+            const contactoId =
+              Number(mensaje.emisor_id) ===
+              Number(usuario.id)
+                ? mensaje.receptor_id
+                : mensaje.emisor_id;
+
+            const contacto = contactos.find(
+              (c) =>
+                Number(c.id) ===
+                Number(contactoId)
+            );
+
+            if (contacto) {
+              abrirChatPrivado(contacto);
+            }
+          }}
+          style={{
+            width: "100%",
+            border: "none",
+            borderBottom:
+              "1px solid #f1f5f9",
+            background: "#fff",
+            padding: "10px 12px",
+            textAlign: "left",
+            cursor: "pointer",
+          }}
+        >
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#1e293b",
+            }}
+          >
+            {mensaje.nombre}
+          </div>
+
+          <div
+            style={{
+              marginTop: 3,
+              fontSize: 12,
+              color: "#475569",
+              lineHeight: 1.4,
+            }}
+          >
+            {mensaje.texto}
+          </div>
+
+          <div
+            style={{
+              marginTop: 4,
+              fontSize: 10,
+              color: "#94a3b8",
+            }}
+          >
+            {mensaje.created_at
+              ? new Date(
+                  mensaje.created_at
+                ).toLocaleString("es-CO")
+              : ""}
+          </div>
+        </button>
+      ))}
+    </div>
+  )}
 
       {/* =====================================================
           LISTA CONTACTOS

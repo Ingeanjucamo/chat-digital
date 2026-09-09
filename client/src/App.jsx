@@ -53,6 +53,9 @@ function App() {
   const archivoInputRef = useRef(null);
 
   const [busqueda, setBusqueda] = useState("");
+  const [busquedaMensajes, setBusquedaMensajes] = useState("");
+const [resultadosMensajes, setResultadosMensajes] = useState([]);
+const [buscandoMensajes, setBuscandoMensajes] = useState(false);
 
   /* NOTIFICACIONES */
   const [notificacionesPrivadas, setNotificacionesPrivadas] = useState(0);
@@ -97,6 +100,109 @@ function obtenerNombreUsuario(id) {
     encontrado?.usuario ||
     "Usuario"
   );
+}
+
+async function buscarMensajes() {
+  const termino = busqueda.trim();
+
+  if (!termino) {
+    setResultadosMensajes([]);
+    return;
+  }
+
+  setBuscandoMensajes(true);
+
+  try {
+    const { data, error } = await supabase
+      .from("mensajes")
+      .select("*")
+      .ilike("texto", `%${termino}%`)
+      .not("texto", "is", null)
+      .order("created_at", {
+        ascending: false,
+      })
+      .limit(50);
+
+    if (error) {
+      throw error;
+    }
+
+    const resultados = (data || []).map((mensaje) => ({
+      ...mensaje,
+      nombre: obtenerNombreUsuario(
+        mensaje.emisor_id
+      ),
+    }));
+
+    setResultadosMensajes(resultados);
+  } catch (error) {
+    console.error(
+      "Error buscando mensajes:",
+      error
+    );
+
+    setResultadosMensajes([]);
+  } finally {
+    setBuscandoMensajes(false);
+  }
+}
+useEffect(() => {
+  if (!usuario || seccion !== "privado") {
+    return;
+  }
+
+  const termino = busqueda.trim();
+
+  if (!termino) {
+    setResultadosMensajes([]);
+    return;
+  }
+
+  const temporizador = setTimeout(() => {
+    buscarMensajes();
+  }, 400);
+
+  return () => clearTimeout(temporizador);
+}, [
+  busqueda,
+  usuario,
+  seccion,
+]);
+async function cargarNotificacionesPendientes(usuarioActual) {
+  if (!usuarioActual) return;
+
+  try {
+    const { data, error } = await supabase
+      .from("mensajes")
+      .select("id, emisor_id, receptor_id")
+      .eq("receptor_id", usuarioActual.id)
+      .eq("leido", false);
+
+    if (error) {
+      throw error;
+    }
+
+    const pendientes = {};
+
+    (data || []).forEach((mensaje) => {
+      if (!pendientes[mensaje.emisor_id]) {
+        pendientes[mensaje.emisor_id] = 0;
+      }
+
+      pendientes[mensaje.emisor_id]++;
+    });
+
+    setPendientesPorUsuario(pendientes);
+
+    setNotificacionesPrivadas(
+      (data || []).length
+    );
+  } catch (error) {
+    console.error(
+      "Error cargando notificaciones pendientes:",
+      error
+    );
+  }
 }
 
 
@@ -377,6 +483,7 @@ async function iniciarSesion(e) {
     );
 
     setUsuario(datos.usuario);
+    await cargarNotificacionesPendientes(datos.usuario);
 
     await cargarUsuarios();
 
@@ -421,10 +528,9 @@ const contactos = useMemo(() => {
     );
   }
 
-  if (busqueda.trim() !== "") {
-    const textoBusqueda =
-      busqueda.toLowerCase().trim();
+  const textoBusqueda = busqueda.trim().toLowerCase();
 
+  if (textoBusqueda !== "") {
     lista = lista.filter((u) => {
       const nombre = u.nombre
         ? u.nombre.toLowerCase()
@@ -440,10 +546,6 @@ const contactos = useMemo(() => {
       );
     });
   }
-
-  /* =====================================================
-     ORDENAR POR MENSAJES PENDIENTES
-  ===================================================== */
 
   lista.sort((a, b) => {
     const pendientesA =
@@ -546,6 +648,20 @@ const contactos = useMemo(() => {
 
     setSeccion("privado");
     setUsuarioChat(contacto);
+
+    const { error: errorLeido } = await supabase
+  .from("mensajes")
+  .update({ leido: true })
+  .eq("receptor_id", usuario.id)
+  .eq("emisor_id", contacto.id)
+  .eq("leido", false);
+
+if (errorLeido) {
+  console.error(
+    "Error marcando mensajes como leídos:",
+    errorLeido
+  );
+}
 
     setPendientesPorUsuario(
       (anteriores) => {
@@ -1169,6 +1285,11 @@ setMensajes((anteriores) => {
   seccion={seccion}
   busqueda={busqueda}
   setBusqueda={setBusqueda}
+  busquedaMensajes={busquedaMensajes}
+  setBusquedaMensajes={setBusquedaMensajes}
+  resultadosMensajes={resultadosMensajes}
+  buscarMensajes={buscarMensajes}
+  buscandoMensajes={buscandoMensajes}
   contactos={contactos}
   pendientesPorUsuario={pendientesPorUsuario}
   usuarioChat={usuarioChat}
