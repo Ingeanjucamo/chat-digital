@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { supabase } from "../../lib/supabase";
 
 function Chat({
   usuario,
@@ -16,6 +17,7 @@ function Chat({
   API,
   mensajeRespondido,
   setMensajeRespondido,
+  usuarioActual,
 }) {
   const mensajesAreaRef = useRef(null);
 
@@ -155,6 +157,86 @@ function Chat({
         Number(m.id) ===
         Number(mensaje.mensaje_respondido_id)
     );
+  }
+    // =====================================================
+  // REACCIONES
+  // =====================================================
+
+  const reaccionesDisponibles = ["👍", "❤️", "😂", "😮", "😢", "👏"];
+
+  const [reacciones, setReacciones] = React.useState({});
+
+  async function cargarReacciones() {
+    if (!usuario || seccion !== "informacion") return;
+
+    const { data, error } = await supabase
+      .from("reacciones_mensajes")
+      .select("*");
+
+    if (error) {
+      console.error("Error cargando reacciones:", error);
+      return;
+    }
+
+    const agrupadas = {};
+
+    (data || []).forEach((r) => {
+      if (!agrupadas[r.mensaje_id]) {
+        agrupadas[r.mensaje_id] = [];
+      }
+
+      agrupadas[r.mensaje_id].push(r);
+    });
+
+    setReacciones(agrupadas);
+  }
+
+  useEffect(() => {
+    cargarReacciones();
+  }, [mensajes, seccion, usuario]);
+
+  async function reaccionarMensaje(mensajeId, reaccion) {
+    if (!usuario) return;
+
+    const existentes = reacciones[mensajeId] || [];
+
+    const miReaccion = existentes.find(
+      (r) => Number(r.usuario_id) === Number(usuario.id)
+    );
+
+    try {
+      if (miReaccion?.reaccion === reaccion) {
+        const { error } = await supabase
+          .from("reacciones_mensajes")
+          .delete()
+          .eq("id", miReaccion.id);
+
+        if (error) throw error;
+      } else if (miReaccion) {
+        const { error } = await supabase
+          .from("reacciones_mensajes")
+          .update({
+            reaccion,
+          })
+          .eq("id", miReaccion.id);
+
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("reacciones_mensajes")
+          .insert({
+            mensaje_id: mensajeId,
+            usuario_id: usuario.id,
+            reaccion,
+          });
+
+        if (error) throw error;
+      }
+
+      await cargarReacciones();
+    } catch (error) {
+      console.error("Error reaccionando:", error);
+    }
   }
 
   // =====================================================
@@ -470,6 +552,84 @@ setTimeout(() => {
                       )}
                     </div>
                   )}
+                  {/* =====================================================
+    REACCIONES
+===================================================== */}
+
+{seccion === "informacion" && (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: 5,
+      marginTop: 8,
+      flexWrap: "wrap",
+    }}
+  >
+    {reaccionesDisponibles.map((reaccion) => {
+      const lista = reacciones[mensaje.id] || [];
+
+      const cantidad = lista.filter(
+        (r) => r.reaccion === reaccion
+      ).length;
+
+      const yoReaccione = lista.some(
+        (r) =>
+          Number(r.usuario_id) === Number(usuario.id) &&
+          r.reaccion === reaccion
+      );
+
+      return (
+        <button
+          key={reaccion}
+          type="button"
+          onClick={() =>
+            reaccionarMensaje(
+              mensaje.id,
+              reaccion
+            )
+          }
+          style={{
+            border: yoReaccione
+              ? "2px solid #2563eb"
+              : "1px solid #d1d5db",
+            background: yoReaccione
+              ? "#eff6ff"
+              : "#ffffff",
+            borderRadius: 15,
+            padding: "3px 7px",
+            cursor: "pointer",
+            fontSize: 14,
+            display: cantidad > 0
+              ? "flex"
+              : "block",
+            alignItems: "center",
+            gap: 3,
+          }}
+          title={
+            yoReaccione
+              ? "Quitar reacción"
+              : "Reaccionar"
+          }
+        >
+          {reaccion}
+          {cantidad > 0 && (
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: "bold",
+                color: "#374151",
+              }}
+            >
+              {cantidad}
+            </span>
+          )}
+        </button>
+      );
+    })}
+  </div>
+)}
+
 
                   {/* =====================================================
                       HORA + RESPONDER
