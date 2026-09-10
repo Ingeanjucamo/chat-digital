@@ -207,8 +207,6 @@ async function cargarNotificacionesPendientes(usuarioActual) {
   }
 }
 
-
-
   /* =====================================================
      NOTIFICACIONES
   ===================================================== */
@@ -792,10 +790,13 @@ if (archivoSeleccionado) {
     archivoSeleccionado.type?.startsWith("image/");
 
   const puedeEnviarImagenPrivada =
-    seccion === "privado" &&
-    usuarioChat &&
-    usuarioChat.rol !== usuario.rol &&
-    esImagen;
+  seccion === "privado" &&
+  usuarioChat &&
+  (
+    usuarioChat.id === usuario.id ||
+    usuarioChat.rol !== usuario.rol
+  ) &&
+  esImagen;
 
   const puedeEnviarArchivoInformacion =
     seccion === "informacion" &&

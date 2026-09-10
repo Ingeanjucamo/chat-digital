@@ -647,16 +647,19 @@ setTimeout(() => {
                 ===================================================== */}
 
                 {(
-                  (
-                    seccion === "informacion" &&
-                    usuario.rol === "Administrador"
-                  ) ||
-                  (
-                    seccion === "privado" &&
-                    usuarioChat &&
-                    usuarioChat.rol !== usuario.rol
-                  )
-                ) && (
+  (
+    seccion === "informacion" &&
+    usuario.rol === "Administrador"
+  ) ||
+  (
+    seccion === "privado" &&
+    usuarioChat &&
+    (
+      usuarioChat.id === usuario.id ||
+      usuarioChat.rol !== usuario.rol
+    )
+  )
+)&& (
                   <>
                     <input
                       ref={archivoInputRef}
