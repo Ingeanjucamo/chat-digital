@@ -3,6 +3,8 @@ import React from "react";
 function Contacts({
   usuario,
   seccion,
+  miChat,
+setMiChat,
   busqueda,
   setBusqueda,
   busquedaMensajes,
@@ -14,6 +16,7 @@ function Contacts({
   pendientesPorUsuario,
   usuarioChat,
   abrirChatPrivado,
+  abrirMiChat,
   estilos,
 }) {
   return (
@@ -190,6 +193,60 @@ onKeyDown={(e) => {
       ))}
     </div>
   )}
+  {/* =====================================================
+    MI CHAT
+===================================================== */}
+
+{seccion === "privado" && (
+  <button
+    type="button"
+    onClick={() => {
+  setBusqueda("");
+  setBusquedaMensajes("");
+  abrirMiChat();
+}}
+    className="contact-item"
+    style={{
+      ...estilos.contacto,
+      margin: "0 12px 8px",
+      width: "calc(100% - 24px)",
+      background: miChat
+        ? "#f1f5f9"
+        : "#ffffff",
+    }}
+  >
+    <div
+      className="contact-avatar"
+      style={{
+        ...estilos.avatarContacto,
+        background: "#eaf4ff",
+        color: "#1769e8",
+      }}
+    >
+      📝
+    </div>
+
+    <div
+      className="contact-info"
+      style={estilos.infoContacto}
+    >
+      <div
+        className="contact-name"
+        style={estilos.nombreContacto}
+      >
+        Mi chat
+      </div>
+
+      <div
+        className="contact-role"
+        style={estilos.funcionesContacto}
+      >
+        Mis notas personales
+      </div>
+    </div>
+  </button>
+)}
+
 
       {/* =====================================================
           LISTA CONTACTOS

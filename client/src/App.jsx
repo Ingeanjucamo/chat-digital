@@ -42,6 +42,7 @@ function App() {
 
   const [seccion, setSeccion] = useState("informacion");
   const [usuarioChat, setUsuarioChat] = useState(null);
+  const [miChat, setMiChat] = useState(false);
 
   const [mensajes, setMensajes] = useState([]);
   const [texto, setTexto] = useState("");
@@ -173,10 +174,11 @@ async function cargarNotificacionesPendientes(usuarioActual) {
 
   try {
     const { data, error } = await supabase
-      .from("mensajes")
-      .select("id, emisor_id, receptor_id")
-      .eq("receptor_id", usuarioActual.id)
-      .eq("leido", false);
+  .from("mensajes")
+  .select("id, emisor_id, receptor_id")
+  .eq("receptor_id", usuarioActual.id)
+  .neq("emisor_id", usuarioActual.id)
+  .eq("leido", false);
 
     if (error) {
       throw error;
@@ -720,7 +722,52 @@ if (errorLeido) {
     }
   }
 
+/* =====================================================
+   ABRIR MI CHAT
+===================================================== */
 
+async function abrirMiChat() {
+  if (!usuario) return;
+
+  console.log("ABRIENDO MI CHAT");
+
+  setSeccion("privado");
+  setMiChat(true);
+  setUsuarioChat(usuario);
+
+  try {
+    const { data, error } = await supabase
+      .from("mensajes")
+      .select("*")
+      .eq("emisor_id", usuario.id)
+      .eq("receptor_id", usuario.id)
+      .is("grupo", null)
+      .order("created_at", {
+        ascending: true,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    setMensajes(
+      (data || []).map((mensaje) => ({
+        ...mensaje,
+        nombre:
+          usuario.nombre ||
+          usuario.usuario ||
+          "Yo",
+      }))
+    );
+  } catch (error) {
+    console.error(
+      "Error cargando Mi chat:",
+      error
+    );
+
+    setMensajes([]);
+  }
+}
   /* =====================================================
      ENVIAR MENSAJE
   ===================================================== */
@@ -776,12 +823,12 @@ if (archivoSeleccionado) {
   }
 
   if (
-    seccion === "privado" &&
-    !usuarioChat
-  ) {
-    alert("Selecciona un contacto primero.");
-    return;
-  }
+  seccion === "privado" &&
+  !usuarioChat
+) {
+  alert("Selecciona un contacto primero.");
+  return;
+}
 
   try {
     const { data: { user: authUser } } =
@@ -840,15 +887,15 @@ console.log("USUARIO APP:", usuario);
 const nuevoMensaje = {
   emisor_id: usuario.id,
   texto: mensajeTexto || null,
-  grupo:
-    seccion === "informacion"
-      ? "informacion"
-      : null,
+  grupo: seccion === "informacion" ? "informacion" : null,
+
   receptor_id:
     seccion === "privado"
       ? usuarioChat.id
       : null,
+
   archivo: archivoData,
+
   mensaje_respondido_id:
     mensajeRespondido?.id || null,
 };
@@ -1283,6 +1330,9 @@ setMensajes((anteriores) => {
      <Contacts
   usuario={usuario}
   seccion={seccion}
+  miChat={miChat}
+  abrirMiChat={abrirMiChat}
+setMiChat={setMiChat}
   busqueda={busqueda}
   setBusqueda={setBusqueda}
   busquedaMensajes={busquedaMensajes}
