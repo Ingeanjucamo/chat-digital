@@ -63,6 +63,7 @@ const [buscandoMensajes, setBuscandoMensajes] = useState(false);
   const [notificacionesInfo, setNotificacionesInfo] = useState(0);
 
   const [pendientesPorUsuario, setPendientesPorUsuario] = useState({});
+const [ultimosMensajesPorUsuario, setUltimosMensajesPorUsuario] = useState({});
 
   const [alerta, setAlerta] = useState(null);
 
@@ -90,6 +91,55 @@ const [buscandoMensajes, setBuscandoMensajes] = useState(false);
     console.error("Error cargando usuarios desde Supabase:", error);
   }
 }
+async function cargarUltimosMensajes() {
+  if (!usuario) return;
+
+  try {
+    const { data, error } = await supabase
+      .from("mensajes")
+      .select("emisor_id, receptor_id, created_at")
+      .is("grupo", null)
+      .or(
+        `emisor_id.eq.${usuario.id},receptor_id.eq.${usuario.id}`
+      )
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (error) {
+      throw error;
+    }
+
+    const ultimos = {};
+
+    (data || []).forEach((mensaje) => {
+      const otroUsuario =
+        Number(mensaje.emisor_id) === Number(usuario.id)
+          ? mensaje.receptor_id
+          : mensaje.emisor_id;
+
+      if (!otroUsuario) return;
+
+      if (!ultimos[otroUsuario]) {
+        ultimos[otroUsuario] = mensaje.created_at;
+      }
+    });
+
+    setUltimosMensajesPorUsuario(ultimos);
+  } catch (error) {
+    console.error(
+      "Error cargando últimos mensajes:",
+      error
+    );
+  }
+}
+useEffect(() => {
+  if (!usuario || seccion !== "privado") {
+    return;
+  }
+
+  cargarUltimosMensajes();
+}, [usuario, seccion]);
 
 function obtenerNombreUsuario(id) {
   const encontrado = usuarios.find(
@@ -297,6 +347,17 @@ sonidoNotificacion.play().catch(() => {});
           nombre: nombreEmisor,
         };
 
+        // Actualizar el orden de conversaciones
+if (
+  mensaje.receptor_id &&
+  Number(mensaje.receptor_id) === Number(usuario.id)
+) {
+  setUltimosMensajesPorUsuario((anteriores) => ({
+    ...anteriores,
+    [mensaje.emisor_id]: mensaje.created_at,
+  }));
+}
+
         // =====================================================
         // MENSAJE PRIVADO
         // =====================================================
@@ -486,6 +547,7 @@ async function iniciarSesion(e) {
     await cargarNotificacionesPendientes(datos.usuario);
 
     await cargarUsuarios();
+   
 
     solicitarNotificaciones();
   } catch (error) {
@@ -532,10 +594,7 @@ const contactos = useMemo(() => {
 
   if (textoBusqueda !== "") {
     lista = lista.filter((u) => {
-      const nombre = u.nombre
-        ? u.nombre.toLowerCase()
-        : "";
-
+      const nombre = u.nombre ? u.nombre.toLowerCase() : "";
       const usuarioNombre = u.usuario
         ? u.usuario.toLowerCase()
         : "";
@@ -548,13 +607,15 @@ const contactos = useMemo(() => {
   }
 
   lista.sort((a, b) => {
-    const pendientesA =
-      pendientesPorUsuario[a.id] || 0;
+    const fechaA = ultimosMensajesPorUsuario[a.id]
+      ? new Date(ultimosMensajesPorUsuario[a.id]).getTime()
+      : 0;
 
-    const pendientesB =
-      pendientesPorUsuario[b.id] || 0;
+    const fechaB = ultimosMensajesPorUsuario[b.id]
+      ? new Date(ultimosMensajesPorUsuario[b.id]).getTime()
+      : 0;
 
-    return pendientesB - pendientesA;
+    return fechaB - fechaA;
   });
 
   return lista;
@@ -563,6 +624,7 @@ const contactos = useMemo(() => {
   usuario,
   busqueda,
   pendientesPorUsuario,
+  ultimosMensajesPorUsuario,
 ]);
 
 
@@ -590,18 +652,18 @@ const contactos = useMemo(() => {
         .eq("grupo", "informacion")
         .order("created_at", { ascending: true });
 
-      if (error) {
-        throw error;
-      }
+    if (error) throw error;
 
-      setMensajes(
-        (data || []).map((mensaje) => ({
-          ...mensaje,
-          nombre: obtenerNombreUsuario(
-            mensaje.emisor_id
-          ),
-        }))
-      );
+const mensajesChat = data || [];
+
+setMensajes(
+  mensajesChat.map((mensaje) => ({
+    ...mensaje,
+    nombre: obtenerNombreUsuario(mensaje.emisor_id),
+  }))
+);
+
+
     } catch (error) {
       console.error(
         "Error cargando información:",
@@ -919,6 +981,14 @@ const nuevoMensaje = {
 
       throw error;
     }
+
+    // Actualizar posición de la conversación
+if (seccion === "privado" && usuarioChat) {
+  setUltimosMensajesPorUsuario((anteriores) => ({
+    ...anteriores,
+    [usuarioChat.id]: data.created_at,
+  }));
+}
 
     /* =================================================
        LIMPIAR
