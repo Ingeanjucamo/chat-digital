@@ -159,6 +159,49 @@ function Chat({
     );
   }
     // =====================================================
+  // FECHAS DE MENSAJES
+  // =====================================================
+
+  function obtenerFechaMensaje(mensaje) {
+    const valor =
+      mensaje?.created_at ??
+      mensaje?.createdAt ??
+      mensaje?.fecha;
+
+    if (!valor) return null;
+
+    const fecha = new Date(valor);
+
+    if (Number.isNaN(fecha.getTime())) {
+      return null;
+    }
+
+    return fecha;
+  }
+
+  function formatearFechaMensaje(mensaje) {
+    const fecha = obtenerFechaMensaje(mensaje);
+
+    if (!fecha) return "";
+
+    return fecha.toLocaleDateString("es-CO", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  function esMismoDia(fechaA, fechaB) {
+    if (!fechaA || !fechaB) return false;
+
+    return (
+      fechaA.getFullYear() === fechaB.getFullYear() &&
+      fechaA.getMonth() === fechaB.getMonth() &&
+      fechaA.getDate() === fechaB.getDate()
+    );
+  }
+
+  // =====================================================
   // REACCIONES
   // =====================================================
 
@@ -359,7 +402,7 @@ function Chat({
             </p>
           </div>
         ) : (
-          mensajes.map((mensaje) => {
+          mensajes.map((mensaje, indice) => {
             const propio =
               Number(
                 mensaje.emisor_id ??
@@ -374,7 +417,47 @@ function Chat({
             const mensajeOriginal =
               obtenerMensajeOriginal(mensaje);
 
+            const fechaMensaje = obtenerFechaMensaje(mensaje);
+            const mensajeAnterior =
+              indice > 0 ? mensajes[indice - 1] : null;
+            const fechaAnterior =
+              obtenerFechaMensaje(mensajeAnterior);
+
+            const mostrarFecha =
+              Boolean(fechaMensaje) &&
+              (!fechaAnterior ||
+                !esMismoDia(fechaMensaje, fechaAnterior));
+
             return (
+              <React.Fragment key={mensaje.id}>
+                {mostrarFecha && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      margin: "14px 0 10px",
+                    }}
+                  >
+                    <span
+                      style={{
+                        background: "#e8eef7",
+                        color: "#52637a",
+                        borderRadius: 14,
+                        padding: "6px 13px",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        boxShadow:
+                          "0 1px 3px rgba(15, 35, 60, 0.08)",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {formatearFechaMensaje(mensaje)}
+                    </span>
+                  </div>
+                )}
+
               <div
   key={mensaje.id}
   id={`mensaje-${mensaje.id}`}
@@ -693,6 +776,7 @@ setTimeout(() => {
                   </div>
                 </div>
               </div>
+              </React.Fragment>
             );
           })
         )}

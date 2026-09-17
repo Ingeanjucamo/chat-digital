@@ -48,9 +48,7 @@ function Sidebar({
           style={estilos.avatar}
         >
           {usuario.nombre
-            ? usuario.nombre
-                .charAt(0)
-                .toUpperCase()
+            ? usuario.nombre.charAt(0).toUpperCase()
             : "U"}
         </div>
 
@@ -127,8 +125,8 @@ function Sidebar({
         {/* ADMINISTRACIÓN */}
 
         {usuario.rol === "Administrador" &&
-  (usuario.esSuperAdmin ||
-    usuario.usuario === "andres.cardozo") && (
+          (usuario.esSuperAdmin ||
+            usuario.usuario === "andres.cardozo") && (
             <button
               className="menu-item"
               style={{
@@ -145,15 +143,84 @@ function Sidebar({
           )}
       </div>
 
-      {/* CERRAR SESIÓN */}
+      {/* PARTE INFERIOR */}
 
-      <button
-        className="logout-button"
-        style={estilos.botonCerrar}
-        onClick={cerrarSesion}
+      <div
+        style={{
+          marginTop: "auto",
+          paddingTop: 12,
+        }}
       >
-        🚪 Cerrar sesión
-      </button>
+        {/* CERRAR SESIÓN */}
+
+        <button
+          className="logout-button"
+          style={estilos.botonCerrar}
+          onClick={cerrarSesion}
+        >
+          <span style={{ fontSize: 16 }}>🚪</span>
+          <span>Cerrar sesión</span>
+        </button>
+
+        {/* FIRMA */}
+
+        <div
+          className="sidebar-credit"
+          style={{
+            display: "flex",
+           alignItems: "flex-start",
+justifyContent: "center",
+gap: 15,
+            marginTop: 10,
+            padding: "12px 8px 4px",
+            borderTop: "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          <div
+            style={{
+              color: "#b9d2ff",
+              fontSize: 22,
+              fontWeight: 800,
+              lineHeight: 1.1,
+              letterSpacing: "-2px",
+              minWidth: 25,
+              paddingTop: 1,
+            }}
+          >
+            {"</>"}
+          </div>
+
+          <div
+            className="sidebar-credit-text"
+            style={{
+              minWidth: 0,
+              lineHeight: 1.3,
+            }}
+          >
+            <div
+              style={{
+                color: "rgba(255,255,255,0.88)",
+                fontSize: 12,
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Hecho por <strong>Anjucamo</strong>
+            </div>
+
+            <div
+              style={{
+                marginTop: 5,
+                color: "rgba(255,255,255,0.48)",
+                fontSize: 10,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Diseño y desarrollo
+            </div>
+          </div>
+        </div>
+      </div>
     </aside>
   );
 }

@@ -1396,28 +1396,31 @@ setMensajes((anteriores) => {
 
       {/* =================================================
           CONTACTOS
+          Solo se muestran en CONVERSACIONES.
+          Información y Administración usan todo el espacio.
       ================================================= */}
 
-     <Contacts
-  usuario={usuario}
-  seccion={seccion}
-  miChat={miChat}
-  abrirMiChat={abrirMiChat}
-setMiChat={setMiChat}
-  busqueda={busqueda}
-  setBusqueda={setBusqueda}
-  busquedaMensajes={busquedaMensajes}
-  setBusquedaMensajes={setBusquedaMensajes}
-  resultadosMensajes={resultadosMensajes}
-  buscarMensajes={buscarMensajes}
-  buscandoMensajes={buscandoMensajes}
-  contactos={contactos}
-  pendientesPorUsuario={pendientesPorUsuario}
-  usuarioChat={usuarioChat}
-  abrirChatPrivado={abrirChatPrivado}
-  estilos={estilos}
-/>
-
+      {seccion === "privado" && (
+        <Contacts
+          usuario={usuario}
+          seccion={seccion}
+          miChat={miChat}
+          abrirMiChat={abrirMiChat}
+          setMiChat={setMiChat}
+          busqueda={busqueda}
+          setBusqueda={setBusqueda}
+          busquedaMensajes={busquedaMensajes}
+          setBusquedaMensajes={setBusquedaMensajes}
+          resultadosMensajes={resultadosMensajes}
+          buscarMensajes={buscarMensajes}
+          buscandoMensajes={buscandoMensajes}
+          contactos={contactos}
+          pendientesPorUsuario={pendientesPorUsuario}
+          usuarioChat={usuarioChat}
+          abrirChatPrivado={abrirChatPrivado}
+          estilos={estilos}
+        />
+      )}
 
       {/* =================================================
           PANEL PRINCIPAL

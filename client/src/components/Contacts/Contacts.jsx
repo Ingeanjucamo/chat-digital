@@ -355,52 +355,7 @@ onKeyDown={(e) => {
           background: "#ffffff",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 9,
-          }}
-        >
-          <span
-            style={{
-              width: 27,
-              height: 27,
-              borderRadius: 8,
-              background: "#eaf4ff",
-              color: "#1769e8",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 13,
-              fontWeight: 800,
-            }}
-          >
-            ✦
-          </span>
-
-          <div>
-            <div
-              style={{
-                fontSize: 10,
-                fontWeight: 800,
-                color: "#334155",
-              }}
-            >
-              Hecho por Anjucamo
-            </div>
-
-            <div
-              style={{
-                marginTop: 2,
-                fontSize: 9,
-                color: "#94a3b8",
-              }}
-            >
-              Diseño y desarrollo
-            </div>
-          </div>
-        </div>
+        
       </div>
     </section>
   );
