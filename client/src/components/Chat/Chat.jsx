@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 
 function Chat({
@@ -20,6 +20,22 @@ function Chat({
   usuarioActual,
 }) {
   const mensajesAreaRef = useRef(null);
+  const [busquedaChat, setBusquedaChat] = useState("");
+  const [mostrarBusquedaChat, setMostrarBusquedaChat] = useState(false);
+
+  const mensajesFiltrados = mensajes.filter((mensaje) => {
+    const termino = busquedaChat.trim().toLowerCase();
+
+    if (!termino) return true;
+
+    const texto = mensaje.texto || "";
+    const nombre = mensaje.nombre || "";
+    const archivo = mensaje.archivo?.nombre || "";
+
+    return `${texto} ${nombre} ${archivo}`
+      .toLowerCase()
+      .includes(termino);
+  });
 
   // =====================================================
   // BAJAR AUTOMÁTICAMENTE AL ÚLTIMO MENSAJE
@@ -39,11 +55,19 @@ function Chat({
 
   useEffect(() => {
     const manejarPegado = (e) => {
-      if (
-        seccion !== "privado" ||
-        !usuarioChat ||
-        usuarioChat.rol === usuario.rol
-      ) {
+      const puedePegarEnInformacion =
+        seccion === "informacion" &&
+        usuario?.rol === "Administrador";
+
+      const puedePegarEnChatPrivado =
+        seccion === "privado" &&
+        usuarioChat &&
+        (
+          usuarioChat.id === usuario?.id ||
+          usuarioChat.rol !== usuario?.rol
+        );
+
+      if (!puedePegarEnInformacion && !puedePegarEnChatPrivado) {
         return;
       }
 
@@ -327,6 +351,59 @@ function Chat({
                 {usuarioChat.rol}
               </div>
             </div>
+
+            <div
+              style={{
+                marginLeft: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              {mostrarBusquedaChat && (
+                <input
+                  type="text"
+                  value={busquedaChat}
+                  onChange={(e) => setBusquedaChat(e.target.value)}
+                  placeholder="Buscar en este chat..."
+                  autoFocus
+                  style={{
+                    width: 190,
+                    maxWidth: "28vw",
+                    padding: "9px 12px",
+                    border: "1px solid #dbe4f0",
+                    borderRadius: 10,
+                    outline: "none",
+                    fontSize: 12,
+                    background: "#f8fafc",
+                  }}
+                />
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMostrarBusquedaChat((visible) => !visible);
+
+                  if (mostrarBusquedaChat) {
+                    setBusquedaChat("");
+                  }
+                }}
+                title="Buscar en esta conversación"
+                style={{
+                  border: "1px solid #dbe4f0",
+                  background: "#f8fafc",
+                  color: "#2563eb",
+                  borderRadius: 10,
+                  width: 38,
+                  height: 38,
+                  cursor: "pointer",
+                  fontSize: 17,
+                }}
+              >
+                🔎
+              </button>
+            </div>
           </>
         ) : (
           <>
@@ -334,7 +411,9 @@ function Chat({
               className="chat-avatar"
               style={estilos.avatarChat}
             >
-              {seccion === "informacion"
+              {mensajes.length > 0 && mensajesFiltrados.length === 0
+                ? "🔎"
+                : seccion === "informacion"
                 ? "📢"
                 : "💬"}
             </div>
@@ -371,7 +450,7 @@ function Chat({
         className="messages-area"
         style={estilos.mensajes}
       >
-        {mensajes.length === 0 ? (
+        {mensajes.length === 0 || mensajesFiltrados.length === 0 ? (
           <div
             style={estilos.pantallaCentro}
           >
@@ -386,7 +465,9 @@ function Chat({
             </div>
 
             <h2>
-              {seccion === "privado"
+              {mensajes.length > 0 && mensajesFiltrados.length === 0
+                ? "No se encontraron mensajes"
+                : seccion === "privado"
                 ? usuarioChat
                   ? "Nueva conversación"
                   : "Selecciona un contacto"
@@ -394,7 +475,9 @@ function Chat({
             </h2>
 
             <p>
-              {seccion === "privado"
+              {mensajes.length > 0 && mensajesFiltrados.length === 0
+                ? "Prueba con otra palabra o limpia la búsqueda."
+                : seccion === "privado"
                 ? usuarioChat
                   ? "Envía el primer mensaje."
                   : "Selecciona un asesor o administrador."
@@ -402,7 +485,7 @@ function Chat({
             </p>
           </div>
         ) : (
-          mensajes.map((mensaje, indice) => {
+          mensajesFiltrados.map((mensaje, indice) => {
             const propio =
               Number(
                 mensaje.emisor_id ??
@@ -419,7 +502,7 @@ function Chat({
 
             const fechaMensaje = obtenerFechaMensaje(mensaje);
             const mensajeAnterior =
-              indice > 0 ? mensajes[indice - 1] : null;
+              indice > 0 ? mensajesFiltrados[indice - 1] : null;
             const fechaAnterior =
               obtenerFechaMensaje(mensajeAnterior);
 
