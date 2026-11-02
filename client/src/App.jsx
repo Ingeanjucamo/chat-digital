@@ -7,8 +7,9 @@ import Sidebar from "./components/Sidebar/Sidebar";
 import Contacts from "./components/Contacts/Contacts";
 import Chat from "./components/Chat/Chat";
 import Administration from "./components/Administration/Administration";
+import Ventas from "./components/Ventas/Ventas";
 import { iniciarLogin } from "./services/api";
-
+import DashboardComercial from "./components/DashboardComercial/DashboardComercial";
 
 
 function App() {
@@ -575,13 +576,13 @@ const contactos = useMemo(() => {
   if (usuario.rol === "Asesor") {
     lista = usuarios.filter(
       (u) =>
-        u.rol === "Administrador" &&
+        ["Administrador", "Supervisor"].includes(u.rol) &&
         u.id !== usuario.id &&
         u.activo !== false
     );
   }
 
-  if (usuario.rol === "Administrador") {
+  if (usuario.rol === "Supervisor" || usuario.rol === "Administrador") {
     lista = usuarios.filter(
       (u) =>
         u.rol === "Asesor" &&
@@ -674,6 +675,39 @@ setMensajes(
     }
   }
 
+
+  /* =====================================================
+     ABRIR DASHBOARD COMERCIAL
+  ===================================================== */
+  function abrirDashboard() {
+    setSeccion("dashboard");
+    setUsuarioChat(null);
+    setMensajes([]);
+    setTexto("");
+    setBusqueda("");
+    setArchivoSeleccionado(null);
+
+    if (archivoInputRef.current) {
+      archivoInputRef.current.value = "";
+    }
+  }
+
+  /* =====================================================
+     ABRIR VENTAS
+  ===================================================== */
+
+  function abrirVentas() {
+    setSeccion("ventas");
+    setUsuarioChat(null);
+    setMensajes([]);
+    setTexto("");
+    setBusqueda("");
+    setArchivoSeleccionado(null);
+
+    if (archivoInputRef.current) {
+      archivoInputRef.current.value = "";
+    }
+  }
 
   /* =====================================================
      ABRIR CONVERSACIONES
@@ -1127,7 +1161,10 @@ setMensajes((anteriores) => {
             usuario: formUsuario.usuario.trim(),
             nombre: formUsuario.nombre.trim(),
             password: formUsuario.password,
-            rol: formUsuario.rol,
+            // Compatibilidad con la Edge Function actual.
+            // Supervisor se crea inicialmente como Administrador y
+            // se corrige inmediatamente en el perfil de Supabase.
+            rol: formUsuario.rol === "Supervisor" ? "Administrador" : formUsuario.rol,
           }),
         }
       );
@@ -1138,6 +1175,24 @@ setMensajes((anteriores) => {
         throw new Error(
           datos.error || "No se pudo crear el usuario."
         );
+      }
+
+      // Si se creó como Supervisor mediante la compatibilidad con la
+      // Edge Function antigua, corregimos el rol y sus funciones.
+      if (formUsuario.rol === "Supervisor") {
+        const { error: rolError } = await supabase
+          .from("usuarios")
+          .update({
+            rol: "Supervisor",
+            funciones: ["Ventas", "Revisión"],
+          })
+          .eq("usuario", formUsuario.usuario.trim());
+
+        if (rolError) {
+          throw new Error(
+            `El usuario fue creado, pero no se pudo asignar Supervisor: ${rolError.message}`
+          );
+        }
       }
 
       limpiarFormularioUsuario();
@@ -1332,7 +1387,7 @@ setMensajes((anteriores) => {
 
   return (
     <div
-      className="app-shell"
+      className={`app-shell ${seccion === "administracion" ? "app-shell-admin" : ""}`}
       style={estilos.app}
     >
       {/* =================================================
@@ -1389,6 +1444,8 @@ setMensajes((anteriores) => {
   notificacionesPrivadas={notificacionesPrivadas}
   abrirInformacion={abrirInformacion}
   abrirConversaciones={abrirConversaciones}
+  abrirVentas={abrirVentas}
+  abrirDashboard={abrirDashboard}
   abrirAdministracion={abrirAdministracion}
   cerrarSesion={cerrarSesion}
   estilos={estilos}
@@ -1426,9 +1483,20 @@ setMensajes((anteriores) => {
           PANEL PRINCIPAL
       ================================================= */}
 
-      {seccion === "administracion" ? (
+      {seccion === "dashboard" ? (
         <main
-          className="chat-panel"
+          className="chat-panel dashboard-main-scroll"
+          style={{
+            ...estilos.chat,
+            overflowY: "auto",
+            minHeight: 0,
+          }}
+        >
+          <DashboardComercial usuario={usuario} />
+        </main>
+      ) : seccion === "administracion" ? (
+        <main
+          className="chat-panel administration-main"
           style={estilos.chat}
         >
           <Administration
@@ -1460,6 +1528,13 @@ setMensajes((anteriores) => {
             cambiarPassword={cambiarPassword}
             estilos={estilos}
           />
+        </main>
+      ) : seccion === "ventas" ? (
+        <main
+          className="chat-panel"
+          style={estilos.chat}
+        >
+          <Ventas usuario={usuario} />
         </main>
       ) : (
         <Chat
@@ -1667,6 +1742,10 @@ setMensajes((anteriores) => {
               >
                 <option value="Asesor">
                   Asesor
+                </option>
+
+                <option value="Supervisor">
+                  Supervisor
                 </option>
 
                 <option value="Administrador">

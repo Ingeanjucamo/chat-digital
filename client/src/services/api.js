@@ -35,7 +35,7 @@ export async function iniciarLogin(usuario, password) {
   // BLOQUEAR USUARIO DESACTIVADO
   // =========================================================
 
-  if (perfil.activo === false) {
+  if (perfil.eliminado === true || perfil.activo === false) {
     throw new Error(
       "Tu usuario está desactivado. Comunícate con el administrador."
     );

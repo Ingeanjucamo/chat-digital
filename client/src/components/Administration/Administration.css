@@ -127,6 +127,10 @@
   background: #6941c6;
 }
 
+.user-avatar.supervisor {
+  background: #0f8b8d;
+}
+
 .user-info strong {
   display: block;
   color: #142033;
@@ -160,6 +164,11 @@
 .role-badge.admin {
   background: #f0ebff;
   color: #6941c6;
+}
+
+.role-badge.supervisor {
+  background: #e8fbfb;
+  color: #0f6f70;
 }
 
 .status-badge.active {
@@ -470,3 +479,830 @@
   color: #98a2b3;
 }
     
+
+/* =========================================================
+   ADMINISTRACIÓN — SCROLL GENERAL
+   La lista de usuarios no debe atrapar el scroll.
+   El scroll pertenece al panel completo para poder llegar
+   a Metas y novedades sin una segunda barra interna.
+========================================================= */
+.administration-main {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0;
+  height: 100%;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.administration-page {
+  flex: 0 0 auto;
+  min-height: max-content;
+  padding-bottom: 40px;
+}
+
+.users-table {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 900px) {
+  .administration-main {
+    overflow-y: auto !important;
+  }
+}
+
+/* =========================================================
+   CONTROL COMERCIAL - SUPERADMIN
+========================================================= */
+.commercial-admin-section {
+  margin-top: 20px;
+  background: #f7faff;
+  border: 1px solid #dfe8f5;
+  border-radius: 18px;
+  padding: 20px;
+}
+
+.commercial-admin-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.commercial-admin-kicker {
+  color: #2868e8;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.commercial-admin-header h2 {
+  margin: 5px 0 4px;
+  color: #142033;
+}
+
+.commercial-admin-header p {
+  margin: 0;
+  color: #71819b;
+  font-size: 13px;
+}
+
+.commercial-admin-period {
+  display: flex;
+  gap: 8px;
+}
+
+.commercial-admin-period select,
+.commercial-admin-card select,
+.commercial-admin-card input,
+.commercial-admin-card textarea {
+  border: 1px solid #d8e2ef;
+  background: #fff;
+  border-radius: 9px;
+  padding: 10px 11px;
+  color: #23344d;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.commercial-admin-period select { min-width: 120px; }
+
+.commercial-admin-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.commercial-admin-card {
+  background: #fff;
+  border: 1px solid #e0e8f2;
+  border-radius: 15px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(20,48,88,.04);
+}
+
+.commercial-admin-card h3 { margin: 0 0 7px; color: #17233a; font-size: 15px; }
+.commercial-helper { margin: 0 0 13px; color: #7b8aa0; font-size: 11px; line-height: 1.45; }
+.commercial-helper strong { color: #1769e8; }
+.commercial-admin-card label { display: flex; flex-direction: column; gap: 6px; color: #687993; font-size: 11px; font-weight: 800; margin-bottom: 10px; }
+.commercial-admin-card select,
+.commercial-admin-card input,
+.commercial-admin-card textarea { width: 100%; font-size: 13px; font-weight: 600; }
+.commercial-form-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.commercial-save-btn { border: 0; width: 100%; margin-top: 2px; padding: 11px 14px; border-radius: 9px; cursor: pointer; }
+.commercial-list { margin-top: 14px; border-top: 1px solid #edf1f6; padding-top: 9px; max-height: 150px; overflow: auto; }
+.commercial-list-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid #f0f3f7; font-size: 11px; color: #455570; }
+.commercial-list-row b { color: #1769e8; }
+.commercial-novelties-card { margin-top: 14px; }
+.commercial-card-title { display:flex; justify-content:space-between; align-items:center; gap:15px; margin-bottom: 12px; }
+.commercial-card-title h3 { margin-bottom: 3px; }
+.commercial-card-title span { color:#8794a8; font-size:11px; }
+.commercial-card-title > b { color:#1769e8; font-size:22px; }
+.commercial-novelties-table { overflow:auto; }
+.commercial-novelties-head,
+.commercial-novelties-row { display:grid; grid-template-columns: 1.1fr 1.35fr 1fr .75fr 1.55fr .65fr .6fr; gap:10px; align-items:center; min-width:980px; }
+.commercial-novelties-head { background:#f4f7fb; color:#73819a; font-size:9px; font-weight:900; padding:9px; border-radius:8px; }
+.commercial-novelties-row { padding:10px 9px; border-bottom:1px solid #edf1f5; font-size:11px; color:#34445d; }
+.commercial-novelties-row button { border:1px solid #f0d7d7; background:#fff6f6; color:#c73737; border-radius:7px; padding:6px 7px; cursor:pointer; font-size:10px; font-weight:800; }
+.commercial-sale-preview { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:8px; margin: -2px 0 10px; padding:10px; background:#f5f8fd; border:1px solid #e1eaf5; border-radius:10px; }
+.commercial-sale-preview div { min-width:0; }
+.commercial-sale-preview span { display:block; color:#8290a6; font-size:8px; font-weight:900; letter-spacing:.08em; margin-bottom:3px; }
+.commercial-sale-preview strong { display:block; color:#20314a; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.commercial-client-cell { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.discount-value { color:#d8344a; font-weight:900; }
+.commercial-empty { padding:20px; text-align:center; color:#8794a8; font-size:12px; }
+
+@media (max-width: 850px) {
+  .commercial-admin-header,
+  .commercial-admin-grid { grid-template-columns: 1fr; display:grid; }
+  .commercial-admin-period { justify-content:flex-start; }
+}
+
+/* =========================================================
+   ASIGNACIÓN MASIVA DE METAS - CONTROL COMERCIAL
+   ========================================================= */
+.commercial-card-heading-row {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:10px;
+}
+.commercial-card-heading-row h3 { margin-bottom:4px !important; }
+.commercial-selection-count {
+  flex:none;
+  background:#eef5ff;
+  color:#2463d4;
+  border:1px solid #d9e7ff;
+  border-radius:999px;
+  padding:7px 10px;
+  font-size:10px;
+  font-weight:900;
+}
+.commercial-meta-toolbar {
+  display:grid;
+  grid-template-columns: 150px 1fr;
+  gap:10px;
+  align-items:end;
+  margin-bottom:10px;
+}
+.commercial-meta-value-field { margin-bottom:0 !important; }
+.commercial-meta-actions {
+  display:flex;
+  justify-content:flex-end;
+  gap:7px;
+}
+.commercial-secondary-btn {
+  border:1px solid #d8e2f0;
+  background:#fff;
+  color:#2b4a75;
+  border-radius:8px;
+  padding:9px 11px;
+  cursor:pointer;
+  font-size:11px;
+  font-weight:800;
+  white-space:nowrap;
+}
+.commercial-secondary-btn:hover { background:#f5f8fc; }
+.commercial-meta-search-row {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  margin-bottom:8px;
+}
+.commercial-meta-search-row input { margin:0 !important; }
+.commercial-meta-selection-box {
+  max-height:285px;
+  overflow:auto;
+  border:1px solid #e1e8f2;
+  border-radius:10px;
+  background:#fbfcfe;
+  padding:6px;
+}
+.commercial-meta-check {
+  display:grid !important;
+  grid-template-columns:20px 1fr auto;
+  align-items:center;
+  gap:8px;
+  padding:8px 9px;
+  margin:0 !important;
+  border-radius:8px;
+  border:1px solid transparent;
+  cursor:pointer;
+  color:#263b5c !important;
+  font-size:11px !important;
+}
+.commercial-meta-check:hover { background:#f3f7fd; }
+.commercial-meta-check.selected {
+  background:#edf5ff;
+  border-color:#d7e6ff;
+}
+.commercial-meta-check input {
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+  width:1px !important;
+  height:1px !important;
+}
+.commercial-meta-checkmark {
+  width:18px;
+  height:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1.5px solid #bdc9da;
+  border-radius:5px;
+  background:#fff;
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+}
+.commercial-meta-check.selected .commercial-meta-checkmark {
+  background:#2869e6;
+  border-color:#2869e6;
+}
+.commercial-meta-name {
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-weight:800;
+}
+.commercial-meta-current {
+  color:#8a97aa;
+  font-size:9px;
+  white-space:nowrap;
+}
+.commercial-meta-current b { color:#2869e6; }
+.commercial-save-btn:disabled {
+  opacity:.45;
+  cursor:not-allowed;
+}
+.commercial-meta-summary { max-height:150px; }
+.commercial-meta-summary-head {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding-bottom:7px;
+  margin-bottom:3px;
+  color:#728099;
+  font-size:10px;
+  font-weight:800;
+}
+.commercial-meta-summary-head b { color:#1769e8; font-size:14px; }
+
+@media (max-width: 900px) {
+  .commercial-meta-toolbar { grid-template-columns:1fr; }
+  .commercial-meta-actions { justify-content:flex-start; }
+  .commercial-meta-check { grid-template-columns:20px 1fr; }
+  .commercial-meta-current { grid-column:2; }
+}
+
+/* =========================================================
+   SELECTOR DE METAS — UX MASIVA
+========================================================= */
+.commercial-meta-commandbar {
+  display:grid;
+  grid-template-columns:minmax(190px, 250px) 1fr;
+  gap:12px;
+  align-items:end;
+  padding:12px;
+  background:#f5f8fd;
+  border:1px solid #e2eaf4;
+  border-radius:12px;
+  margin-bottom:10px;
+}
+.commercial-meta-value-field { margin:0 !important; }
+.commercial-meta-value-field > span { color:#687993; font-size:11px; font-weight:800; }
+.commercial-meta-actions { display:flex; justify-content:flex-end; gap:8px; }
+.commercial-meta-helpbox {
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin:0 0 10px;
+}
+.commercial-meta-helpbox div {
+  display:flex; align-items:center; gap:7px;
+  padding:8px 9px;
+  background:#fff;
+  border:1px solid #e5ebf4;
+  border-radius:9px;
+  color:#667791;
+  font-size:10px;
+  font-weight:700;
+}
+.commercial-meta-helpbox b {
+  width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; background:#eaf2ff; color:#2869e6; font-size:10px;
+}
+.commercial-meta-table-wrap { border:1px solid #dfe7f1; border-radius:11px; overflow:hidden; background:#fff; }
+.commercial-meta-table-head,
+.commercial-meta-row {
+  display:grid;
+  grid-template-columns:100px minmax(180px,1fr) 100px 95px 110px;
+  gap:10px;
+  align-items:center;
+}
+.commercial-meta-table-head {
+  padding:9px 10px;
+  background:#f2f6fb;
+  color:#73819a;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+.commercial-meta-table-body { max-height:330px; overflow:auto; }
+.commercial-meta-row {
+  width:100%;
+  box-sizing:border-box;
+  padding:9px 10px;
+  margin:0 !important;
+  border-bottom:1px solid #edf1f5;
+  cursor:pointer;
+  color:#273953 !important;
+  font-size:11px !important;
+  font-weight:600 !important;
+  transition:background .15s ease;
+}
+.commercial-meta-row:hover { background:#f8fbff; }
+.commercial-meta-row.selected { background:#edf5ff; }
+.commercial-meta-selector { display:flex; align-items:center; gap:7px; }
+.commercial-meta-selector input { position:absolute; opacity:0; width:1px !important; height:1px !important; pointer-events:none; }
+.commercial-meta-checkmark {
+  width:19px; height:19px; display:flex; align-items:center; justify-content:center;
+  border:1.5px solid #b9c6d8; border-radius:5px; background:#fff; color:#fff; font-size:12px; font-weight:900;
+}
+.commercial-meta-row.selected .commercial-meta-checkmark { background:#2869e6; border-color:#2869e6; }
+.commercial-meta-person { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.commercial-meta-person b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#1e2f49; }
+.commercial-meta-person small { color:#96a2b4; font-size:9px; font-weight:600; }
+.commercial-meta-number,.commercial-meta-discount,.commercial-meta-adjusted { font-weight:900; }
+.commercial-meta-number { color:#344d72; }
+.commercial-meta-discount { color:#df3650; }
+.commercial-meta-adjusted { color:#1769e8; }
+.commercial-meta-selection-footer {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin-top:10px; padding:11px 12px; background:#f7faff; border:1px solid #dfe9f6; border-radius:10px;
+  color:#64748b; font-size:11px;
+}
+.commercial-meta-selection-footer strong { color:#1769e8; font-size:15px; }
+.commercial-meta-selection-footer span { margin-left:5px; }
+.commercial-meta-selection-footer .commercial-save-btn { width:auto; min-width:190px; margin:0; }
+@media (max-width:900px) {
+  .commercial-meta-commandbar { grid-template-columns:1fr; }
+  .commercial-meta-actions { justify-content:flex-start; }
+  .commercial-meta-helpbox { grid-template-columns:1fr 1fr; }
+  .commercial-meta-table-head,.commercial-meta-row { grid-template-columns:80px minmax(150px,1fr) 75px 75px 85px; }
+  .commercial-meta-selection-footer { flex-direction:column; align-items:stretch; }
+  .commercial-meta-selection-footer .commercial-save-btn { width:100%; }
+}
+
+/* =========================================================
+   ADMINISTRACIÓN — ACORDEÓN DE USUARIOS
+   Evita que una lista larga de usuarios empuje las metas
+   comerciales hacia abajo. Los usuarios se muestran solo
+   cuando el administrador decide abrir el panel.
+========================================================= */
+.administration-card-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.users-toggle-btn {
+  border: 1px solid #d7e2f0;
+  background: #f7faff;
+  color: #245fd1;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  transition: .2s ease;
+}
+
+.users-toggle-btn:hover,
+.users-toggle-btn.open {
+  background: #eaf2ff;
+  border-color: #9bbcff;
+  transform: translateY(-1px);
+}
+
+.administration-card .users-table {
+  margin-top: 4px;
+  border-top: 1px solid #e8eef6;
+  padding-top: 16px;
+}
+
+@media (max-width: 700px) {
+  .administration-card-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .users-toggle-btn {
+    flex: 1;
+  }
+}
+
+/* =========================================================
+   CONTROL COMERCIAL — LAYOUT ESTABLE
+   Evita saltos de altura al seleccionar un asesor/venta.
+========================================================= */
+.commercial-admin-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.commercial-admin-card {
+  min-width: 0;
+}
+
+.commercial-meta-table-wrap {
+  min-height: 0;
+}
+
+.commercial-meta-table-body {
+  height: 300px;
+  max-height: 300px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+
+.commercial-meta-selection-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+
+/* El formulario de caída no debe empujar toda la página al cambiar de asesor. */
+.commercial-admin-grid > .commercial-admin-card:nth-child(2) {
+  align-self: start;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.commercial-admin-grid > .commercial-admin-card:nth-child(2)::-webkit-scrollbar {
+  width: 6px;
+}
+.commercial-admin-grid > .commercial-admin-card:nth-child(2)::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 99px;
+}
+
+.commercial-sale-preview {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-height: 0;
+}
+
+.commercial-sale-preview strong {
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .commercial-admin-grid {
+    grid-template-columns: 1fr;
+  }
+  .commercial-admin-grid > .commercial-admin-card:nth-child(2) {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+/* =========================================================
+   CORRECCIÓN DEFINITIVA DEL FLUJO DE ADMINISTRACIÓN
+   La página completa hace scroll. Ninguna tarjeta comercial
+   debe quedarse pegada, crecer artificialmente o crear un
+   espacio vacío debajo del contenido.
+========================================================= */
+.administration-main {
+  display: block !important;
+  flex: 1 1 auto !important;
+  width: auto;
+  min-width: 0;
+  height: 100vh !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
+}
+
+.administration-main > .administration-page {
+  display: block !important;
+  width: 100%;
+  min-height: max-content !important;
+  height: auto !important;
+  box-sizing: border-box;
+}
+
+/* La tarjeta de descuento vuelve al flujo normal. */
+.commercial-admin-grid > .commercial-admin-card:nth-child(2) {
+  position: static !important;
+  top: auto !important;
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+  align-self: start !important;
+}
+
+/* Evita que el selector de asesores aumente la altura de toda la página. */
+.commercial-meta-table-body {
+  height: 300px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* El resumen de metas también tiene su propio límite. */
+.commercial-meta-summary {
+  max-height: 150px !important;
+  overflow-y: auto !important;
+}
+
+/* El panel de novedades nunca fuerza un ancho mayor que la pantalla. */
+.commercial-admin-section,
+.commercial-admin-grid,
+.commercial-admin-card,
+.commercial-novelties-card {
+  min-width: 0 !important;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  .administration-main {
+    height: 100vh !important;
+    overflow-y: auto !important;
+  }
+
+  .administration-page {
+    padding: 18px 14px 40px !important;
+  }
+
+  .commercial-admin-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+  }
+
+  .commercial-admin-grid > .commercial-admin-card:nth-child(2) {
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
+
+/* =========================================================
+   FIX FINAL — FLUJO REAL DE METAS Y NOVEDADES
+   Evita que al marcar un asesor el contenido quede arriba
+   con un espacio vacío gigante debajo.
+========================================================= */
+.administration-main {
+  height: 100% !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  display: block !important;
+  align-self: stretch !important;
+}
+
+.administration-page {
+  height: auto !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  overflow: visible !important;
+  display: block !important;
+  padding-bottom: 50px !important;
+}
+
+.commercial-admin-section {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  position: relative !important;
+}
+
+.commercial-admin-grid {
+  display: grid !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  align-items: start !important;
+}
+
+.commercial-admin-card {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+.commercial-meta-selection-footer {
+  position: static !important;
+  bottom: auto !important;
+}
+
+.commercial-novelties-card {
+  display: block !important;
+  position: static !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  clear: both !important;
+}
+
+.commercial-novelties-table {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+}
+
+
+/* =========================================================
+   FIX 4 — SCROLL REAL DE ADMINISTRACIÓN
+   El panel principal debe ser el único contenedor vertical
+   con scroll. Se elimina cualquier altura heredada que pueda
+   bloquear la rueda del mouse.
+========================================================= */
+html, body, #root {
+  height: 100%;
+  min-height: 0;
+}
+
+.administration-main {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-gutter: stable;
+  display: block !important;
+  position: relative !important;
+}
+
+.administration-main > .administration-page {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: visible !important;
+  padding-bottom: 70px !important;
+}
+
+/* El listado interno sí conserva su propio scroll. */
+.administration-main .commercial-meta-table-body {
+  height: 300px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Nada dentro del bloque comercial puede capturar el scroll de toda la página. */
+.administration-main .commercial-admin-section,
+.administration-main .commercial-admin-grid,
+.administration-main .commercial-admin-card,
+.administration-main .commercial-novelties-card {
+  max-height: none !important;
+}
+
+@media (max-width: 900px) {
+  .administration-main {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: scroll !important;
+  }
+}
+
+
+/* =========================================================
+   FIX 6 — SELECCIÓN DE ASESORES SIN SALTO DE PÁGINA
+   La fila ya no usa <label> para evitar que el foco del
+   checkbox provoque desplazamientos inesperados.
+========================================================= */
+.commercial-meta-table-body {
+  position: relative !important;
+  min-height: 0 !important;
+  height: 300px !important;
+  max-height: 300px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+}
+
+.commercial-meta-row {
+  cursor: pointer !important;
+  user-select: none;
+}
+
+.commercial-meta-row:focus {
+  outline: none !important;
+}
+
+.commercial-meta-check-button {
+  width: 19px !important;
+  height: 19px !important;
+  min-width: 19px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: 1.5px solid #b9c6d8 !important;
+  border-radius: 5px !important;
+  background: #fff !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.commercial-meta-check-button.checked {
+  background: #2869e6 !important;
+  border-color: #2869e6 !important;
+}
+
+/* Nunca reservar una pantalla adicional debajo del contenido. */
+.app-shell.app-shell-admin .administration-page {
+  min-height: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  padding-bottom: 35px !important;
+}
+
+.app-shell.app-shell-admin .administration-main {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* =========================================================
+   CONTROL COMERCIAL — cabecera y colapso profesional
+========================================================= */
+.commercial-admin-period { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.commercial-collapse-btn { height:38px; border:1px solid #d9e3ef; border-radius:10px; background:#fff; color:#285fca; padding:0 12px; font-weight:800; cursor:pointer; }
+.commercial-collapse-btn:hover { background:#f5f8fd; }
+.commercial-admin-section { scroll-margin-top:20px; }
+
+.commercial-overview-cards { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0 0 14px; }
+.commercial-overview-cards > div { background:#fff; border:1px solid #e2e9f2; border-radius:14px; padding:14px 16px; box-shadow:0 5px 18px rgba(20,48,88,.04); }
+.commercial-overview-cards span { display:block; color:#7a8aa1; font-size:9px; font-weight:900; letter-spacing:.5px; }
+.commercial-overview-cards strong { display:block; color:#17233a; font-size:25px; line-height:1.1; margin-top:6px; }
+.commercial-overview-cards small { display:block; color:#98a4b5; font-size:9px; margin-top:3px; }
+@media(max-width:900px){.commercial-overview-cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.commercial-overview-cards{grid-template-columns:1fr}}
+
+/* =========================================================
+   META OFICIAL CLARO
+========================================================= */
+.commercial-claro-target-card {
+  margin: 14px 0 16px;
+  padding: 18px;
+  border: 1px solid #dce8fb;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f7fbff 0%, #ffffff 60%, #f3f8ff 100%);
+  box-shadow: 0 8px 24px rgba(38, 86, 160, .06);
+}
+.commercial-claro-target-card h3 { margin: 4px 0 5px; font-size: 17px; color:#17233a; }
+.commercial-claro-target-card p { margin:0; color:#7b899d; font-size:11px; max-width:720px; line-height:1.5; }
+.commercial-claro-target-controls {
+  margin-top: 15px;
+  display: flex;
+  align-items: end;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.commercial-claro-target-controls label { display:flex; flex-direction:column; gap:5px; font-size:10px; font-weight:800; color:#617087; }
+.commercial-target-input-wrap { display:flex; align-items:center; gap:8px; }
+.commercial-target-input-wrap input { width:130px; border:1px solid #d7e0ed; border-radius:9px; padding:10px 11px; font-weight:800; font-size:14px; outline:none; }
+.commercial-target-input-wrap input:focus { border-color:#4d82ee; box-shadow:0 0 0 3px rgba(77,130,238,.1); }
+.commercial-target-input-wrap span { color:#7d8ba0; font-size:10px; }
+.commercial-claro-target-summary { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+.commercial-claro-target-summary div { padding:10px 12px; background:#fff; border:1px solid #e7edf5; border-radius:10px; }
+.commercial-claro-target-summary span { display:block; color:#8794a8; font-size:9px; }
+.commercial-claro-target-summary b { display:block; margin-top:3px; color:#17233a; font-size:15px; }
+@media(max-width:700px){ .commercial-claro-target-summary{grid-template-columns:1fr;} }

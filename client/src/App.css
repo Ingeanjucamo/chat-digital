@@ -1463,3 +1463,60 @@ select:focus-visible {
   background: #f1e9b6 !important;
   transition: background 0.1s ease;
 }
+/* =========================================================
+   ADMINISTRACIÓN — LAYOUT Y SCROLL
+   Sidebar fija + contenido central desplazable.
+========================================================= */
+.app-shell.app-shell-admin {
+  height: 100vh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: stretch !important;
+}
+.app-shell.app-shell-admin .app-sidebar {
+  flex: 0 0 252px !important;
+  width: 252px !important;
+  height: 100vh !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+.app-shell.app-shell-admin .administration-main {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  display: block !important;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.app-shell.app-shell-admin .administration-main > .administration-page {
+  height: auto !important;
+  min-height: max-content !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+@media (max-width: 900px) {
+  .app-shell.app-shell-admin {
+    height: 100vh !important;
+    overflow: hidden !important;
+    flex-direction: column !important;
+  }
+  .app-shell.app-shell-admin .app-sidebar {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  .app-shell.app-shell-admin .administration-main {
+    width: 100% !important;
+    height: calc(100vh - 80px) !important;
+    max-height: calc(100vh - 80px) !important;
+  }
+}
+
+/* Pantallas de gestión: un solo scroll vertical, sin huecos artificiales. */
+.dashboard-main-scroll { min-height: 0 !important; height: 100vh !important; overflow-y: auto !important; overflow-x: hidden !important; }

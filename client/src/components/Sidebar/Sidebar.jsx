@@ -8,6 +8,8 @@ function Sidebar({
   abrirInformacion,
   abrirConversaciones,
   abrirAdministracion,
+  abrirVentas,
+  abrirDashboard,
   cerrarSesion,
   estilos,
 }) {
@@ -72,6 +74,27 @@ function Sidebar({
         className="main-menu"
         style={estilos.menu}
       >
+
+        {/* DASHBOARD */}
+
+        <button
+          className="menu-item"
+          style={{
+            ...estilos.menuBoton,
+            ...(seccion === "dashboard"
+              ? estilos.menuActivo
+              : {}),
+          }}
+          onClick={abrirDashboard}
+        >
+          <span>📈</span>
+
+          <span style={{ flex: 1 }}>
+            Dashboard
+          </span>
+        </button>
+
+
         {/* INFORMACIÓN */}
 
         <button
@@ -96,6 +119,7 @@ function Sidebar({
             </span>
           )}
         </button>
+
 
         {/* CONVERSACIONES */}
 
@@ -122,6 +146,27 @@ function Sidebar({
           )}
         </button>
 
+
+        {/* VENTAS */}
+
+        <button
+          className="menu-item"
+          style={{
+            ...estilos.menuBoton,
+            ...(seccion === "ventas"
+              ? estilos.menuActivo
+              : {}),
+          }}
+          onClick={abrirVentas}
+        >
+          <span>📊</span>
+
+          <span style={{ flex: 1 }}>
+            Ventas
+          </span>
+        </button>
+
+
         {/* ADMINISTRACIÓN */}
 
         {usuario.rol === "Administrador" &&
@@ -138,10 +183,14 @@ function Sidebar({
               onClick={abrirAdministracion}
             >
               <span>⚙️</span>
-              <span>Administración</span>
+
+              <span>
+                Administración
+              </span>
             </button>
           )}
       </div>
+
 
       {/* PARTE INFERIOR */}
 
@@ -151,6 +200,7 @@ function Sidebar({
           paddingTop: 12,
         }}
       >
+
         {/* CERRAR SESIÓN */}
 
         <button
@@ -158,9 +208,15 @@ function Sidebar({
           style={estilos.botonCerrar}
           onClick={cerrarSesion}
         >
-          <span style={{ fontSize: 16 }}>🚪</span>
-          <span>Cerrar sesión</span>
+          <span style={{ fontSize: 16 }}>
+            🚪
+          </span>
+
+          <span>
+            Cerrar sesión
+          </span>
         </button>
+
 
         {/* FIRMA */}
 
@@ -168,14 +224,16 @@ function Sidebar({
           className="sidebar-credit"
           style={{
             display: "flex",
-           alignItems: "flex-start",
-justifyContent: "center",
-gap: 15,
+            alignItems: "flex-start",
+            justifyContent: "center",
+            gap: 15,
             marginTop: 10,
             padding: "12px 8px 4px",
-            borderTop: "1px solid rgba(255,255,255,0.08)",
+            borderTop:
+              "1px solid rgba(255,255,255,0.08)",
           }}
         >
+
           <div
             style={{
               color: "#b9d2ff",
@@ -197,9 +255,11 @@ gap: 15,
               lineHeight: 1.3,
             }}
           >
+
             <div
               style={{
-                color: "rgba(255,255,255,0.88)",
+                color:
+                  "rgba(255,255,255,0.88)",
                 fontSize: 12,
                 fontWeight: 600,
                 whiteSpace: "nowrap",
@@ -211,15 +271,18 @@ gap: 15,
             <div
               style={{
                 marginTop: 5,
-                color: "rgba(255,255,255,0.48)",
+                color:
+                  "rgba(255,255,255,0.48)",
                 fontSize: 10,
                 whiteSpace: "nowrap",
               }}
             >
               Diseño y desarrollo
             </div>
+
           </div>
         </div>
+
       </div>
     </aside>
   );
