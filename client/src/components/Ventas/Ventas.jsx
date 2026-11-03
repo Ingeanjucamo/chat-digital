@@ -124,6 +124,9 @@ const HOGAR_COLUMNS = [
 
 const initialForm = {
 
+  tipo_cargue: "NORMAL",
+  fecha_real_venta: "",
+
   // Comunes
 
   tipo_cedula: "",
@@ -876,6 +879,8 @@ function prepararCorreccion(venta) {
 
       ...initialForm,
 
+      tipo_cargue: venta.tipo_cargue || "NORMAL",
+      fecha_real_venta: venta.tipo_cargue === "FIN_SEMANA" ? String(venta.fecha_llamada || "").slice(0, 10) : "",
       tipo_cedula: venta.tipo_cedula || "C.C",
 
       sala: venta.sala || "SALA 1",
@@ -1874,11 +1879,14 @@ function prepararCorreccion(venta) {
   async function devolverParaCorreccion(venta) {
     if (!puedeRevisar) return;
 
-    const observacion = revision.trim();
-    if (!observacion) {
+    const detalleCorreccion = revision.trim();
+    if (!detalleCorreccion) {
       setError("Para devolver una venta a corrección debes indicar qué debe corregir el asesor.");
       return;
     }
+
+    // El supervisor solo describe qué debe corregir. El asesor selecciona el tipo de cargue al editar.
+    const observacion = detalleCorreccion;
 
     try {
       // Primero cambiamos el estado para que las políticas de Storage permitan retirar los soportes.
@@ -2143,21 +2151,19 @@ function prepararCorreccion(venta) {
 
           
 
-          {!ventaEditando && (
-            <div className="venta-grid">
-              <Field label="Tipo de cargue" required>
-                <select value={form.tipo_cargue} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
-                  <option value="NORMAL">Hoy</option>
-                  <option value="FIN_SEMANA">FIN DE SEMANA</option>
-                </select>
+          <div className="venta-grid">
+            <Field label="Tipo de cargue" required>
+              <select value={form.tipo_cargue || "NORMAL"} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
+                <option value="NORMAL">Hoy</option>
+                <option value="FIN_SEMANA">FIN DE SEMANA</option>
+              </select>
+            </Field>
+            {form.tipo_cargue === "FIN_SEMANA" && (
+              <Field label="Fecha real de la venta (sábado, domingo o festivo)" required>
+                <input type="date" value={form.fecha_real_venta || ""} onChange={(e) => actualizarCampo("fecha_real_venta", e.target.value)} />
               </Field>
-              {form.tipo_cargue === "FIN_SEMANA" && (
-                <Field label="Fecha real de la venta (sábado, domingo o festivo)" required>
-                  <input type="date" value={form.fecha_real_venta} onChange={(e) => actualizarCampo("fecha_real_venta", e.target.value)} />
-                </Field>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 <div className="venta-grid">
 
             <Field label="Tipo de cédula" required>
@@ -2414,21 +2420,19 @@ function prepararCorreccion(venta) {
 
           
 
-          {!ventaEditando && (
-            <div className="venta-grid">
-              <Field label="Tipo de cargue" required>
-                <select value={form.tipo_cargue} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
-                  <option value="NORMAL">Hoy</option>
-                  <option value="FIN_SEMANA">FIN DE SEMANA</option>
-                </select>
+          <div className="venta-grid">
+            <Field label="Tipo de cargue" required>
+              <select value={form.tipo_cargue || "NORMAL"} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
+                <option value="NORMAL">Hoy</option>
+                <option value="FIN_DE_SEMANA">FIN DE SEMANA</option>
+              </select>
+            </Field>
+            {form.tipo_cargue === "FIN_DE_SEMANA" && (
+              <Field label="Fecha real de la venta (sábado, domingo o festivo)" required>
+                <input type="date" value={form.fecha_real_venta || ""} onChange={(e) => actualizarCampo("fecha_real_venta", e.target.value)} />
               </Field>
-              {form.tipo_cargue === "FIN_SEMANA" && (
-                <Field label="Fecha real de la venta (sábado, domingo o festivo)" required>
-                  <input type="date" value={form.fecha_real_venta} onChange={(e) => actualizarCampo("fecha_real_venta", e.target.value)} />
-                </Field>
-              )}
-            </div>
-          )}
+            )}
+          </div>
 <div className="venta-grid">
 
             <Field label="Tipo de cédula" required>
@@ -2763,7 +2767,7 @@ function prepararCorreccion(venta) {
                         {v.tipo_cargue === "FIN_SEMANA" ? (
                           <span style={{ display: "inline-block", padding: "4px 9px", borderRadius: "999px", background: "#fff1d6", color: "#92400e", fontWeight: 700, fontSize: "12px" }}>FIN DE SEMANA</span>
                         ) : (
-                          <span style={{ display: "inline-block", padding: "4px 9px", borderRadius: "999px", background: "#e8f5e9", color: "#166534", fontWeight: 700, fontSize: "12px" }}>Hoy</span>
+                          <span style={{ display: "inline-block", padding: "4px 9px", borderRadius: "999px", background: "#e8f5e9", color: "#166534", fontWeight: 700, fontSize: "12px" }}>NORMAL</span>
                         )}
                       </td>
 
