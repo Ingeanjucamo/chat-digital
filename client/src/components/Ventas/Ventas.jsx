@@ -275,6 +275,7 @@ function Ventas({ usuario }) {
   const [revision, setRevision] = useState("");
 
   const [soportesRevision, setSoportesRevision] = useState([]);
+  const [soportesExistentesCorreccion, setSoportesExistentesCorreccion] = useState({});
 
   const [cargandoSoportes, setCargandoSoportes] = useState(false);
 
@@ -614,20 +615,21 @@ function Ventas({ usuario }) {
       return 'Selecciona la fecha real de la venta de fin de semana.';
     }
 
+    const tipoSoportePorCampo = {
+      rectificacion_plan: "RECTIFICACION_PLAN",
+      validacion_imagen: "VALIDACION",
+      habeas_data: "HABEAS_DATA",
+    };
+
     for (const [campo, nombre] of obligatorios) {
-
+      const esSoporte = Boolean(tipoSoportePorCampo[campo]);
+      const yaExisteSoporte = esSoporte && Boolean(soportesExistentesCorreccion[tipoSoportePorCampo[campo]]);
       if (
-
-        !form[campo] ||
-
+        (!form[campo] && !(ventaEditando && yaExisteSoporte)) ||
         (typeof form[campo] === "string" && !form[campo].trim())
-
       ) {
-
         return `El campo "${nombre}" es obligatorio.`;
-
       }
-
     }
 
 
@@ -863,13 +865,36 @@ function Ventas({ usuario }) {
     if (mensajeError) throw mensajeError;
   }
 
-function prepararCorreccion(venta) {
+async function prepararCorreccion(venta) {
 
     setError("");
 
+    setSoportesExistentesCorreccion({});
     setVentaSeleccionada(null);
 
     setVentaEditando(venta);
+
+    try {
+      const { data: supports, error: supportsError } = await supabase
+        .from("venta_soportes")
+        .select("tipo, nombre_archivo, ruta_storage")
+        .eq("venta_id", venta.id);
+      if (supportsError) throw supportsError;
+      const existentes = {};
+      for (const soporte of supports || []) {
+        const { data: signed, error: signedError } = await supabase.storage
+          .from("venta-soportes")
+          .createSignedUrl(soporte.ruta_storage, 60 * 60);
+        existentes[soporte.tipo] = {
+          nombre: soporte.nombre_archivo,
+          url: signedError ? null : signed?.signedUrl || null,
+        };
+      }
+      setSoportesExistentesCorreccion(existentes);
+    } catch (supportsErr) {
+      console.error("No se pudieron cargar los soportes existentes:", supportsErr);
+      setError("No se pudieron recuperar los soportes existentes. Si persiste, revisa permisos de Supabase Storage.");
+    }
 
     setTipoProducto(venta.producto || "MOVIL");
 
@@ -1079,6 +1104,10 @@ function prepararCorreccion(venta) {
 
                 tipo_validacion: form.tipo_validacion,
 
+                tipo_cargue: form.tipo_cargue || "NORMAL",
+
+                fecha_llamada: (form.tipo_cargue === "FIN_SEMANA" && form.fecha_real_venta) ? form.fecha_real_venta : new Date().toISOString().slice(0, 10),
+
                 departamento: form.departamento.trim(),
 
                 cantidad_servicios: form.cantidad_servicios,
@@ -1171,6 +1200,10 @@ function prepararCorreccion(venta) {
 
                 tipo_validacion: form.tipo_validacion,
 
+                tipo_cargue: form.tipo_cargue || "NORMAL",
+
+                fecha_llamada: (form.tipo_cargue === "FIN_SEMANA" && form.fecha_real_venta) ? form.fecha_real_venta : new Date().toISOString().slice(0, 10),
+
                 codigo_plan: form.codigo_plan.trim(),
 
                 id_descuento_oferta: form.id_descuento_oferta.trim(),
@@ -1197,13 +1230,11 @@ function prepararCorreccion(venta) {
 
 
 
-        // Al corregir, los soportes anteriores ya no deben reutilizarse.
-        // El asesor debe cargar nuevamente las evidencias.
-        await eliminarTodosLosSoportes(ventaEditando.id);
-        await subirSoporte(ventaEditando.id, form.rectificacion_plan, "RECTIFICACION_PLAN");
-        await subirSoporte(ventaEditando.id, form.validacion_imagen, "VALIDACION");
-        await subirSoporte(ventaEditando.id, form.habeas_data, "HABEAS_DATA");
-        await subirSoporte(ventaEditando.id, form.habeas_data_2, "HABEAS_DATA_2");
+        // Conserva los soportes existentes. Solo reemplaza los que el asesor seleccionó de nuevo.
+        await reemplazarSoporteSiSeSelecciono(ventaEditando.id, form.rectificacion_plan, "RECTIFICACION_PLAN");
+        await reemplazarSoporteSiSeSelecciono(ventaEditando.id, form.validacion_imagen, "VALIDACION");
+        await reemplazarSoporteSiSeSelecciono(ventaEditando.id, form.habeas_data, "HABEAS_DATA");
+        await reemplazarSoporteSiSeSelecciono(ventaEditando.id, form.habeas_data_2, "HABEAS_DATA_2");
 
         const { error: updateError } = await supabase
 
@@ -1889,7 +1920,8 @@ function prepararCorreccion(venta) {
     const observacion = detalleCorreccion;
 
     try {
-      // Primero cambiamos el estado para que las políticas de Storage permitan retirar los soportes.
+      // El supervisor solo cambia el estado y registra la observación.
+      // Los soportes existentes se conservan para que el asesor no tenga que volver a cargarlos.
       const { error: updateError } = await supabase
         .from("ventas")
         .update({
@@ -1899,9 +1931,6 @@ function prepararCorreccion(venta) {
         .eq("id", venta.id);
 
       if (updateError) throw updateError;
-
-      // Eliminamos todos los soportes anteriores. El asesor deberá cargarlos nuevamente.
-      await eliminarTodosLosSoportes(venta.id);
 
       const { error: historialError } = await supabase
         .from("venta_revisiones")
@@ -2078,13 +2107,35 @@ function prepararCorreccion(venta) {
         />
 
         {form[campo] && (
-
+          <div className="venta-file-name">📎 {form[campo].name} (nuevo; reemplazará el soporte anterior)</div>
+        )}
+        {ventaEditando && !form[campo] && soportesExistentesCorreccion[({
+          rectificacion_plan: "RECTIFICACION_PLAN",
+          validacion_imagen: "VALIDACION",
+          habeas_data: "HABEAS_DATA",
+          habeas_data_2: "HABEAS_DATA_2",
+        })[campo]] && (
           <div className="venta-file-name">
-
-            📎 {form[campo].name}
-
+            📎 Soporte existente: {soportesExistentesCorreccion[({
+              rectificacion_plan: "RECTIFICACION_PLAN",
+              validacion_imagen: "VALIDACION",
+              habeas_data: "HABEAS_DATA",
+              habeas_data_2: "HABEAS_DATA_2",
+            })[campo]].nombre}
+            {soportesExistentesCorreccion[({
+              rectificacion_plan: "RECTIFICACION_PLAN",
+              validacion_imagen: "VALIDACION",
+              habeas_data: "HABEAS_DATA",
+              habeas_data_2: "HABEAS_DATA_2",
+            })[campo]].url && (
+              <a href={soportesExistentesCorreccion[({
+                rectificacion_plan: "RECTIFICACION_PLAN",
+                validacion_imagen: "VALIDACION",
+                habeas_data: "HABEAS_DATA",
+                habeas_data_2: "HABEAS_DATA_2",
+              })[campo]].url} target="_blank" rel="noreferrer"> Ver imagen</a>
+            )}
           </div>
-
         )}
 
       </div>
@@ -2135,7 +2186,7 @@ function prepararCorreccion(venta) {
 
               <strong>🏠 {ventaEditando ? `Corregir venta Hogar #${ventaEditando.id}` : "Datos de la venta Hogar"}</strong>
 
-              <span>{ventaEditando ? "Corrige los datos indicados por el supervisor. Los soportes existentes se conservan; si seleccionas uno nuevo, reemplazará el anterior." : "Los asesores deben diligenciar todos los campos. Habeas Data 2 queda opcional."}</span>
+              <span>{ventaEditando ? "Corrige los datos indicados por el supervisor. Los soportes existentes se conservan; solo adjunta imágenes nuevas si necesitas reemplazarlas." : "Los asesores deben diligenciar todos los campos. Habeas Data 2 queda opcional."}</span>
 
             </div>
 
@@ -2264,7 +2315,7 @@ function prepararCorreccion(venta) {
 
             <h2>📷 Soportes UMG</h2>
 
-            <p>{ventaEditando ? "Al corregir debes cargar nuevamente las evidencias. Los soportes anteriores fueron eliminados al devolver la venta." : "Se mantienen los mismos soportes del flujo de ventas. Habeas Data 2 queda opcional."}</p>
+            <p>{ventaEditando ? "Los soportes anteriores se conservan. No necesitas volver a subirlos; si seleccionas una imagen nueva, reemplazará solo ese soporte." : "Se mantienen los mismos soportes del flujo de ventas. Habeas Data 2 queda opcional."}</p>
 
             <div className="venta-files-grid">
 
@@ -2404,7 +2455,7 @@ function prepararCorreccion(venta) {
 
               <strong>📱 {ventaEditando ? `Corregir venta #${ventaEditando.id}` : "Nueva venta Móvil"}</strong>
 
-              <span>{ventaEditando ? "Corrige los datos indicados por el supervisor. Los soportes existentes se conservan; si seleccionas uno nuevo, reemplazará el anterior." : "Todos los campos son obligatorios excepto Habeas Data 2."}</span>
+              <span>{ventaEditando ? "Corrige los datos indicados por el supervisor. Los soportes existentes se conservan; solo adjunta imágenes nuevas si necesitas reemplazarlas." : "Todos los campos son obligatorios excepto Habeas Data 2."}</span>
 
             </div>
 
@@ -2424,10 +2475,10 @@ function prepararCorreccion(venta) {
             <Field label="Tipo de cargue" required>
               <select value={form.tipo_cargue || "NORMAL"} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
                 <option value="NORMAL">Hoy</option>
-                <option value="FIN_DE_SEMANA">FIN DE SEMANA</option>
+                <option value="FIN_SEMANA">FIN DE SEMANA</option>
               </select>
             </Field>
-            {form.tipo_cargue === "FIN_DE_SEMANA" && (
+            {form.tipo_cargue === "FIN_SEMANA" && (
               <Field label="Fecha real de la venta (sábado, domingo o festivo)" required>
                 <input type="date" value={form.fecha_real_venta || ""} onChange={(e) => actualizarCampo("fecha_real_venta", e.target.value)} />
               </Field>
@@ -2553,7 +2604,7 @@ function prepararCorreccion(venta) {
 
             <h2>📷 Soportes UMG</h2>
 
-            <p>{ventaEditando ? "Al corregir debes cargar nuevamente las evidencias. Los soportes anteriores fueron eliminados al devolver la venta." : "Sube las evidencias de la venta. Habeas Data 2 es opcional."}</p>
+            <p>{ventaEditando ? "Los soportes anteriores se conservan. No necesitas volver a subirlos; si seleccionas una imagen nueva, reemplazará solo ese soporte." : "Sube las evidencias de la venta. Habeas Data 2 es opcional."}</p>
 
             <div className="venta-files-grid">
 

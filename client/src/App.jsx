@@ -200,56 +200,216 @@ useEffect(() => {
   return () => { cancelado = true; };
 }, [usuario, seccion, usuarioChat, miChat, usuarios]);
 
-async function enviarMensaje(e) {
+ async function enviarMensaje(e) {
   e.preventDefault();
-  const mensajeTexto = texto.trim();
 
-  if (!mensajeTexto || !usuario) return;
+  const mensajeTexto = texto
+  .replace(/\r\n/g, "\n")
+  .replace(/\r/g, "\n")
+  .trim();
 
-  if (seccion === "informacion" && usuario.rol !== "Administrador") {
-    alert("Solo los administradores pueden publicar información.");
+  if (
+    (!mensajeTexto && !archivoSeleccionado) ||
+    !usuario
+  ) {
     return;
   }
 
-  if (seccion === "privado" && !usuarioChat) {
-    alert("Selecciona un contacto primero.");
+if (archivoSeleccionado) {
+  const esImagen =
+    archivoSeleccionado.type?.startsWith("image/");
+
+  const puedeEnviarImagenPrivada =
+  seccion === "privado" &&
+  (miChat || (usuarioChat && (
+    Number(usuarioChat.id) === Number(usuario.id) ||
+    usuarioChat.rol !== usuario.rol
+  ))) &&
+  esImagen;
+
+  const puedeEnviarArchivoInformacion =
+    seccion === "informacion" &&
+    usuario.rol === "Administrador";
+
+  if (
+    !puedeEnviarImagenPrivada &&
+    !puedeEnviarArchivoInformacion
+  ) {
+    alert(
+      "En chats privados solo se pueden enviar imágenes entre Asesor y Administrador."
+    );
     return;
   }
+}
+
+  if (
+    seccion === "informacion" &&
+    usuario.rol !== "Administrador"
+  ) {
+    alert(
+      "Solo los administradores pueden publicar información."
+    );
+    return;
+  }
+
+  if (
+  seccion === "privado" &&
+  !usuarioChat
+) {
+  alert("Selecciona un contacto primero.");
+  return;
+}
 
   try {
-    const nuevoMensaje = {
-      emisor_id: usuario.id,
-      texto: mensajeTexto,
-      receptor_id: seccion === "privado" ? usuarioChat.id : null,
-      grupo: seccion === "informacion" ? "informacion" : null,
-    };
+    const { data: { user: authUser } } =
+  await supabase.auth.getUser();
+
+console.log("AUTH USER:", authUser);
+console.log("AUTH UID:", authUser?.id);
+console.log("USUARIO APP:", usuario);
+
+    let archivoData = null;
+
+    /* =================================================
+       SUBIR ARCHIVO A SUPABASE STORAGE
+    ================================================= */
+
+    if (archivoSeleccionado) {
+      setSubiendoArchivo(true);
+
+      const nombreArchivo =
+        `${usuario.id}_${Date.now()}_${archivoSeleccionado.name}`
+          .replace(/\s+/g, "_");
+
+      const rutaArchivo =
+        `mensajes/${nombreArchivo}`;
+
+      const { error: errorArchivo } =
+        await supabase.storage
+          .from("archivos")
+          .upload(
+            rutaArchivo,
+            archivoSeleccionado
+          );
+
+      if (errorArchivo) {
+        throw errorArchivo;
+      }
+
+      const { data: urlData } =
+        supabase.storage
+          .from("archivos")
+          .getPublicUrl(rutaArchivo);
+
+      archivoData = {
+        nombre: archivoSeleccionado.name,
+        tipo: archivoSeleccionado.type,
+        url: urlData.publicUrl,
+      };
+
+      setSubiendoArchivo(false);
+    }
+
+    /* =================================================
+       PREPARAR MENSAJE
+    ================================================= */
+
+const nuevoMensaje = {
+  emisor_id: usuario.id,
+  texto: mensajeTexto || null,
+  grupo: seccion === "informacion" ? "informacion" : null,
+
+  receptor_id:
+    seccion === "privado"
+      ? (miChat ? usuario.id : usuarioChat.id)
+      : null,
+
+  archivo: archivoData,
+
+  mensaje_respondido_id:
+    mensajeRespondido?.id || null,
+};
+
+    /* =================================================
+       GUARDAR EN SUPABASE
+    ================================================= */
 
     const { data, error } = await supabase
       .from("mensajes")
       .insert(nuevoMensaje)
-      .select("*")
+      .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error(
+        "ERROR SUPABASE AL ENVIAR:",
+        error
+      );
 
-    const mensajeConNombre = {
-      ...data,
-      nombre: usuario.nombre || usuario.usuario || "Usuario",
-    };
+      throw error;
+    }
+
+    // Actualizar posición de la conversación
+if (seccion === "privado" && usuarioChat) {
+  setUltimosMensajesPorUsuario((anteriores) => ({
+    ...anteriores,
+    [usuarioChat.id]: data.created_at,
+  }));
+}
+
+    /* =================================================
+       LIMPIAR
+    ================================================= */
 
     setTexto("");
-    setMensajeRespondido(null);
-    setMensajes((anteriores) => {
-      if (anteriores.some((m) => Number(m.id) === Number(data.id))) {
-        return anteriores;
-      }
-      return [...anteriores, mensajeConNombre];
-    });
+setArchivoSeleccionado(null);
+setMensajeRespondido(null);
+
+    if (archivoInputRef.current) {
+      archivoInputRef.current.value = "";
+    }
+
+    /* =================================================
+       MOSTRAR MENSAJE
+    ================================================= */
+
+setMensajes((anteriores) => {
+  if (
+    anteriores.some(
+      (m) => Number(m.id) === Number(data.id)
+    )
+  ) {
+    return anteriores;
+  }
+
+  return [
+    ...anteriores,
+    {
+      ...data,
+      nombre:
+        usuario.nombre ||
+        usuario.usuario ||
+        "Usuario",
+    },
+  ];
+});
+
   } catch (error) {
-    console.error("Error enviando mensaje:", error);
-    alert(error?.message || "No se pudo enviar el mensaje. Verifica la conexión y los permisos de Supabase.");
+    console.error(
+      "Error enviando mensaje:",
+      error
+    );
+
+    setSubiendoArchivo(false);
+
+    alert(
+      error.message ||
+        "No se pudo enviar el mensaje"
+    );
   }
 }
+
+
 
 async function buscarMensajes() {
   const termino = busqueda.trim();
@@ -739,8 +899,14 @@ const contactos = useMemo(() => {
     const textoBusqueda = busqueda.toLowerCase().trim();
     lista = lista.filter((u) => (u.nombre || "").toLowerCase().includes(textoBusqueda) || (u.usuario || "").toLowerCase().includes(textoBusqueda));
   }
+  // Orden tipo WhatsApp: conversaciones con actividad reciente primero.
+  lista = [...lista].sort((a, b) => {
+    const fechaA = new Date(ultimosMensajesPorUsuario[a.id] || 0).getTime() || 0;
+    const fechaB = new Date(ultimosMensajesPorUsuario[b.id] || 0).getTime() || 0;
+    return fechaB - fechaA;
+  });
   return lista;
-}, [usuarios, usuario, busqueda]);
+}, [usuarios, usuario, busqueda, ultimosMensajesPorUsuario]);
 
 function limpiarFormularioUsuario() {
   setMostrarFormularioUsuario(false);
@@ -898,6 +1064,7 @@ const vistaApp = (() => {
           usuario={usuario}
           seccion={seccion}
           usuarioChat={usuarioChat}
+          miChat={miChat}
           mensajes={mensajes}
           texto={texto}
           setTexto={setTexto}

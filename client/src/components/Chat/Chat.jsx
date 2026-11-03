@@ -5,6 +5,7 @@ function Chat({
   usuario,
   seccion,
   usuarioChat,
+  miChat,
   mensajes,
   texto,
   setTexto,
@@ -115,6 +116,7 @@ function Chat({
   }, [
     seccion,
     usuarioChat,
+    miChat,
     usuario,
     setArchivoSeleccionado,
   ]);
@@ -323,17 +325,17 @@ function Chat({
         className="chat-header"
         style={estilos.chatHeader}
       >
-        {seccion === "privado" && usuarioChat ? (
+        {seccion === "privado" && (usuarioChat || miChat) ? (
           <>
             <div
               className="chat-avatar"
               style={estilos.avatarChat}
             >
-              {usuarioChat.nombre
-                ? usuarioChat.nombre
-                    .charAt(0)
-                    .toUpperCase()
-                : "U"}
+              {miChat
+                ? "📝"
+                : usuarioChat?.nombre
+                  ? usuarioChat.nombre.charAt(0).toUpperCase()
+                  : "U"}
             </div>
 
             <div>
@@ -341,14 +343,14 @@ function Chat({
                 className="chat-name"
                 style={estilos.chatNombre}
               >
-                {usuarioChat.nombre}
+                {miChat ? "Mi chat" : usuarioChat?.nombre}
               </div>
 
               <div
                 className="chat-status"
                 style={estilos.chatEstado}
               >
-                {usuarioChat.rol}
+                {miChat ? "Mis notas personales" : usuarioChat?.rol}
               </div>
             </div>
 
@@ -468,7 +470,7 @@ function Chat({
               {mensajes.length > 0 && mensajesFiltrados.length === 0
                 ? "No se encontraron mensajes"
                 : seccion === "privado"
-                ? usuarioChat
+                ? (usuarioChat || miChat)
                   ? "Nueva conversación"
                   : "Selecciona un contacto"
                 : "Información general"}
@@ -478,7 +480,7 @@ function Chat({
               {mensajes.length > 0 && mensajesFiltrados.length === 0
                 ? "Prueba con otra palabra o limpia la búsqueda."
                 : seccion === "privado"
-                ? usuarioChat
+                ? (usuarioChat || miChat)
                   ? "Envía el primer mensaje."
                   : "Selecciona un asesor o administrador."
                 : "Aquí aparecerán los comunicados."}
