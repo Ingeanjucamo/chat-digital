@@ -484,37 +484,59 @@ async function cargarNotificacionesPendientes(usuarioActual) {
   if (!usuarioActual) return;
 
   try {
-    const { data, error } = await supabase
-  .from("mensajes")
-  .select("id, emisor_id, receptor_id")
-  .eq("receptor_id", usuarioActual.id)
-  .neq("emisor_id", usuarioActual.id)
-  .eq("leido", false);
+    // Reinicio único de las notificaciones antiguas por usuario.
+    const claveInicioNotificaciones = `amv_notificaciones_inicio_${usuarioActual.id}`;
+    let inicioNotificaciones = null;
 
-    if (error) {
-      throw error;
+    try {
+      inicioNotificaciones = window.localStorage.getItem(claveInicioNotificaciones);
+    } catch (_) {}
+
+    if (!inicioNotificaciones) {
+      inicioNotificaciones = new Date().toISOString();
+
+      try {
+        window.localStorage.setItem(claveInicioNotificaciones, inicioNotificaciones);
+      } catch (_) {}
+
+      // Limpiar los mensajes privados que ya estaban pendientes antes del reinicio.
+      const { error: limpiarError } = await supabase
+        .from("mensajes")
+        .update({ leido: true })
+        .eq("receptor_id", usuarioActual.id)
+        .neq("emisor_id", usuarioActual.id)
+        .eq("leido", false)
+        .lt("created_at", inicioNotificaciones);
+
+      if (limpiarError) throw limpiarError;
+
+      setPendientesPorUsuario({});
+      setNotificacionesPrivadas(0);
+      setNotificacionesInfo(0);
+      return;
     }
 
+    // Desde el punto de limpieza solo se cuentan mensajes nuevos aún no leídos.
+    const { data, error } = await supabase
+      .from("mensajes")
+      .select("id, emisor_id, receptor_id")
+      .eq("receptor_id", usuarioActual.id)
+      .neq("emisor_id", usuarioActual.id)
+      .eq("leido", false)
+      .gt("created_at", inicioNotificaciones);
+
+    if (error) throw error;
+
     const pendientes = {};
-
     (data || []).forEach((mensaje) => {
-      if (!pendientes[mensaje.emisor_id]) {
-        pendientes[mensaje.emisor_id] = 0;
-      }
-
-      pendientes[mensaje.emisor_id]++;
+      pendientes[mensaje.emisor_id] = (pendientes[mensaje.emisor_id] || 0) + 1;
     });
 
     setPendientesPorUsuario(pendientes);
-
-    setNotificacionesPrivadas(
-      (data || []).length
-    );
+    setNotificacionesPrivadas((data || []).length);
+    setNotificacionesInfo(0);
   } catch (error) {
-    console.error(
-      "Error cargando notificaciones pendientes:",
-      error
-    );
+    console.error("Error limpiando/cargando notificaciones pendientes:", error);
   }
 }
 
@@ -792,11 +814,37 @@ if (
     setMensajes([]);
   }
 
-  function abrirChatPrivado(contacto) {
+  async function abrirChatPrivado(contacto) {
     setSeccion("privado");
     setMiChat(false);
     setUsuarioChat(contacto);
     setMensajes([]);
+
+    // Abrir el chat marca los mensajes recibidos como leídos y limpia su badge.
+    if (usuario && contacto?.id) {
+      try {
+        const cantidadPendiente = pendientesPorUsuario[contacto.id] || 0;
+        const { error } = await supabase
+          .from("mensajes")
+          .update({ leido: true })
+          .eq("receptor_id", usuario.id)
+          .eq("emisor_id", contacto.id)
+          .eq("leido", false);
+
+        if (error) throw error;
+
+        setPendientesPorUsuario((anteriores) => {
+          const actualizado = { ...anteriores };
+          delete actualizado[contacto.id];
+          return actualizado;
+        });
+        setNotificacionesPrivadas((cantidad) =>
+          Math.max(0, cantidad - cantidadPendiente)
+        );
+      } catch (error) {
+        console.error("No se pudieron marcar los mensajes como leídos:", error);
+      }
+    }
   }
 
   function cerrarSesion() {
