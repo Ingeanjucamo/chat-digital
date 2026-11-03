@@ -126,11 +126,11 @@ const initialForm = {
 
   // Comunes
 
-  tipo_cedula: "C.C",
+  tipo_cedula: "",
 
-  sala: "SALA 1",
+  sala: "",
 
-  origen: "CRM",
+  origen: "",
 
   cedula_cliente: "",
 
@@ -138,7 +138,7 @@ const initialForm = {
 
   ciudad: "",
 
-  tipo_validacion: "POLIEDRO OTP",
+  tipo_validacion: "",
 
 
 
@@ -154,11 +154,11 @@ const initialForm = {
 
   direccion: "",
 
-  sim_adquirida: "SI",
+  sim_adquirida: "",
 
-  tipo_venta: "PORTABILIDAD",
+  tipo_venta: "",
 
-  operador_donante: "TIGO",
+  operador_donante: "",
 
   codigo_plan: "",
 
@@ -168,9 +168,9 @@ const initialForm = {
 
   cfm: "",
 
-  cliente_todo_claro: "SI",
+  cliente_todo_claro: "",
 
-  tipo_contrato: "DIGITAL",
+  tipo_contrato: "",
 
   numero_grabacion: "",
 
@@ -188,19 +188,19 @@ const initialForm = {
 
   cantidad_servicios: "",
 
-  todo_claro: "NO",
+  todo_claro: "",
 
-  telefonia: "NO",
+  telefonia: "",
 
   tv: "NO APLICA",
 
-  internet: "NO",
+  internet: "",
 
   ultra_wifi: "0",
 
   cantidad_decos: "0",
 
-  instalacion: "MAÑANA",
+  instalacion: "",
 
   fecha_instalacion: "",
 
@@ -278,6 +278,8 @@ function Ventas({ usuario }) {
   const [imagenAmpliada, setImagenAmpliada] = useState(null);
 
   const [exportando, setExportando] = useState(false);
+  const [eliminandoVentas, setEliminandoVentas] = useState(false);
+  const [ventasSeleccionadas, setVentasSeleccionadas] = useState([]);
 
   const inputRefs = {
 
@@ -349,6 +351,63 @@ function Ventas({ usuario }) {
       setMostrarHistorico(false);
     }
   }, [usuario?.rol]);
+
+  async function eliminarVentasSeleccionadas() {
+    if (!esSuperAdmin || eliminandoVentas || ventasSeleccionadas.length === 0) return;
+    const ids = [...ventasSeleccionadas];
+    const confirmacion = window.confirm(
+      `Se eliminarán ${ids.length} venta(s) seleccionada(s) de Supabase permanentemente. ¿Deseas continuar?`
+    );
+    if (!confirmacion) return;
+    const confirmacionFinal = window.prompt('Escribe exactamente ELIMINAR para confirmar:');
+    if (confirmacionFinal !== "ELIMINAR") {
+      window.alert("Operación cancelada. No se eliminó ninguna venta.");
+      return;
+    }
+    setEliminandoVentas(true);
+    setError("");
+    try {
+      const { data: soportesExistentes, error: consultaSoportesError } = await supabase
+        .from("venta_soportes").select("ruta_storage").in("venta_id", ids);
+      if (consultaSoportesError) throw consultaSoportesError;
+      const rutas = (soportesExistentes || []).map((s) => s.ruta_storage).filter(Boolean);
+      if (rutas.length) {
+        const { error: storageError } = await supabase.storage.from("venta-soportes").remove(rutas);
+        if (storageError) throw storageError;
+      }
+      const { error: soportesError } = await supabase
+        .from("venta_soportes").delete().in("venta_id", ids);
+      if (soportesError) throw soportesError;
+      const { data: eliminadas, error: ventasError } = await supabase
+        .from("ventas").delete().in("id", ids).select("id");
+      if (ventasError) throw ventasError;
+      const cantidad = eliminadas?.length || 0;
+      if (cantidad === 0) {
+        throw new Error("Supabase no confirmó la eliminación de registros. Revisa la política RLS DELETE para la tabla ventas (SuperAdmin).");
+      }
+      setVentasSeleccionadas([]);
+      await cargarVentas();
+      window.alert(`Supabase confirmó la eliminación de ${cantidad} venta(s) seleccionada(s).`);
+    } catch (err) {
+      console.error("Error eliminando ventas seleccionadas:", err);
+      setError(err?.message || "No fue posible eliminar las ventas. Verifica los permisos de Supabase.");
+      window.alert("No se pudo completar la eliminación: " + (err?.message || "Error desconocido"));
+    } finally {
+      setEliminandoVentas(false);
+    }
+  }
+
+  function alternarVentaSeleccionada(id) {
+    setVentasSeleccionadas((prev) => prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]);
+  }
+
+  function alternarSeleccionVisible() {
+    const idsVisibles = ventasFiltradas.map((venta) => venta.id);
+    const todosSeleccionados = idsVisibles.length > 0 && idsVisibles.every((id) => ventasSeleccionadas.includes(id));
+    setVentasSeleccionadas((prev) => todosSeleccionados
+      ? prev.filter((id) => !idsVisibles.includes(id))
+      : [...new Set([...prev, ...idsVisibles])]);
+  }
 
   async function cargarVentas() {
 
@@ -547,6 +606,10 @@ function Ventas({ usuario }) {
         : [...comunes, ...movil, ...soportes];
 
 
+
+    if (form.tipo_cargue === "FIN_SEMANA" && !form.fecha_real_venta) {
+      return 'Selecciona la fecha real de la venta de fin de semana.';
+    }
 
     for (const [campo, nombre] of obligatorios) {
 
@@ -1201,7 +1264,8 @@ function prepararCorreccion(venta) {
 
               agente: usuario.nombre || usuario.usuario || "",
 
-              fecha_llamada: new Date().toISOString().slice(0, 10),
+              fecha_llamada: (form.tipo_cargue === "FIN_SEMANA" && form.fecha_real_venta) ? form.fecha_real_venta : new Date().toISOString().slice(0, 10),
+              tipo_cargue: form.tipo_cargue || "NORMAL",
 
               hora_llamada: new Date().toTimeString().slice(0, 8),
 
@@ -1321,7 +1385,8 @@ function prepararCorreccion(venta) {
 
               agente: usuario.nombre || usuario.usuario || "",
 
-              fecha_llamada: new Date().toISOString().slice(0, 10),
+              fecha_llamada: (form.tipo_cargue === "FIN_SEMANA" && form.fecha_real_venta) ? form.fecha_real_venta : new Date().toISOString().slice(0, 10),
+              tipo_cargue: form.tipo_cargue || "NORMAL",
 
               hora_llamada: new Date().toTimeString().slice(0, 8),
 
@@ -2076,11 +2141,28 @@ function prepararCorreccion(venta) {
 
 
 
-          <div className="venta-grid">
+          
+
+          {!ventaEditando && (
+            <div className="venta-grid">
+              <Field label="Tipo de cargue" required>
+                <select value={form.tipo_cargue} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
+                  <option value="NORMAL">NORMAL</option>
+                  <option value="FIN_SEMANA">FIN DE SEMANA</option>
+                </select>
+              </Field>
+              {form.tipo_cargue === "FIN_SEMANA" && (
+                <Field label="Fecha real de la venta (sábado, domingo o festivo)" required>
+                  <input type="date" value={form.fecha_real_venta} onChange={(e) => actualizarCampo("fecha_real_venta", e.target.value)} />
+                </Field>
+              )}
+            </div>
+          )}
+<div className="venta-grid">
 
             <Field label="Tipo de cédula" required>
 
-              <select value={form.tipo_cedula} onChange={(e) => actualizarCampo("tipo_cedula", e.target.value)}>
+              <select value={form.tipo_cedula} onChange={(e) => actualizarCampo("tipo_cedula", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>C.C</option><option>C.E</option>
 
@@ -2090,7 +2172,7 @@ function prepararCorreccion(venta) {
 
             <Field label="Sala" required>
 
-              <select value={form.sala} onChange={(e) => actualizarCampo("sala", e.target.value)}>
+              <select value={form.sala} onChange={(e) => actualizarCampo("sala", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>SALA 1</option><option>SALA 2</option><option>SALA 3</option>
 
@@ -2100,7 +2182,7 @@ function prepararCorreccion(venta) {
 
             <Field label="Origen" required>
 
-              <select value={form.origen} onChange={(e) => actualizarCampo("origen", e.target.value)}>
+              <select value={form.origen} onChange={(e) => actualizarCampo("origen", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>CRM</option><option>BASE</option>
 
@@ -2120,19 +2202,19 @@ function prepararCorreccion(venta) {
 
             <Field label="Cantidad de servicios" required><input type="number" min="1" value={form.cantidad_servicios} onChange={(e) => actualizarCampo("cantidad_servicios", e.target.value)} /></Field>
 
-            <Field label="Todo Claro" required><select value={form.todo_claro} onChange={(e) => actualizarCampo("todo_claro", e.target.value)}><option>SI</option><option>NO</option></select></Field>
+            <Field label="Todo Claro" required><select value={form.todo_claro} onChange={(e) => actualizarCampo("todo_claro", e.target.value)}><option value="">Seleccionar</option><option>SI</option><option>NO</option></select></Field>
 
-            <Field label="Telefonía" required><select value={form.telefonia} onChange={(e) => actualizarCampo("telefonia", e.target.value)}><option>SI</option><option>NO</option></select></Field>
+            <Field label="Telefonía" required><select value={form.telefonia} onChange={(e) => actualizarCampo("telefonia", e.target.value)}><option value="">Seleccionar</option><option>SI</option><option>NO</option></select></Field>
 
             <Field label="TV" required><input value={form.tv} onChange={(e) => actualizarCampo("tv", e.target.value)} placeholder="Ej. INTERMEDIO PLUS / NO APLICA" /></Field>
 
-            <Field label="Internet" required><select value={form.internet} onChange={(e) => actualizarCampo("internet", e.target.value)}><option>SI</option><option>NO</option></select></Field>
+            <Field label="Internet" required><select value={form.internet} onChange={(e) => actualizarCampo("internet", e.target.value)}><option value="">Seleccionar</option><option>SI</option><option>NO</option></select></Field>
 
             <Field label="Ultra WiFi" required><input type="number" min="0" value={form.ultra_wifi} onChange={(e) => actualizarCampo("ultra_wifi", e.target.value)} /></Field>
 
             <Field label="Cantidad de decos" required><input type="number" min="0" value={form.cantidad_decos} onChange={(e) => actualizarCampo("cantidad_decos", e.target.value)} /></Field>
 
-            <Field label="Instalación" required><select value={form.instalacion} onChange={(e) => actualizarCampo("instalacion", e.target.value)}><option>MAÑANA</option><option>TARDE</option></select></Field>
+            <Field label="Instalación" required><select value={form.instalacion} onChange={(e) => actualizarCampo("instalacion", e.target.value)}><option value="">Seleccionar</option><option>MAÑANA</option><option>TARDE</option></select></Field>
 
             <Field label="Fecha de instalación" required><input type="date" value={form.fecha_instalacion} onChange={(e) => actualizarCampo("fecha_instalacion", e.target.value)} /></Field>
 
@@ -2152,7 +2234,7 @@ function prepararCorreccion(venta) {
 
             <Field label="Tipo de validación de identidad" required>
 
-              <select value={form.tipo_validacion} onChange={(e) => actualizarCampo("tipo_validacion", e.target.value)}>
+              <select value={form.tipo_validacion} onChange={(e) => actualizarCampo("tipo_validacion", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>POLIEDRO OTP</option><option>POLIEDRO BIOMETRIA FACIAL</option><option>BIOMETRIA EXTERNA</option><option>ID VISION</option><option>SAFE</option><option>VISOR OTP</option><option>SIN VALIDACION</option>
 
@@ -2330,11 +2412,28 @@ function prepararCorreccion(venta) {
 
 
 
-          <div className="venta-grid">
+          
+
+          {!ventaEditando && (
+            <div className="venta-grid">
+              <Field label="Tipo de cargue" required>
+                <select value={form.tipo_cargue} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
+                  <option value="NORMAL">NORMAL</option>
+                  <option value="FIN_SEMANA">FIN DE SEMANA</option>
+                </select>
+              </Field>
+              {form.tipo_cargue === "FIN_SEMANA" && (
+                <Field label="Fecha real de la venta (sábado, domingo o festivo)" required>
+                  <input type="date" value={form.fecha_real_venta} onChange={(e) => actualizarCampo("fecha_real_venta", e.target.value)} />
+                </Field>
+              )}
+            </div>
+          )}
+<div className="venta-grid">
 
             <Field label="Tipo de cédula" required>
 
-              <select value={form.tipo_cedula} onChange={(e) => actualizarCampo("tipo_cedula", e.target.value)}>
+              <select value={form.tipo_cedula} onChange={(e) => actualizarCampo("tipo_cedula", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>C.C</option><option>C.E</option>
 
@@ -2344,7 +2443,7 @@ function prepararCorreccion(venta) {
 
             <Field label="Sala" required>
 
-              <select value={form.sala} onChange={(e) => actualizarCampo("sala", e.target.value)}>
+              <select value={form.sala} onChange={(e) => actualizarCampo("sala", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>SALA 1</option><option>SALA 2</option><option>SALA 3</option>
 
@@ -2354,7 +2453,7 @@ function prepararCorreccion(venta) {
 
             <Field label="Origen" required>
 
-              <select value={form.origen} onChange={(e) => actualizarCampo("origen", e.target.value)}>
+              <select value={form.origen} onChange={(e) => actualizarCampo("origen", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>CRM</option><option>BASE</option>
 
@@ -2366,13 +2465,13 @@ function prepararCorreccion(venta) {
 
             <Field label="Nombre cliente" required><input value={form.nombre_cliente} onChange={(e) => actualizarCampo("nombre_cliente", e.target.value)} /></Field>
 
-            <Field label="Número a portar" required><input value={form.numero_portar} onChange={(e) => actualizarCampo("numero_portar", e.target.value)} /></Field>
+            <Field label="Número a portar" required><input type="text" inputMode="numeric" maxLength={10} pattern="[0-9]{10}" title="Debe ingresar exactamente 10 números" value={form.numero_portar} onChange={(e) => actualizarCampo("numero_portar", e.target.value.replace(/\\D/g, "").slice(0, 10))} /></Field>
 
-            <Field label="NIP" required={form.tipo_venta === "PORTABILIDAD"}><input value={form.nip} onChange={(e) => actualizarCampo("nip", e.target.value)} /></Field>
+            <Field label="NIP" required={form.tipo_venta === "PORTABILIDAD"}><input type="text" inputMode="numeric" maxLength={5} pattern="[0-9]{5}" title="El NIP debe contener exactamente 5 números" value={form.nip} onChange={(e) => actualizarCampo("nip", e.target.value.replace(/\\D/g, "").slice(0, 5))} /></Field>
 
             <Field label="Email" required><input type="email" value={form.email} onChange={(e) => actualizarCampo("email", e.target.value)} /></Field>
 
-            <Field label="ICCID" required><input value={form.iccid} onChange={(e) => actualizarCampo("iccid", e.target.value)} /></Field>
+            <Field label="ICCID" required><input type="text" inputMode="numeric" maxLength={12} pattern="[0-9]{12}" title="El ICCID debe contener exactamente 12 números" value={form.iccid} onChange={(e) => actualizarCampo("iccid", e.target.value.replace(/\\D/g, "").slice(0, 12))} /></Field>
 
             <Field label="Dirección" required><input value={form.direccion} onChange={(e) => actualizarCampo("direccion", e.target.value)} /></Field>
 
@@ -2380,13 +2479,13 @@ function prepararCorreccion(venta) {
 
             <Field label="SIM adquirida" required>
 
-              <select value={form.sim_adquirida} onChange={(e) => actualizarCampo("sim_adquirida", e.target.value)}><option>SI</option><option>NO</option></select>
+              <select value={form.sim_adquirida} onChange={(e) => actualizarCampo("sim_adquirida", e.target.value)}><option value="">Seleccionar</option><option>SI</option><option>NO</option></select>
 
             </Field>
 
             <Field label="Tipo de venta" required>
 
-              <select value={form.tipo_venta} onChange={(e) => actualizarCampo("tipo_venta", e.target.value)}>
+              <select value={form.tipo_venta} onChange={(e) => actualizarCampo("tipo_venta", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>PORTABILIDAD</option><option>MIGRACION</option>
 
@@ -2396,7 +2495,7 @@ function prepararCorreccion(venta) {
 
             <Field label="Operador donante" required>
 
-              <select value={form.operador_donante} onChange={(e) => actualizarCampo("operador_donante", e.target.value)}>
+              <select value={form.operador_donante} onChange={(e) => actualizarCampo("operador_donante", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>TIGO</option><option>MOVISTAR</option><option>WOM</option><option>ETB</option><option>VIRGIN</option><option>OTRO</option><option>MIGRACION</option>
 
@@ -2406,7 +2505,7 @@ function prepararCorreccion(venta) {
 
             <Field label="Tipo de validación" required>
 
-              <select value={form.tipo_validacion} onChange={(e) => actualizarCampo("tipo_validacion", e.target.value)}>
+              <select value={form.tipo_validacion} onChange={(e) => actualizarCampo("tipo_validacion", e.target.value)}><option value="">Seleccionar</option>
 
                 <option>POLIEDRO OTP</option><option>POLIEDRO BIOMETRIA FACIAL</option><option>BIOMETRIA EXTERNA</option><option>ID VISION</option><option>SAFE</option><option>SIN VALIDACION</option>
 
@@ -2416,7 +2515,7 @@ function prepararCorreccion(venta) {
 
             <Field label="Código del plan" required><input value={form.codigo_plan} onChange={(e) => actualizarCampo("codigo_plan", e.target.value)} /></Field>
 
-            <Field label="Plan general" required><input value={form.plan_general} onChange={(e) => actualizarCampo("plan_general", e.target.value)} /></Field>
+            <Field label="Plan general" required><select value={form.plan_general} onChange={(e) => actualizarCampo("plan_general", e.target.value)}><option value="">Seleccionar</option><option value="">Seleccionar</option><option value="CONECTADOS">CONECTADOS</option><option value="POWER">POWER</option><option value="PREPAGO">PREPAGO</option></select></Field>
 
             <Field label="ID descuento de la oferta" required><input value={form.id_descuento_oferta} onChange={(e) => actualizarCampo("id_descuento_oferta", e.target.value)} /></Field>
 
@@ -2424,17 +2523,17 @@ function prepararCorreccion(venta) {
 
             <Field label="CFM (Cargo fijo mensual)" required><input type="number" min="0" step="0.01" value={form.cfm} onChange={(e) => actualizarCampo("cfm", e.target.value)} /></Field>
 
-            <Field label="Envío logístico" required><input value={form.envio_logistico} onChange={(e) => actualizarCampo("envio_logistico", e.target.value)} /></Field>
+            <Field label="Envío logístico" required><select value={form.envio_logistico} onChange={(e) => actualizarCampo("envio_logistico", e.target.value)}><option value="">Seleccionar</option><option value="">Seleccionar</option><option value="CLIENTE COMPRA SIM">CLIENTE COMPRA SIM</option><option value="ENTREGA LOGISTICA">ENTREGA LOGISTICA</option><option value="N/A (MIGRACIÓN)">N/A (MIGRACIÓN)</option></select></Field>
 
             <Field label="Cliente Todo Claro" required>
 
-              <select value={form.cliente_todo_claro} onChange={(e) => actualizarCampo("cliente_todo_claro", e.target.value)}><option>SI</option><option>NO</option></select>
+              <select value={form.cliente_todo_claro} onChange={(e) => actualizarCampo("cliente_todo_claro", e.target.value)}><option value="">Seleccionar</option><option>SI</option><option>NO</option></select>
 
             </Field>
 
             <Field label="Tipo de contrato" required>
 
-              <select value={form.tipo_contrato} onChange={(e) => actualizarCampo("tipo_contrato", e.target.value)}><option>DIGITAL</option><option>GRABADO</option></select>
+              <select value={form.tipo_contrato} onChange={(e) => actualizarCampo("tipo_contrato", e.target.value)}><option value="">Seleccionar</option><option>DIGITAL</option><option>GRABADO</option></select>
 
             </Field>
 
@@ -2512,6 +2611,7 @@ function prepararCorreccion(venta) {
               {!mostrarHistorico && <select value={periodoMes} disabled={usuario?.rol === "Asesor"} onChange={(e) => setPeriodoMes(Number(e.target.value))}>{MESES_VENTAS.map((m,i)=><option key={m} value={i+1}>{m}</option>)}</select>}
               {!mostrarHistorico && <select value={periodoAnio} disabled={usuario?.rol === "Asesor"} onChange={(e) => setPeriodoAnio(Number(e.target.value))}>{[2026,2027,2028].map((y)=><option key={y} value={y}>{y}</option>)}</select>}
               {puedeVerTodas && <button type="button" className={`venta-period-toggle ${mostrarHistorico ? "active" : ""}`} onClick={() => setMostrarHistorico((v) => !v)}>{mostrarHistorico ? "↩ Volver al mes" : "🗂 Ver histórico"}</button>}
+              {esSuperAdmin && mostrarHistorico && <button type="button" className="venta-period-toggle" style={{ borderColor: "#dc2626", color: "#dc2626" }} onClick={eliminarVentasSeleccionadas} disabled={eliminandoVentas || ventasSeleccionadas.length === 0}>{eliminandoVentas ? "Eliminando..." : `🗑️ Eliminar seleccionadas (${ventasSeleccionadas.length})`}</button>}
             </div>
           </div>
 
@@ -2599,6 +2699,18 @@ function prepararCorreccion(venta) {
 
                   <tr>
 
+                    {esSuperAdmin && mostrarHistorico && (
+                      <th style={{ width: "42px", textAlign: "center" }}>
+                        <input
+                          type="checkbox"
+                          aria-label="Seleccionar todas las ventas visibles"
+                          checked={ventasFiltradas.length > 0 && ventasFiltradas.every((venta) => ventasSeleccionadas.includes(venta.id))}
+                          onChange={alternarSeleccionVisible}
+                          style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                        />
+                      </th>
+                    )}
+
                     <th>Nombre</th>
 
                     <th>Cédula</th>
@@ -2607,6 +2719,8 @@ function prepararCorreccion(venta) {
                     {puedeRevisar && <th>Asesor</th>}
 
                     <th>Fecha de activación</th>
+
+                    <th>Tipo de cargue</th>
 
                     <th>Estado</th>
 
@@ -2622,6 +2736,18 @@ function prepararCorreccion(venta) {
 
                     <tr key={v.id}>
 
+                      {esSuperAdmin && mostrarHistorico && (
+                        <td style={{ textAlign: "center" }}>
+                          <input
+                            type="checkbox"
+                            aria-label={`Seleccionar venta ${v.id}`}
+                            checked={ventasSeleccionadas.includes(v.id)}
+                            onChange={() => alternarVentaSeleccionada(v.id)}
+                            style={{ width: "18px", height: "18px", cursor: "pointer" }}
+                          />
+                        </td>
+                      )}
+
                       <td><strong>{v.nombre_cliente}</strong></td>
 
                       <td>{v.cedula_cliente || "—"}</td>
@@ -2632,6 +2758,14 @@ function prepararCorreccion(venta) {
                       )}
 
                       <td>{v.fecha_activacion || v.created_at?.slice(0, 10) || "—"}</td>
+
+                      <td>
+                        {v.tipo_cargue === "FIN_SEMANA" ? (
+                          <span style={{ display: "inline-block", padding: "4px 9px", borderRadius: "999px", background: "#fff1d6", color: "#92400e", fontWeight: 700, fontSize: "12px" }}>FIN DE SEMANA</span>
+                        ) : (
+                          <span style={{ display: "inline-block", padding: "4px 9px", borderRadius: "999px", background: "#e8f5e9", color: "#166534", fontWeight: 700, fontSize: "12px" }}>NORMAL</span>
+                        )}
+                      </td>
 
                       <td><Status estado={v.estado} /></td>
 

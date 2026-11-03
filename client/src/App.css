@@ -1520,3 +1520,1500 @@ select:focus-visible {
 
 /* Pantallas de gestión: un solo scroll vertical, sin huecos artificiales. */
 .dashboard-main-scroll { min-height: 0 !important; height: 100vh !important; overflow-y: auto !important; overflow-x: hidden !important; }
+
+
+/* ===== AMV CRM & SOFTWARE — identidad visual renovada ===== */
+:root {
+  --dc-blue: #0878ff;
+  --dc-blue-dark: #073b91;
+  --dc-blue-soft: #e7f6ff;
+  --dc-cyan: #08c9f4;
+  --dc-ink: #071b43;
+  --dc-text: #17345e;
+  --dc-muted: #7890b1;
+  --dc-light: #edf6ff;
+  --dc-line: #cde3f8;
+  --dc-card: #ffffff;
+  --dc-sidebar: #03132f;
+  --dc-shadow: 0 12px 32px rgba(7, 45, 110, .09);
+  --dc-shadow-lg: 0 22px 60px rgba(2, 20, 60, .18);
+  --dc-radius: 18px;
+}
+body {
+  font-family: "DM Sans", Inter, "Segoe UI", Arial, sans-serif;
+  background: #edf6ff;
+  color: #17345e;
+}
+button, input, select, textarea { font-family: inherit; }
+.app-sidebar {
+  background: linear-gradient(180deg, #04152f 0%, #062b63 72%, #0758bd 100%) !important;
+  border-right: 1px solid rgba(29, 199, 255, .22) !important;
+  box-shadow: 10px 0 34px rgba(3, 23, 65, .12);
+}
+.brand-area {
+  border-bottom-color: rgba(65, 213, 255, .2) !important;
+}
+.sidebar-logo {
+  filter: drop-shadow(0 0 12px rgba(0, 195, 255, .34));
+  object-fit: contain;
+}
+.brand-text { color: #f5fbff !important; }
+.current-user {
+  background: linear-gradient(135deg, rgba(11, 91, 183, .38), rgba(7, 33, 78, .58)) !important;
+  border: 1px solid rgba(42, 202, 255, .17) !important;
+  border-radius: 15px !important;
+}
+.current-avatar {
+  background: linear-gradient(135deg, #16d5f5, #0878ff) !important;
+  box-shadow: 0 0 18px rgba(0, 181, 255, .25);
+}
+.menu-item {
+  border-radius: 12px !important;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+.menu-item:hover {
+  background: rgba(12, 154, 255, .16) !important;
+  transform: translateX(2px);
+}
+.menu-item[style*="background"] { box-shadow: 0 7px 20px rgba(0, 125, 255, .18); }
+.logout-button {
+  border: 1px solid rgba(77, 202, 255, .2) !important;
+  background: rgba(12, 63, 132, .36) !important;
+  border-radius: 12px !important;
+}
+.main-content, .app-main, .content-area {
+  background: linear-gradient(145deg, #f4faff 0%, #eaf4ff 100%);
+}
+button:not(.menu-item):not(.logout-button) {
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+button:not(.menu-item):not(.logout-button):hover {
+  box-shadow: 0 8px 20px rgba(0, 133, 255, .12);
+}
+input, select, textarea {
+  border-color: #c9e0f5 !important;
+  border-radius: 10px !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid rgba(8, 190, 242, .22) !important;
+  border-color: #0bb8ee !important;
+}
+.login-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 5vw, 72px);
+  padding: clamp(20px, 4vw, 56px);
+  background:
+    radial-gradient(ellipse at 12% 18%, rgba(0, 180, 255, .24), transparent 36%),
+    radial-gradient(ellipse at 88% 82%, rgba(13, 94, 255, .28), transparent 42%),
+    linear-gradient(135deg, #020817, #041b43 54%, #063b83) !important;
+  position: relative;
+  overflow: auto;
+}
+.login-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(125deg, transparent 0 90px, rgba(49, 205, 255, .035) 91px 93px, transparent 94px 180px);
+  pointer-events: none;
+}
+.login-showcase {
+  width: min(430px, 40vw);
+  color: #f6fbff;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  padding: 32px 18px;
+}
+.login-logo-wrap {
+  width: 190px;
+  height: 190px;
+  margin: 0 auto 18px;
+  border-radius: 42px;
+  background: linear-gradient(145deg, rgba(9, 54, 126, .72), rgba(1, 12, 35, .72));
+  border: 1px solid rgba(39, 205, 255, .28);
+  box-shadow: 0 0 50px rgba(0, 163, 255, .18), inset 0 0 30px rgba(4, 109, 255, .1);
+  display: grid;
+  place-items: center;
+}
+.login-logo { width: 160px; height: 160px; object-fit: contain; }
+.login-showcase-title {
+  font-size: clamp(48px, 5vw, 70px);
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: -3px;
+  background: linear-gradient(180deg, #fff, #b7d9ff 70%, #5dcaff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.login-showcase-subtitle {
+  font-size: clamp(20px, 2.1vw, 28px);
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  margin-top: 9px;
+}
+.login-showcase-subtitle::after {
+  content: "SOFTWARE";
+  color: #19d6f6;
+}
+.login-showcase-slogan {
+  color: #b6d7f9;
+  font-size: 16px;
+  line-height: 1.6;
+  max-width: 320px;
+  margin: 18px auto;
+}
+.login-showcase-pill {
+  display: inline-block;
+  padding: 9px 17px;
+  border: 1px solid rgba(17, 199, 255, .45);
+  border-radius: 999px;
+  color: #7feaff;
+  background: rgba(0, 104, 255, .12);
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 800;
+}
+.login-showcase-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #d6eaff;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  margin-top: 30px;
+}
+.login-showcase-bottom i {
+  width: 5px; height: 5px; border-radius: 50%; background: #16d6f5;
+}
+.login-card {
+  width: min(460px, 100%) !important;
+  padding: clamp(26px, 3vw, 42px) !important;
+  border: 1px solid rgba(255,255,255,.75);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 25px 80px rgba(0, 8, 30, .4), 0 0 0 1px rgba(0, 171, 255, .12);
+}
+.login-form-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #dcecfb;
+}
+.login-form-logo { width: 48px; height: 48px; object-fit: contain; }
+.login-form-brand strong {
+  display: block;
+  color: #071d49;
+  font-size: 14px;
+  font-weight: 900;
+}
+.login-form-brand span {
+  display: block;
+  margin-top: 4px;
+  color: #6f86a8;
+  font-size: 12px;
+}
+.login-heading { padding: 22px 0 0; }
+.login-heading h1 { text-align: left !important; margin: 0 0 7px !important; }
+.login-heading p { text-align: left !important; margin: 0 0 23px !important; }
+.amv-login-form { display: flex; flex-direction: column; }
+.amv-login-form label {
+  color: #18365f;
+  font-size: 12px;
+  font-weight: 800;
+  margin: 0 0 8px;
+}
+.amv-login-form input {
+  padding: 14px 15px !important;
+  margin-bottom: 18px !important;
+  border: 1px solid #c9e0f5 !important;
+  border-radius: 11px !important;
+  background: #fff !important;
+}
+.amv-login-form button {
+  margin-top: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 15px !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+}
+.login-security-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #6f86a8;
+  font-size: 11px;
+  margin-top: 22px;
+}
+.login-security-dot { width: 7px; height: 7px; border-radius: 50%; background: #08bfae; box-shadow: 0 0 9px #08bfae; }
+.login-copyright {
+  text-align: center;
+  color: #9aabc2;
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-top: 17px;
+}
+@media (max-width: 850px) {
+  .login-page { flex-direction: column; gap: 10px; padding: 20px; }
+  .login-showcase { width: 100%; padding: 5px 10px 18px; }
+  .login-logo-wrap { width: 110px; height: 110px; border-radius: 26px; margin-bottom: 10px; }
+  .login-logo { width: 95px; height: 95px; }
+  .login-showcase-title { font-size: 42px; }
+  .login-showcase-subtitle { font-size: 17px; }
+  .login-showcase-slogan { margin: 9px auto; font-size: 13px; }
+  .login-showcase-bottom { margin-top: 12px; }
+  .login-card { width: min(460px, 100%) !important; }
+}
+
+/* AMV CRM & SOFTWARE — identidad visual renovada para el login */
+.login-page {
+  min-height: 100vh !important;
+  width: 100% !important;
+  padding: 22px 16px !important;
+  gap: 0 !important;
+  flex-direction: column !important;
+  overflow-y: auto !important;
+  background: #030b18 url("/amv-login-background.png") center center / cover no-repeat fixed !important;
+}
+.login-page::before { content: ""; position: fixed; inset: 0; background: linear-gradient(90deg,rgba(0,8,24,.12),rgba(0,8,24,.34),rgba(0,8,24,.12)); pointer-events:none; }
+.login-showcase { width: min(620px,100%) !important; padding: 6px 12px 16px !important; }
+.login-logo-wrap { width: 90px !important; height: 90px !important; margin: 0 auto 8px !important; border: 0 !important; background: transparent !important; box-shadow: 0 0 24px rgba(0,185,255,.24) !important; border-radius: 22px !important; }
+.login-logo { width: 100% !important; height: 100% !important; object-fit: contain !important; }
+.login-showcase-title { font-size: clamp(36px,4vw,48px) !important; letter-spacing: -1px !important; }
+.login-showcase-subtitle { font-size: 20px !important; margin-top: 3px !important; }
+.login-showcase-subtitle::after { content: " SOFTWARE" !important; color: #14d8f5 !important; }
+.login-showcase-slogan { margin: 7px auto 0 !important; font-size: 13px !important; color: #e0f4ff !important; }
+.login-showcase-pill, .login-showcase-bottom { display: none !important; }
+.login-card { width: min(460px,100%) !important; padding: 28px 30px 24px !important; border: 1px solid rgba(50,205,255,.78) !important; border-radius: 22px !important; background: linear-gradient(145deg,rgba(5,29,65,.94),rgba(3,13,35,.95)) !important; box-shadow: 0 0 30px rgba(0,174,255,.28), inset 0 0 20px rgba(0,110,255,.12) !important; }
+.login-heading { padding: 0 0 20px !important; }
+.login-heading h1 { color: #f7fbff !important; text-align: center !important; font-size: 29px !important; }
+.login-heading p { color: #b8dcf8 !important; text-align: center !important; }
+.amv-login-form label { color: #e1f4ff !important; }
+.login-page input[type="text"], .login-page input[type="password"] { background: rgba(34,78,120,.76) !important; border: 1px solid rgba(165,221,255,.8) !important; color: white !important; }
+.login-page input::placeholder { color: #d0e8fa !important; }
+.login-page button[type="submit"] { background: linear-gradient(110deg,#05d8f2,#0765ff) !important; box-shadow: 0 0 20px rgba(0,185,255,.3) !important; }
+.login-security-note { color: #9bdfff !important; }
+.login-copyright { color: #e5f6ff !important; border-top: 1px solid rgba(0,205,255,.35); padding-top: 15px; margin-top: 16px; }
+@media (max-height: 780px) { .login-logo-wrap { width: 64px !important; height: 64px !important; } .login-showcase { padding-bottom: 10px !important; } .login-card { padding: 20px 26px !important; } }
+@media (max-width: 560px) { .login-page { padding: 14px 12px !important; } .login-showcase { padding: 4px 8px 12px !important; } .login-logo-wrap { width: 68px !important; height: 68px !important; } .login-card { padding: 24px 20px !important; } }
+
+/* AMV Login: visual inspirado en el mockup aprobado; reemplaza estilos anteriores */
+.amv-login-screen.login-page {
+  min-height: 100vh !important; width: 100% !important; height: 100vh !important;
+  display: flex !important; flex-direction: column !important; justify-content: center !important;
+  align-items: center !important; gap: 0 !important; overflow-y: auto !important;
+  padding: 20px 14px !important;
+  background: #020916 url("/amv-login-background.png") center center / cover no-repeat fixed !important;
+  position: relative !important;
+}
+.amv-login-screen::before { content:""; position:fixed; inset:0; background:linear-gradient(180deg,rgba(0,7,22,.12),rgba(0,9,30,.42)); pointer-events:none; z-index:0; }
+.amv-login-brand { width:min(560px,100%) !important; text-align:center !important; padding:0 10px 20px !important; z-index:1 !important; }
+.amv-login-brand .login-logo-wrap { width:76px !important; height:76px !important; margin:0 auto 2px !important; border:0 !important; border-radius:0 !important; background:transparent !important; box-shadow:0 0 22px rgba(0,190,255,.22) !important; }
+.amv-login-brand .login-logo { width:100% !important; height:100% !important; object-fit:contain !important; }
+.amv-login-brand .login-showcase-title { font-size:clamp(38px,5vw,48px) !important; line-height:1 !important; letter-spacing:-1.5px !important; margin:0 !important; }
+.amv-login-brand .login-showcase-subtitle { font-size:clamp(18px,2.6vw,24px) !important; font-weight:850 !important; letter-spacing:.3px !important; margin-top:3px !important; color:#eaf6ff !important; }
+.amv-login-brand .login-showcase-subtitle::after { content:none !important; }
+.amv-login-brand .login-showcase-slogan { max-width:100% !important; font-size:13px !important; font-weight:600 !important; color:#e0f4ff !important; margin:5px auto 0 !important; line-height:1.4 !important; }
+.amv-login-panel.login-card { width:min(430px,100%) !important; padding:22px 28px 20px !important; border:1px solid rgba(69,205,255,.88) !important; border-radius:22px !important; background:linear-gradient(145deg,rgba(7,30,67,.91),rgba(2,13,36,.94)) !important; box-shadow:0 0 30px rgba(0,174,255,.32),inset 0 0 22px rgba(0,110,255,.12) !important; z-index:1 !important; }
+.amv-login-heading { padding:0 0 18px !important; }
+.amv-login-heading h1 { color:#f7fbff !important; text-align:center !important; font-size:28px !important; font-weight:800 !important; margin:0 !important; }
+.amv-login-form { display:flex !important; flex-direction:column !important; gap:10px !important; }
+.amv-visually-hidden { position:absolute !important; width:1px !important; height:1px !important; padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important; white-space:nowrap !important; border:0 !important; }
+.amv-input-wrap { position:relative !important; width:100% !important; }
+.amv-input-icon { position:absolute !important; left:15px !important; top:50% !important; transform:translateY(-50%) !important; color:#eaf7ff !important; font-size:20px !important; z-index:2 !important; pointer-events:none !important; }
+.amv-input-wrap input { width:100% !important; min-height:45px !important; padding:12px 14px 12px 45px !important; margin:0 !important; border:1px solid rgba(170,223,255,.82) !important; border-radius:12px !important; background:rgba(37,78,121,.82) !important; color:#fff !important; font-size:14px !important; box-shadow:inset 0 1px 5px rgba(0,0,0,.14) !important; }
+.amv-input-wrap input::placeholder { color:#d5e9fa !important; opacity:1 !important; }
+.amv-input-wrap input:focus { outline:none !important; border-color:#31e5ff !important; box-shadow:0 0 0 3px rgba(0,200,255,.16) !important; }
+.amv-login-submit { display:flex !important; justify-content:center !important; align-items:center !important; gap:12px !important; width:100% !important; min-height:46px !important; margin:2px 0 0 !important; padding:12px 16px !important; border:1px solid rgba(35,226,255,.8) !important; border-radius:13px !important; background:linear-gradient(110deg,#12d9f2,#0879ff 58%,#1544f7) !important; color:#fff !important; font-size:15px !important; font-weight:850 !important; box-shadow:0 0 18px rgba(0,185,255,.28) !important; cursor:pointer !important; }
+.amv-login-submit:hover { filter:brightness(1.08) !important; }
+.amv-login-footer { color:#f1f8ff !important; border-top:1px solid rgba(0,205,255,.38) !important; padding-top:14px !important; margin-top:16px !important; text-align:center !important; font-size:13px !important; font-weight:800 !important; letter-spacing:.2px !important; }
+.amv-login-error { border-radius:9px !important; font-size:13px !important; }
+@media (max-width:560px) { .amv-login-brand { padding-bottom:14px !important; } .amv-login-brand .login-logo-wrap { width:65px !important;height:65px !important; } .amv-login-panel.login-card { padding:20px 18px 18px !important; } }
+@media (max-height:680px) { .amv-login-screen.login-page { padding:10px !important; } .amv-login-brand { padding-bottom:10px !important; } .amv-login-brand .login-logo-wrap { width:52px !important;height:52px !important; } .amv-login-brand .login-showcase-title { font-size:34px !important; } .amv-login-panel.login-card { padding:16px 22px !important; } .amv-login-heading { padding-bottom:12px !important; } }
+
+/* AMV login - afinado para coincidir con la referencia visual enviada */
+.amv-login-screen.login-page { gap:0 !important; padding:14px 12px !important; }
+.amv-login-brand { padding-bottom:19px !important; }
+.amv-login-brand .login-logo-wrap { width:94px !important; height:94px !important; margin-bottom:0 !important; box-shadow:0 0 30px rgba(0,190,255,.42) !important; }
+.amv-login-brand .login-showcase-title { font-size:clamp(40px,5vw,48px) !important; font-weight:900 !important; letter-spacing:-1.2px !important; color:#f7fbff !important; text-shadow:0 2px 10px rgba(0,90,255,.3) !important; }
+.amv-login-brand .login-showcase-subtitle { font-size:clamp(19px,2.5vw,24px) !important; font-weight:900 !important; color:#f5fbff !important; }
+.amv-login-brand .login-showcase-subtitle::before,.amv-login-brand .login-showcase-subtitle::after { content:"" !important; display:inline-block !important; width:38px !important; height:2px !important; vertical-align:middle !important; margin:0 12px !important; background:linear-gradient(90deg,#00eaff,#168cff) !important; }
+.amv-login-brand .login-showcase-slogan { font-size:14px !important; font-style:italic !important; font-weight:700 !important; }
+.amv-login-panel.login-card { width:min(425px,100%) !important; padding:20px 28px 22px !important; border-radius:22px !important; background:linear-gradient(145deg,rgba(8,34,75,.94),rgba(2,12,34,.97)) !important; box-shadow:0 0 28px rgba(0,174,255,.45),inset 0 0 28px rgba(0,110,255,.18) !important; }
+.amv-login-heading { padding-bottom:18px !important; }
+.amv-login-heading h1 { font-size:29px !important; letter-spacing:-.4px !important; }
+.amv-login-form { gap:10px !important; }
+.amv-input-icon { width:23px !important; height:23px !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+.amv-input-icon svg,.amv-password-toggle svg,.amv-login-submit svg { width:100% !important; height:100% !important; fill:none !important; stroke:currentColor !important; stroke-width:2 !important; stroke-linecap:round !important; stroke-linejoin:round !important; }
+.amv-input-wrap input { min-height:44px !important; padding-left:48px !important; padding-right:42px !important; font-size:14px !important; border-radius:12px !important; background:rgba(39,79,124,.9) !important; }
+.amv-password-toggle { position:absolute !important; right:12px !important; top:50% !important; transform:translateY(-50%) !important; width:23px !important; height:23px !important; padding:0 !important; color:#effaff !important; border:0 !important; background:transparent !important; cursor:pointer !important; }
+.amv-login-submit { min-height:47px !important; font-size:17px !important; border-radius:14px !important; gap:14px !important; margin-top:4px !important; }
+.amv-login-submit svg { width:24px !important; height:24px !important; }
+.amv-login-forgot { text-align:center !important; margin-top:16px !important; color:#22eaff !important; font-size:14px !important; font-weight:700 !important; text-decoration:underline !important; text-underline-offset:3px !important; }
+.amv-login-footer { margin-top:18px !important; padding-top:14px !important; border-top:0 !important; position:relative !important; }
+.amv-login-footer::before,.amv-login-footer::after { content:"" !important; display:inline-block !important; width:48px !important; height:2px !important; vertical-align:middle !important; margin:0 14px !important; background:linear-gradient(90deg,#00eaff,#168cff) !important; }
+@media(max-width:560px) { .amv-login-brand .login-logo-wrap { width:82px !important;height:82px !important; } .amv-login-panel.login-card { padding:19px 20px 20px !important; } }
+
+/* Ajuste solicitado: login solo con usuario y contraseña, iconos sin superposición */
+.amv-login-form { gap: 12px !important; }
+.amv-input-wrap { min-height: 46px !important; display: block !important; }
+.amv-input-icon { left: 15px !important; top: 50% !important; width: 22px !important; height: 22px !important; transform: translateY(-50%) !important; display:flex !important; align-items:center !important; justify-content:center !important; }
+.amv-input-wrap input { box-sizing:border-box !important; display:block !important; height:46px !important; line-height:normal !important; text-align:left !important; padding-top:0 !important; padding-bottom:0 !important; }
+.amv-input-wrap input::placeholder { text-align:left !important; }
+.amv-login-forgot { display:none !important; }
+
+/* Refinamiento visual solicitado: logo sin placa y campos oscuros, no blancos */
+.amv-login-brand .login-logo-wrap.amv-logo-transparent {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  width: 118px !important;
+  height: 118px !important;
+  margin: 0 auto 2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.amv-login-brand .login-logo-wrap.amv-logo-transparent .login-logo {
+  width: 112px !important;
+  height: 112px !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  filter: drop-shadow(0 0 13px rgba(0,185,255,.38)) !important;
+}
+.amv-login-form .amv-input-wrap {
+  position: relative !important;
+  width: 100% !important;
+  min-height: 46px !important;
+  margin: 0 !important;
+}
+.amv-login-form .amv-input-wrap input {
+  height: 46px !important;
+  min-height: 46px !important;
+  box-sizing: border-box !important;
+  background: rgba(39,79,124,.88) !important;
+  color: #f5fbff !important;
+  border: 1px solid rgba(170,223,255,.82) !important;
+  border-radius: 12px !important;
+  padding: 0 42px 0 48px !important;
+  margin: 0 !important;
+  line-height: 46px !important;
+  text-align: left !important;
+}
+.amv-login-form .amv-input-wrap input::placeholder {
+  color: #d5e9fa !important;
+  opacity: 1 !important;
+}
+.amv-login-form .amv-input-icon {
+  position: absolute !important;
+  left: 15px !important;
+  top: 23px !important;
+  transform: translateY(-50%) !important;
+  width: 22px !important;
+  height: 22px !important;
+  color: #f5fbff !important;
+  z-index: 3 !important;
+  pointer-events: none !important;
+}
+.amv-login-form .amv-input-icon svg {
+  display: block !important;
+  width: 22px !important;
+  height: 22px !important;
+  stroke: #f5fbff !important;
+  fill: none !important;
+}
+
+/* AMV CRM — refresco visual inspirado en la referencia azul/cian */
+:root {
+  --dc-blue: #1768ff;
+  --dc-blue-dark: #061b49;
+  --dc-blue-soft: #e8f2ff;
+  --dc-cyan: #11d8f4;
+  --dc-sidebar: #061633;
+  --dc-ink: #0b1d46;
+  --dc-text: #18345d;
+}
+.app-shell {
+  background: #07152c !important;
+}
+.app-sidebar {
+  width: 272px !important;
+  min-width: 272px !important;
+  padding: 18px 14px 14px !important;
+  background: linear-gradient(180deg, #06142f 0%, #08265b 58%, #0b3d8c 100%) !important;
+  border-right: 1px solid rgba(45, 197, 255, .26) !important;
+  box-shadow: 8px 0 32px rgba(0, 18, 61, .24) !important;
+}
+.brand-area {
+  min-height: 90px !important;
+  padding: 8px 7px 17px !important;
+  margin-bottom: 15px !important;
+  border-bottom: 1px solid rgba(64, 211, 255, .25) !important;
+  gap: 12px !important;
+}
+.sidebar-logo {
+  width: 56px !important;
+  height: 56px !important;
+  object-fit: contain !important;
+  border-radius: 14px !important;
+  background: transparent !important;
+  filter: drop-shadow(0 0 12px rgba(0, 191, 255, .35));
+}
+.brand-text { min-width: 0 !important; }
+.brand-text div:first-child {
+  color: #f4faff !important;
+  font-size: 17px !important;
+  line-height: 1.15 !important;
+  font-weight: 900 !important;
+  letter-spacing: .35px !important;
+}
+.brand-text div:last-child {
+  color: #9ec9f5 !important;
+  font-size: 11px !important;
+  margin-top: 5px !important;
+}
+.current-user {
+  border: 1px solid rgba(72, 190, 255, .24) !important;
+  border-radius: 17px !important;
+  background: linear-gradient(135deg, rgba(26, 79, 157, .45), rgba(7, 28, 69, .75)) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.04) !important;
+  margin: 0 3px 15px !important;
+}
+.current-avatar {
+  background: linear-gradient(135deg, #15d9f4, #2366ff) !important;
+  box-shadow: 0 0 16px rgba(0, 177, 255, .24) !important;
+}
+.main-menu { gap: 7px !important; }
+.menu-item {
+  min-height: 48px !important;
+  padding: 0 14px !important;
+  border: 1px solid transparent !important;
+  border-radius: 13px !important;
+  color: #e7f2ff !important;
+  font-weight: 750 !important;
+  letter-spacing: .1px !important;
+  background: rgba(20, 57, 117, .32) !important;
+}
+.menu-item:hover {
+  background: linear-gradient(100deg, rgba(0, 190, 255, .18), rgba(33, 101, 255, .18)) !important;
+  border-color: rgba(60, 202, 255, .22) !important;
+  box-shadow: 0 6px 20px rgba(0, 83, 190, .18) !important;
+}
+.menu-item[style*="background"] {
+  background: linear-gradient(105deg, #08c9f2 0%, #087bff 52%, #2556ff 100%) !important;
+  border-color: rgba(97, 232, 255, .6) !important;
+  color: white !important;
+  box-shadow: 0 7px 22px rgba(0, 117, 255, .3), inset 0 1px rgba(255,255,255,.24) !important;
+}
+.logout-button {
+  color: #eaf5ff !important;
+  background: rgba(11, 65, 145, .45) !important;
+  border-color: rgba(64, 199, 255, .28) !important;
+}
+.sidebar-credit { border-top-color: rgba(67, 197, 255, .2) !important; }
+.chat-panel.dashboard-main-scroll {
+  background: #eef5ff !important;
+  position: relative;
+}
+@media (max-width: 900px) {
+  .app-sidebar { width: 228px !important; min-width: 228px !important; }
+}
+
+
+/* AMV brand refresh: sidebar and workspace background inspired by supplied references */
+.app-shell {
+  background: #dcecff !important;
+}
+.app-sidebar {
+  position: relative !important;
+  isolation: isolate !important;
+  width: 272px !important;
+  min-width: 272px !important;
+  padding: 14px 14px 13px !important;
+  background:
+    linear-gradient(180deg, rgba(3,15,43,.90) 0%, rgba(4,29,77,.88) 48%, rgba(8,56,135,.92) 100%),
+    url('/amv-login-background.png') center center / cover no-repeat !important;
+  border-right: 1px solid rgba(45,199,255,.36) !important;
+  box-shadow: 9px 0 35px rgba(0,25,79,.24) !important;
+}
+.app-sidebar::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 8%, rgba(0,180,255,.22), transparent 42%),
+              linear-gradient(180deg, transparent 0%, rgba(0,10,38,.35) 100%);
+  pointer-events: none;
+}
+.brand-area {
+  min-height: 218px !important;
+  margin: 0 0 14px !important;
+  padding: 17px 10px 18px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 5px !important;
+  text-align: center !important;
+  border-bottom: 1px solid rgba(65,210,255,.28) !important;
+  background: linear-gradient(180deg, rgba(0,10,38,.15), rgba(0,10,38,.38)) !important;
+  border-radius: 0 0 15px 15px !important;
+}
+.sidebar-logo {
+  width: 132px !important;
+  height: 132px !important;
+  flex: 0 0 132px !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  filter: drop-shadow(0 0 16px rgba(0,188,255,.48)) !important;
+}
+.brand-text { width: 100% !important; text-align: center !important; }
+.brand-text div:first-child {
+  font-size: 21px !important;
+  line-height: 1.08 !important;
+  font-weight: 950 !important;
+  letter-spacing: .25px !important;
+  text-shadow: 0 2px 12px rgba(0,94,255,.35) !important;
+}
+.brand-text div:last-child {
+  margin-top: 7px !important;
+  color: #d0eaff !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+}
+.current-user {
+  background: linear-gradient(135deg, rgba(22,83,173,.52), rgba(3,20,58,.72)) !important;
+  border: 1px solid rgba(71,195,255,.36) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 22px rgba(0,15,58,.2), inset 0 1px rgba(255,255,255,.08) !important;
+}
+.main-menu { gap: 8px !important; }
+.menu-item {
+  min-height: 49px !important;
+  border-radius: 13px !important;
+  border: 1px solid rgba(78,169,255,.12) !important;
+  background: linear-gradient(110deg, rgba(20,68,143,.38), rgba(8,37,94,.50)) !important;
+  color: #f0f7ff !important;
+  font-size: 13px !important;
+  font-weight: 750 !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.035) !important;
+}
+.menu-item:hover {
+  background: linear-gradient(110deg, rgba(0,202,255,.26), rgba(37,91,255,.35)) !important;
+  border-color: rgba(75,216,255,.45) !important;
+  transform: translateX(2px) !important;
+}
+.menu-item[style*="background"] {
+  background: linear-gradient(105deg, #08d2f3 0%, #087bff 53%, #3154ff 100%) !important;
+  border-color: rgba(134,240,255,.76) !important;
+  box-shadow: 0 8px 24px rgba(0,112,255,.35), inset 0 1px rgba(255,255,255,.3) !important;
+}
+.logout-button {
+  min-height: 45px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(100deg, rgba(13,78,169,.55), rgba(6,36,91,.72)) !important;
+  border-color: rgba(64,199,255,.32) !important;
+  color: #f2f8ff !important;
+}
+.sidebar-credit { border-top-color: rgba(65,204,255,.28) !important; }
+
+/* Bright blue branded background across main content, with translucent clean cards */
+.chat-panel.dashboard-main-scroll {
+  background:
+    linear-gradient(135deg, rgba(231,243,255,.94) 0%, rgba(211,231,255,.88) 48%, rgba(237,247,255,.94) 100%),
+    url('/amv-login-background.png') center center / cover fixed !important;
+}
+.dashboard-comercial {
+  background: transparent !important;
+  color: #09285e !important;
+  position: relative !important;
+}
+.dashboard-comercial::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  inset: 0 0 0 272px;
+  background: radial-gradient(ellipse at 82% 12%, rgba(45,150,255,.20), transparent 38%),
+              radial-gradient(ellipse at 20% 78%, rgba(0,210,245,.12), transparent 36%),
+              linear-gradient(120deg, rgba(255,255,255,.18), transparent 55%);
+}
+.dashboard-comercial > * { position: relative; z-index: 1; }
+.dashboard-panel,
+.dashboard-kpi {
+  background: rgba(255,255,255,.78) !important;
+  border-color: rgba(102,167,255,.34) !important;
+  box-shadow: 0 9px 28px rgba(24,78,165,.09), inset 0 1px rgba(255,255,255,.72) !important;
+  backdrop-filter: blur(9px);
+}
+.dashboard-panel { border-radius: 19px !important; }
+.dashboard-kpi { border-radius: 18px !important; }
+.dashboard-header h1 { color: #09285e !important; text-shadow: 0 1px rgba(255,255,255,.65); }
+.dashboard-kicker { color: #2865ff !important; }
+.dashboard-table th { background: rgba(213,230,255,.68) !important; color: #28528f !important; }
+.mini-card, .calendar-stats div, .projection-message {
+  background: rgba(225,238,255,.68) !important;
+  border-color: rgba(92,157,255,.24) !important;
+}
+@media (max-width: 900px) {
+  .app-sidebar { width: 235px !important; min-width: 235px !important; }
+  .brand-area { min-height: 190px !important; }
+  .sidebar-logo { width: 112px !important; height: 112px !important; flex-basis: 112px !important; }
+  .dashboard-comercial::before { left: 235px; }
+}
+
+/* Sidebar expandible/compacto inspirado en el menú de referencia */
+.app-sidebar {
+  transition: width .25s ease, min-width .25s ease, padding .25s ease;
+  position: relative;
+}
+.sidebar-toggle {
+  position: absolute;
+  top: 14px;
+  right: 7px;
+  z-index: 15;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: 1px solid rgba(90, 205, 255, .55);
+  background: linear-gradient(135deg, #38d9ff, #2862ff);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 153, 255, .35);
+}
+.sidebar-hidden { display: none !important; }
+.app-sidebar.sidebar-collapsed {
+  width: 78px !important;
+  min-width: 78px !important;
+  padding: 18px 9px !important;
+}
+.sidebar-collapsed .brand-area {
+  justify-content: center !important;
+  padding: 20px 0 15px !important;
+}
+.sidebar-collapsed .sidebar-logo {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+  background: transparent;
+  padding: 0;
+}
+.sidebar-collapsed .current-user {
+  justify-content: center !important;
+  margin: 14px 0 12px !important;
+  padding: 8px 3px !important;
+  background: transparent !important;
+  border-color: transparent;
+}
+.sidebar-collapsed .main-menu { gap: 8px; }
+.sidebar-collapsed .menu-item {
+  justify-content: center !important;
+  padding: 10px 4px !important;
+  min-height: 46px;
+  gap: 0;
+  font-size: 20px;
+  border-radius: 12px !important;
+}
+.sidebar-collapsed .menu-item > span:first-child { flex: 0 0 auto !important; }
+.sidebar-collapsed .menu-item .badge { position: absolute; margin: -25px 0 0 28px; min-width: 16px; height: 16px; padding: 0 3px; font-size: 9px; }
+.sidebar-collapsed .logout-button {
+  display: flex !important;
+  justify-content: center !important;
+  padding: 10px 4px !important;
+}
+.sidebar-collapsed .sidebar-toggle { right: 3px; top: 4px; }
+
+
+/* ===== AMV visual refresh: sidebar retractil + fondo azul luminoso ===== */
+.app-sidebar {
+  flex: 0 0 252px !important;
+  transition: width .28s ease, min-width .28s ease, flex-basis .28s ease, padding .28s ease;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(36,190,255,.34), transparent 32%),
+    radial-gradient(ellipse at 100% 78%, rgba(45,105,255,.32), transparent 35%),
+    linear-gradient(160deg, #061638 0%, #071d49 48%, #123d91 100%) !important;
+  border-right: 1px solid rgba(82,198,255,.32);
+  box-shadow: 8px 0 30px rgba(0,34,105,.16);
+}
+.app-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .45;
+  background: repeating-linear-gradient(132deg, transparent 0 105px, rgba(55,196,255,.10) 106px 108px, transparent 109px 205px);
+}
+.app-sidebar > * { position: relative; }
+.brand-area {
+  position: relative;
+  min-height: 104px;
+  justify-content: center !important;
+  padding: 14px 8px 17px !important;
+  flex-wrap: nowrap;
+  background: linear-gradient(180deg, rgba(1,10,35,.24), rgba(12,47,113,.06));
+  border-bottom: 1px solid rgba(72,197,255,.24) !important;
+}
+.sidebar-logo {
+  width: 58px !important;
+  height: 58px !important;
+  flex: 0 0 58px !important;
+  object-fit: contain !important;
+  border-radius: 14px !important;
+  padding: 2px !important;
+  background: transparent !important;
+  filter: drop-shadow(0 0 12px rgba(0,170,255,.4));
+}
+.brand-text { flex: 1; }
+.brand-text > div:first-child, .logoTitulo {
+  font-size: 16px !important;
+  letter-spacing: .02em;
+}
+.current-user {
+  border: 1px solid rgba(79,178,255,.30) !important;
+  background: linear-gradient(135deg, rgba(23,70,145,.48), rgba(5,24,65,.55)) !important;
+  border-radius: 17px !important;
+}
+.menu-item {
+  min-height: 48px !important;
+  border-radius: 13px !important;
+  border-color: transparent !important;
+  color: rgba(244,249,255,.90) !important;
+}
+.menu-item:hover {
+  background: linear-gradient(110deg, rgba(48,204,255,.18), rgba(49,94,255,.22)) !important;
+  border-color: rgba(80,195,255,.25) !important;
+}
+.menu-item[style*="background"] {
+  background: linear-gradient(105deg, #38d9ff 0%, #2874ff 48%, #3d50ff 100%) !important;
+  border: 1px solid rgba(125,224,255,.72) !important;
+  color: #fff !important;
+  box-shadow: 0 7px 20px rgba(27,111,255,.27), inset 0 1px rgba(255,255,255,.25);
+}
+.sidebar-toggle {
+  right: 8px !important;
+  top: 10px !important;
+  border: 1px solid rgba(132,224,255,.7) !important;
+  background: linear-gradient(135deg,#42dfff,#3264ff) !important;
+}
+.app-sidebar.sidebar-collapsed {
+  flex: 0 0 82px !important;
+  width: 82px !important;
+  min-width: 82px !important;
+  padding: 14px 8px !important;
+}
+.sidebar-collapsed .brand-area {
+  min-height: 94px !important;
+  height: 94px !important;
+  width: 100%;
+  padding: 20px 0 12px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  border-radius: 12px;
+}
+.sidebar-collapsed .sidebar-logo {
+  display: block !important;
+  width: 56px !important;
+  height: 56px !important;
+  max-width: 100%;
+  flex: 0 0 56px !important;
+  margin: 0 auto !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+.sidebar-collapsed .current-user {
+  width: 100%;
+  justify-content: center !important;
+  margin: 14px 0 12px !important;
+  padding: 8px 2px !important;
+}
+.sidebar-collapsed .main-menu { width: 100%; gap: 8px !important; }
+.sidebar-collapsed .menu-item {
+  width: 100% !important;
+  min-height: 48px !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 9px 0 !important;
+  gap: 0 !important;
+}
+.sidebar-collapsed .menu-item > span:first-child {
+  width: 100%;
+  text-align: center;
+  font-size: 21px !important;
+  line-height: 1;
+}
+.sidebar-collapsed .sidebar-toggle { right: 2px !important; top: 3px !important; }
+.sidebar-collapsed .logout-button {
+  width: 100% !important;
+  min-height: 46px;
+  justify-content: center !important;
+  padding: 8px 0 !important;
+}
+.sidebar-credit { border-top-color: rgba(76,195,255,.25) !important; }
+
+/* === SIDEBAR AMV: composición de marca como la referencia enviada === */
+.app-sidebar:not(.sidebar-collapsed) .brand-area {
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 8px !important;
+  min-height: 286px !important;
+  height: 286px !important;
+  flex: 0 0 286px !important;
+  padding: 18px 8px 20px !important;
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(0,177,255,.18), transparent 62%),
+    linear-gradient(180deg, rgba(0,9,35,.28), rgba(7,37,100,.04)) !important;
+  border-bottom: 1px solid rgba(47,206,255,.38) !important;
+}
+.app-sidebar:not(.sidebar-collapsed) .sidebar-logo {
+  width: 154px !important;
+  height: 154px !important;
+  flex: 0 0 154px !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  filter: drop-shadow(0 0 17px rgba(0,177,255,.58)) !important;
+}
+.app-sidebar:not(.sidebar-collapsed) .brand-text {
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  text-align: center !important;
+}
+.app-sidebar:not(.sidebar-collapsed) .brand-text > div:first-child {
+  font-size: 23px !important;
+  line-height: 1.08 !important;
+  font-weight: 900 !important;
+  letter-spacing: .01em !important;
+  text-shadow: 0 2px 9px rgba(0,0,0,.25) !important;
+}
+.app-sidebar:not(.sidebar-collapsed) .brand-text > div:last-child {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #d5eaff !important;
+  margin-top: 8px !important;
+}
+.app-sidebar:not(.sidebar-collapsed) .current-user { margin-top: 14px !important; }
+.app-sidebar:not(.sidebar-collapsed) .main-menu { gap: 7px !important; }
+.app-sidebar:not(.sidebar-collapsed) .menu-item {
+  min-height: 47px !important;
+  padding: 10px 14px !important;
+  gap: 13px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  border-radius: 14px !important;
+}
+.app-sidebar:not(.sidebar-collapsed) .menu-item > span:first-child {
+  width: 25px !important;
+  flex: 0 0 25px !important;
+  text-align: center !important;
+  font-size: 20px !important;
+}
+.app-sidebar:not(.sidebar-collapsed) .sidebar-credit {
+  margin-top: 12px !important;
+  padding: 12px 8px 5px !important;
+  border-top: 1px solid rgba(68,200,255,.32) !important;
+  text-align: center !important;
+}
+.app-sidebar:not(.sidebar-collapsed) .sidebar-credit-text { text-align: center !important; }
+.app-sidebar.sidebar-collapsed .brand-area {
+  min-height: 76px !important;
+  height: 76px !important;
+  flex: 0 0 76px !important;
+  padding: 17px 0 8px !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+.app-sidebar.sidebar-collapsed .sidebar-logo {
+  width: 48px !important;
+  height: 48px !important;
+  flex: 0 0 48px !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+.app-sidebar.sidebar-collapsed .current-user { margin: 12px 0 !important; }
+.app-sidebar.sidebar-collapsed .menu-item > span:first-child { font-size: 22px !important; }
+
+
+/* Ajuste solicitado: quitar completamente el bloque de color de los botones del sidebar.
+   Se conserva solo una reacción suave al pasar el cursor. */
+.app-sidebar .main-menu .menu-item,
+.app-sidebar .main-menu .menu-item[style],
+.app-sidebar .main-menu .menu-item[style*="background"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  transition: transform .18s ease, color .18s ease, opacity .18s ease !important;
+}
+.app-sidebar .main-menu .menu-item:hover,
+.app-sidebar .main-menu .menu-item[style*="background"]:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  transform: translateX(3px) !important;
+  color: #9feaff !important;
+  opacity: .96;
+}
+.app-sidebar .main-menu .menu-item:active {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: translateX(2px) scale(.995) !important;
+}
+
+
+/* === AMV responsive polish: sidebar, fondo azul y módulos === */
+:root {
+  --amv-navy: #06163f;
+  --amv-blue: #285cff;
+  --amv-cyan: #39d5ff;
+}
+.app-sidebar {
+  flex: 0 0 252px !important;
+  width: 252px !important;
+  min-width: 252px !important;
+  background:
+    radial-gradient(ellipse at 15% 5%, rgba(58,205,255,.30), transparent 32%),
+    radial-gradient(ellipse at 90% 85%, rgba(44,101,255,.45), transparent 42%),
+    linear-gradient(155deg, #061337 0%, #0a1e50 55%, #173e91 100%) !important;
+  border-right: 1px solid rgba(83,190,255,.28) !important;
+  box-shadow: 8px 0 28px rgba(4,20,66,.20) !important;
+}
+.brand-area {
+  flex-direction: column !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 10px !important;
+  padding: 16px 8px 22px !important;
+  min-height: 180px !important;
+  border-bottom-color: rgba(91,190,255,.28) !important;
+  background: linear-gradient(180deg, rgba(7,18,55,.45), rgba(7,18,55,0)) !important;
+}
+.sidebar-logo {
+  width: min(100%, 170px) !important;
+  height: 116px !important;
+  flex: 0 0 auto !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+.brand-text > div:first-child, .logoTitulo {
+  font-size: 19px !important;
+  line-height: 1.18 !important;
+  letter-spacing: .015em !important;
+}
+.brand-text > div:last-child, .logoTexto {
+  color: rgba(226,244,255,.88) !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+}
+.menu-item {
+  border: 1px solid transparent !important;
+  border-radius: 14px !important;
+  background: transparent !important;
+  color: #f0f7ff !important;
+  transition: background .22s ease, border-color .22s ease, transform .22s ease, box-shadow .22s ease !important;
+}
+.menu-item:hover {
+  background: linear-gradient(100deg, rgba(48,197,255,.16), rgba(58,94,255,.12)) !important;
+  border-color: rgba(89,193,255,.22) !important;
+  transform: translateX(2px) !important;
+  box-shadow: 0 5px 16px rgba(5,30,90,.12) !important;
+}
+.menu-item:active { transform: scale(.985) !important; }
+.menu-item[style*="background"] { background: transparent !important; }
+.sidebar-toggle {
+  background: linear-gradient(135deg, #45d9ff, #3162ff) !important;
+  border: 1px solid rgba(255,255,255,.38) !important;
+  box-shadow: 0 4px 14px rgba(35,105,255,.35) !important;
+}
+body, #root {
+  overflow-x: hidden !important;
+}
+.main-content, .app-main, .content-area, .dashboard-page {
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(82,177,255,.32), transparent 38%),
+    radial-gradient(ellipse at 15% 100%, rgba(74,130,255,.18), transparent 40%),
+    linear-gradient(135deg, #f5f9ff 0%, #eaf3ff 48%, #dceaff 100%) !important;
+}
+@media (max-width: 1024px) {
+  .app-sidebar {
+    flex-basis: 220px !important;
+    width: 220px !important;
+    min-width: 220px !important;
+    padding: 14px 10px !important;
+  }
+  .brand-area { min-height: 150px !important; }
+  .sidebar-logo { height: 92px !important; width: min(100%, 145px) !important; }
+  .brand-text > div:first-child, .logoTitulo { font-size: 16px !important; }
+  .menu-item { min-height: 42px !important; padding: 9px 8px !important; font-size: 13px !important; }
+}
+@media (max-width: 768px) {
+  .app-sidebar {
+    flex-basis: 76px !important;
+    width: 76px !important;
+    min-width: 76px !important;
+    padding: 12px 7px !important;
+  }
+  .brand-area { min-height: 72px !important; padding: 8px 2px !important; }
+  .sidebar-logo { width: 54px !important; height: 52px !important; }
+  .brand-text, .current-user > div:not(.current-avatar), .menu-item > span:not(:first-child),
+  .sidebar-hidden { display: none !important; }
+  .current-user { justify-content: center !important; margin: 10px 0 !important; padding: 7px 3px !important; }
+  .current-avatar { width: 40px !important; height: 40px !important; min-width: 40px !important; }
+  .main-menu { gap: 7px !important; }
+  .menu-item { justify-content: center !important; min-height: 46px !important; padding: 8px 2px !important; }
+  .menu-item > span:first-child { flex: 0 0 auto !important; font-size: 18px !important; }
+  .sidebar-toggle { top: 8px !important; right: 4px !important; width: 24px !important; height: 24px !important; }
+}
+@media (max-width: 480px) {
+  .app-sidebar {
+    flex-basis: 64px !important;
+    width: 64px !important;
+    min-width: 64px !important;
+    padding: 8px 5px !important;
+  }
+  .sidebar-logo { width: 46px !important; height: 46px !important; }
+  .menu-item { min-height: 42px !important; border-radius: 11px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .menu-item { transition: none !important; }
+}
+
+
+/* === AMV: fondo visual del Dashboard aplicado también a todos los módulos === */
+:root {
+  --amv-module-bg:
+    radial-gradient(ellipse at 100% 0%, rgba(82,177,255,.34), transparent 38%),
+    radial-gradient(ellipse at 12% 100%, rgba(74,130,255,.20), transparent 42%),
+    linear-gradient(135deg, #f5f9ff 0%, #eaf3ff 48%, #dceaff 100%);
+}
+/* Área de trabajo de Información, Conversaciones, Ventas y Administración */
+.app-shell > .chat-panel,
+.app-shell > .chat-panel:not(.dashboard-main-scroll),
+.app-shell > .administration-main {
+  background: var(--amv-module-bg) !important;
+}
+/* Chat / Información: que el fondo azul claro sea visible detrás de los mensajes */
+.chat-panel .messages,
+.chat-panel .mensajes,
+.chat-panel .chat-body,
+.chat-panel .chat-content,
+.chat-panel .chat-conversation,
+.chat-panel .information-content,
+.chat-panel .informacion-content {
+  background: var(--amv-module-bg) !important;
+}
+/* Ventas: sustituir el fondo gris original por el fondo común AMV */
+.chat-panel .ventas-page {
+  background: var(--amv-module-bg) !important;
+}
+/* Administración: fondo exterior común; las tarjetas siguen legibles */
+.chat-panel .administration-page {
+  background: var(--amv-module-bg) !important;
+}
+/* Mantener el fondo aplicado también en pantallas estrechas */
+@media (max-width: 900px) {
+  .app-shell > .chat-panel,
+  .app-shell > .administration-main,
+  .chat-panel .ventas-page,
+  .chat-panel .administration-page,
+  .chat-panel .messages,
+  .chat-panel .mensajes {
+    background: var(--amv-module-bg) !important;
+  }
+}
+
+
+/* =========================================================
+   AMV RESPONSIVE GLOBAL — móvil, tablet, portátil y escritorio
+   Corrección de columnas comprimidas y desbordamientos.
+========================================================= */
+.app-shell { width:100%; max-width:100vw; min-width:0; }
+.app-shell > .app-sidebar { flex-shrink:0; }
+.app-shell > .contacts-panel { flex:0 0 290px; width:290px; min-width:0 !important; max-width:34vw; }
+.app-shell > .chat-panel { flex:1 1 0; min-width:0 !important; max-width:100%; }
+.chat-panel, .contacts-panel, .administration-main, .dashboard-main-scroll { box-sizing:border-box; }
+.chat-panel > *, .contacts-panel > *, .administration-main > * { min-width:0; max-width:100%; box-sizing:border-box; }
+
+/* Tablet landscape/portrait */
+@media (max-width: 1024px) {
+  .app-sidebar { flex-basis:220px !important; width:220px !important; min-width:220px !important; }
+  .app-shell > .contacts-panel { flex-basis:260px; width:260px; max-width:31vw; }
+  .administration-page, .ventas-page { padding:22px 18px !important; }
+  .ventas-cards { grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+}
+
+/* Phone: sidebar becomes an icon rail; no three-column squeeze */
+@media (max-width: 700px) {
+  .app-shell, .app-shell.app-shell-admin {
+    width:100vw !important; max-width:100vw !important; height:100dvh !important;
+    min-height:0 !important; overflow:hidden !important; display:flex !important;
+    flex-direction:row !important; align-items:stretch !important;
+  }
+  .app-shell > .app-sidebar, .app-shell.app-shell-admin > .app-sidebar {
+    flex:0 0 58px !important; width:58px !important; min-width:58px !important;
+    max-width:58px !important; height:100dvh !important; padding:8px 4px !important;
+    overflow:hidden !important; position:relative !important;
+  }
+  .app-sidebar .brand-area { min-height:56px !important; height:56px !important; padding:4px !important; }
+  .app-sidebar .sidebar-logo { width:46px !important; height:46px !important; max-width:46px !important; }
+  .app-sidebar .brand-text, .app-sidebar .current-user > div:last-child,
+  .app-sidebar .main-menu .menu-item > span:not(:first-child),
+  .app-sidebar .sidebar-credit, .app-sidebar .logout-button > span:not(:first-child) { display:none !important; }
+  .app-sidebar .current-user { justify-content:center !important; margin:8px 0 !important; padding:5px 0 !important; }
+  .app-sidebar .current-avatar { width:38px !important; height:38px !important; min-width:38px !important; }
+  .app-sidebar .main-menu { width:100% !important; padding:0 !important; gap:7px !important; }
+  .app-sidebar .main-menu .menu-item { width:48px !important; min-width:48px !important; height:46px !important; min-height:46px !important; margin:0 auto !important; padding:0 !important; justify-content:center !important; border-radius:13px !important; }
+  .app-sidebar .main-menu .menu-item > span:first-child { display:block !important; font-size:19px !important; margin:0 !important; }
+  .app-sidebar .sidebar-toggle { top:5px !important; right:2px !important; width:20px !important; height:20px !important; z-index:20 !important; }
+  .app-sidebar .logout-button { width:48px !important; min-width:48px !important; height:42px !important; margin:0 auto !important; padding:0 !important; justify-content:center !important; }
+
+  /* Contacts panel becomes the main content pane until a conversation is opened. */
+  .app-shell > .contacts-panel {
+    flex:1 1 0 !important; width:auto !important; min-width:0 !important; max-width:none !important;
+    height:100dvh !important; overflow:hidden !important; display:flex !important;
+    flex-direction:column !important; border-right:1px solid rgba(100,150,220,.2) !important;
+  }
+  .contacts-panel .contacts-list { min-width:0 !important; overflow-y:auto !important; }
+  .contacts-panel .contact-item { max-width:calc(100% - 16px) !important; }
+  .contacts-panel .contact-name { overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; }
+  .contacts-panel .contacts-header, .contacts-panel > div { min-width:0 !important; }
+
+  /* When a chat is active, hide the contacts list pane so the conversation has full width. */
+  .app-shell:has(.message-form) > .contacts-panel { display:none !important; }
+  .app-shell:has(.message-form) > .chat-panel {
+    flex:1 1 0 !important; width:auto !important; min-width:0 !important; max-width:none !important;
+  }
+  .app-shell > .chat-panel, .app-shell > .administration-main {
+    flex:1 1 0 !important; width:auto !important; min-width:0 !important; max-width:none !important;
+    height:100dvh !important; min-height:0 !important; overflow-x:hidden !important;
+  }
+  .chat-header { min-width:0 !important; padding:9px 10px !important; }
+  .messages, .mensajes { padding:12px 10px !important; }
+  .message-bubble, .mensaje { max-width:88% !important; overflow-wrap:anywhere !important; }
+  .message-form, .formMensaje, .barra-mensaje { width:100% !important; min-width:0 !important; padding:7px !important; gap:6px !important; }
+  .message-form input, .formMensaje input, .barra-mensaje input { min-width:0 !important; width:100% !important; }
+  .administration-page, .ventas-page { padding:14px 12px !important; width:100% !important; }
+  .administration-header, .ventas-header { flex-direction:column !important; align-items:stretch !important; gap:12px !important; }
+  .ventas-cards { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:8px !important; }
+  .users-table-wrap, .ventas-table-wrap, .table-responsive { max-width:100% !important; overflow-x:auto !important; }
+}
+
+@media (max-width: 380px) {
+  .app-shell > .app-sidebar, .app-shell.app-shell-admin > .app-sidebar { flex-basis:52px !important; width:52px !important; min-width:52px !important; max-width:52px !important; }
+  .app-sidebar .main-menu .menu-item { width:43px !important; min-width:43px !important; }
+  .app-sidebar .current-avatar { width:34px !important; height:34px !important; min-width:34px !important; }
+  .contacts-panel .contacts-title h2, .contacts-panel h2 { font-size:17px !important; }
+  .contacts-panel .contact-item { padding:8px !important; gap:7px !important; }
+  .contacts-panel .contact-avatar { width:30px !important; height:30px !important; min-width:30px !important; }
+  .contacts-panel .contact-name { font-size:10px !important; }
+  .ventas-cards { grid-template-columns:minmax(0,1fr) !important; }
+  .administration-page, .ventas-page { padding:10px 8px !important; }
+}
+
+/* Tablets in portrait mode */
+@media (min-width:701px) and (max-width:900px) {
+  .app-shell > .contacts-panel { flex-basis:230px !important; width:230px !important; max-width:30vw !important; }
+  .app-sidebar { flex-basis:72px !important; width:72px !important; min-width:72px !important; }
+  .app-sidebar .brand-text, .app-sidebar .current-user > div:last-child,
+  .app-sidebar .main-menu .menu-item > span:not(:first-child), .app-sidebar .sidebar-credit { display:none !important; }
+  .app-sidebar .main-menu .menu-item { justify-content:center !important; padding:0 !important; }
+}
+
+/* =========================================================
+   AMV FINAL RESPONSIVE OVERRIDES — viewport/zoom friendly
+   ========================================================= */
+html, body, #root { width:100%; max-width:100%; min-width:0; overflow-x:hidden; }
+.app-shell { width:100%; max-width:100%; height:100vh; height:100dvh; min-height:0; overflow:hidden; }
+.app-shell > .app-sidebar { flex:0 0 252px !important; width:252px !important; min-width:252px !important; max-width:252px !important; height:100%; min-height:0; }
+.app-shell > .chat-panel, .app-shell > .administration-main { flex:1 1 0% !important; width:0; min-width:0 !important; max-width:none !important; height:100%; min-height:0; overflow-x:hidden; }
+.app-shell > .contacts-panel { flex:0 1 310px !important; width:310px !important; min-width:0 !important; max-width:30vw !important; height:100%; min-height:0; }
+.chat-panel { min-width:0 !important; }
+.chat-panel > *, .administration-main > *, .ventas-page > *, .dashboard-main-scroll > * { min-width:0; max-width:100%; }
+/* Chat canvas with subtle WhatsApp-inspired wallpaper */
+.app-shell > .chat-panel:not(.dashboard-main-scroll),
+.app-shell > .administration-main,
+.chat-panel .messages, .chat-panel .mensajes, .chat-panel .chat-body,
+.chat-panel .chat-content, .chat-panel .chat-conversation,
+.chat-panel .information-content, .chat-panel .informacion-content {
+  background-color:#edf4fb !important;
+  background-image:
+    radial-gradient(circle at 18px 18px, rgba(35,104,180,.045) 2px, transparent 2.5px),
+    radial-gradient(circle at 54px 48px, rgba(35,104,180,.035) 2px, transparent 2.5px),
+    linear-gradient(135deg, #f4f9ff 0%, #eaf3ff 52%, #e2edff 100%) !important;
+  background-size:72px 72px, 96px 96px, auto !important;
+}
+/* Keep message composer anchored at bottom and make message content scroll */
+.chat-panel { position:relative; }
+.chat-panel .messages, .chat-panel .mensajes, .chat-panel .chat-body { flex:1 1 auto; min-height:0; overflow-y:auto; }
+.chat-panel .message-form, .chat-panel .formMensaje, .chat-panel .barra-mensaje { flex:0 0 auto; position:sticky; bottom:0; z-index:3; background:rgba(248,251,255,.96) !important; backdrop-filter:blur(10px); border-top:1px solid rgba(105,155,220,.22); }
+/* Zoomed desktop/laptop: smoothly reduce sidebar and contact column */
+@media (max-width:1200px) {
+ .app-shell > .app-sidebar { flex-basis:210px !important; width:210px !important; min-width:210px !important; max-width:210px !important; }
+ .app-shell > .contacts-panel { flex-basis:250px !important; width:250px !important; max-width:27vw !important; }
+ .app-sidebar { padding-left:10px !important; padding-right:10px !important; }
+}
+@media (max-width:900px) {
+ .app-shell > .app-sidebar { flex-basis:68px !important; width:68px !important; min-width:68px !important; max-width:68px !important; padding:8px 5px !important; }
+ .app-sidebar .brand-area { min-height:60px !important; height:60px !important; padding:4px !important; }
+ .app-sidebar .sidebar-logo { width:52px !important; height:52px !important; }
+ .app-sidebar .brand-text, .app-sidebar .current-user > div:last-child, .app-sidebar .main-menu .menu-item > span:not(:first-child), .app-sidebar .sidebar-credit, .app-sidebar .logout-button > span:not(:first-child) { display:none !important; }
+ .app-sidebar .current-user { justify-content:center !important; padding:5px 0 !important; margin:8px 0 !important; }
+ .app-sidebar .current-avatar { width:38px !important; height:38px !important; min-width:38px !important; }
+ .app-sidebar .main-menu .menu-item { width:54px !important; min-width:54px !important; max-width:54px !important; height:46px !important; min-height:46px !important; margin:0 auto 5px !important; padding:0 !important; justify-content:center !important; }
+ .app-sidebar .logout-button { width:54px !important; min-width:54px !important; margin:0 auto !important; padding:0 !important; justify-content:center !important; }
+ .app-shell > .contacts-panel { flex:0 1 250px !important; width:250px !important; max-width:34vw !important; }
+}
+@media (max-width:700px) {
+ .app-shell { height:100dvh !important; flex-direction:row !important; }
+ .app-shell > .app-sidebar { flex-basis:54px !important; width:54px !important; min-width:54px !important; max-width:54px !important; padding:6px 3px !important; }
+ .app-sidebar .sidebar-logo { width:42px !important; height:42px !important; }
+ .app-sidebar .main-menu .menu-item { width:46px !important; min-width:46px !important; max-width:46px !important; height:42px !important; min-height:42px !important; border-radius:12px !important; }
+ .app-sidebar .current-avatar { width:32px !important; height:32px !important; min-width:32px !important; }
+ .app-shell > .contacts-panel { flex:1 1 0% !important; width:0 !important; max-width:none !important; min-width:0 !important; }
+ .app-shell > .chat-panel, .app-shell > .administration-main { flex:1 1 0% !important; width:0 !important; min-width:0 !important; max-width:none !important; }
+ .app-shell:has(.message-form) > .contacts-panel { display:none !important; }
+ .chat-header { padding:8px 10px !important; min-height:58px !important; }
+ .messages, .mensajes { padding:10px 8px !important; }
+ .message-bubble, .mensaje { max-width:92% !important; overflow-wrap:anywhere !important; }
+ .message-form, .formMensaje, .barra-mensaje { padding:6px !important; gap:5px !important; }
+ .message-form button, .formMensaje button, .barra-mensaje button { flex:0 0 auto; }
+ .administration-page, .ventas-page { padding:12px 8px !important; }
+}
+@media (max-width:380px) {
+ .app-shell > .app-sidebar { flex-basis:48px !important; width:48px !important; min-width:48px !important; max-width:48px !important; }
+ .app-sidebar .main-menu .menu-item { width:42px !important; min-width:42px !important; max-width:42px !important; }
+}
+
+/* =========================================================
+   AMV — RESPONSIVE REFINADO GLOBAL (PC / TABLET / MÓVIL / ZOOM)
+   ========================================================= */
+.app-shell,
+.app-shell * { min-width: 0; }
+.app-shell { align-items: stretch !important; isolation: isolate; }
+.app-shell > .app-sidebar { flex-shrink: 0 !important; }
+.app-sidebar { overflow: hidden !important; }
+.app-sidebar .main-menu {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+  padding-bottom: 10px !important;
+}
+.app-sidebar > div:last-child { flex: 0 0 auto !important; margin-top: auto !important; }
+.app-sidebar .menu-item { flex: 0 0 auto !important; transition: background .18s ease, transform .18s ease, box-shadow .18s ease !important; }
+.app-sidebar .menu-item:hover { transform: translateX(2px) !important; background: rgba(70,155,255,.16) !important; box-shadow: inset 0 0 0 1px rgba(120,205,255,.18) !important; }
+.app-sidebar .menu-item[style*="background"] { background: transparent !important; box-shadow: none !important; }
+.app-sidebar .menu-item:focus-visible { outline: 2px solid #55d8ff !important; outline-offset: -2px; }
+
+/* Conversaciones e Información: panel flex real y mensajes scrollables */
+.app-shell > .chat-panel:not(.dashboard-main-scroll) {
+  display: flex !important; flex-direction: column !important;
+  flex: 1 1 0% !important; width: 0 !important;
+  min-width: 0 !important; max-width: none !important;
+  height: 100% !important; min-height: 0 !important;
+  overflow: hidden !important; position: relative !important;
+}
+.chat-panel .messages-area {
+  flex: 1 1 auto !important; min-height: 0 !important;
+  width: 100% !important; max-width: 100% !important;
+  overflow-y: auto !important; overflow-x: hidden !important;
+  overscroll-behavior: contain; scrollbar-gutter: stable;
+  background-color: #edf4fb !important;
+  background-image: radial-gradient(circle at 18px 18px, rgba(35,104,180,.055) 2px, transparent 2.5px),
+    radial-gradient(circle at 54px 48px, rgba(35,104,180,.04) 2px, transparent 2.5px),
+    linear-gradient(135deg,#f4f9ff 0%,#eaf3ff 52%,#e2edff 100%) !important;
+  background-size: 72px 72px,96px 96px,auto !important;
+}
+.chat-panel .message-row { max-width: 100% !important; }
+.chat-panel .message-bubble { width: fit-content; max-width: min(78%, 720px) !important; overflow-wrap: anywhere !important; }
+.chat-panel .message-bubble img, .chat-panel .message-bubble video, .chat-panel .message-bubble table { max-width: 100% !important; height: auto; }
+.chat-panel .message-form { flex: 0 0 auto !important; width: 100% !important; max-width: 100% !important; position: relative !important; }
+.chat-panel .message-input { flex: 1 1 auto !important; width: 0 !important; min-width: 0 !important; }
+
+/* Todas las áreas de módulo respetan ancho de su contenedor */
+.app-shell > .administration-main { flex: 1 1 0% !important; width: 0 !important; min-width: 0 !important; max-width: none !important; }
+.administration-main .administration-page,
+.chat-panel .ventas-page,
+.dashboard-main-scroll { width: 100% !important; max-width: 100% !important; min-width: 0 !important; }
+.administration-page { overflow-wrap: anywhere; }
+.administration-header, .administration-card-header, .commercial-admin-header { flex-wrap: wrap !important; }
+.users-table-wrap, .users-table, .commercial-meta-table-wrap, .table-responsive { max-width: 100% !important; overflow-x: auto !important; }
+.administration-main input, .administration-main select, .administration-main textarea,
+.ventas-page input, .ventas-page select, .ventas-page textarea { max-width: 100% !important; }
+
+@media (max-width: 1200px) {
+  .app-shell > .app-sidebar { flex-basis: 198px !important; width: 198px !important; min-width: 198px !important; max-width: 198px !important; }
+  .app-sidebar { padding-left: 9px !important; padding-right: 9px !important; }
+  .app-sidebar .brand-text { font-size: .94em; }
+  .app-sidebar .menu-item { padding-left: 10px !important; padding-right: 10px !important; }
+}
+@media (max-width: 900px) {
+  .app-shell > .app-sidebar { flex-basis: 66px !important; width: 66px !important; min-width: 66px !important; max-width: 66px !important; padding: 8px 4px !important; }
+  .app-sidebar .brand-area { justify-content: center !important; height: 60px !important; min-height: 60px !important; padding: 3px !important; }
+  .app-sidebar .sidebar-logo { width: 48px !important; height: 48px !important; }
+  .app-sidebar .brand-text, .app-sidebar .current-user > div:last-child, .app-sidebar .main-menu .menu-item > span:not(:first-child), .app-sidebar .sidebar-credit, .app-sidebar .logout-button > span:not(:first-child) { display: none !important; }
+  .app-sidebar .current-user { justify-content: center !important; margin: 8px 0 !important; padding: 5px 0 !important; }
+  .app-sidebar .main-menu .menu-item { width: 54px !important; max-width: 54px !important; min-width: 54px !important; height: 46px !important; min-height: 46px !important; margin: 0 auto 6px !important; padding: 0 !important; justify-content: center !important; }
+  .app-sidebar .logout-button { width: 54px !important; min-width: 54px !important; margin: 0 auto !important; justify-content: center !important; }
+  .app-shell > .contacts-panel { flex: 0 1 250px !important; width: 250px !important; max-width: 34vw !important; }
+  .administration-page { padding: 18px 14px !important; }
+  .commercial-admin-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
+}
+@media (max-width: 700px) {
+  .app-shell { flex-direction: row !important; height: 100dvh !important; }
+  .app-shell > .app-sidebar { flex-basis: 52px !important; width: 52px !important; min-width: 52px !important; max-width: 52px !important; padding: 5px 2px !important; }
+  .app-sidebar .sidebar-logo { width: 40px !important; height: 40px !important; }
+  .app-sidebar .main-menu .menu-item { width: 44px !important; min-width: 44px !important; max-width: 44px !important; height: 40px !important; min-height: 40px !important; border-radius: 11px !important; }
+  .app-sidebar .current-avatar { width: 30px !important; height: 30px !important; min-width: 30px !important; }
+  .app-shell > .contacts-panel { flex: 1 1 0% !important; width: 0 !important; max-width: none !important; min-width: 0 !important; }
+  .app-shell > .chat-panel:not(.dashboard-main-scroll), .app-shell > .administration-main { flex: 1 1 0% !important; width: 0 !important; min-width: 0 !important; max-width: none !important; }
+  .app-shell:has(.message-form) > .contacts-panel { display: none !important; }
+  .chat-header { flex: 0 0 auto !important; min-height: 56px !important; padding: 8px 10px !important; }
+  .chat-panel .messages-area { padding: 10px 8px !important; }
+  .chat-panel .message-bubble { max-width: 92% !important; }
+  .chat-panel .message-form { padding: 6px !important; gap: 5px !important; }
+  .administration-page, .ventas-page { padding: 12px 9px !important; }
+  .administration-header { align-items: stretch !important; gap: 10px !important; }
+  .administration-header h1 { font-size: clamp(20px,5vw,26px) !important; }
+  .administration-card-header { padding: 14px !important; gap: 10px !important; }
+  .commercial-admin-section { padding: 12px !important; }
+  .commercial-admin-grid { grid-template-columns: minmax(0,1fr) !important; }
+}
+@media (max-width: 380px) {
+  .app-shell > .app-sidebar { flex-basis: 46px !important; width: 46px !important; min-width: 46px !important; max-width: 46px !important; }
+  .app-sidebar .main-menu .menu-item { width: 40px !important; min-width: 40px !important; max-width: 40px !important; }
+  .contacts-panel .contact-item { padding: 8px !important; }
+  .administration-page, .ventas-page { padding: 9px 6px !important; }
+}
+
+
+/* FIX DEFINITIVO: al contraer el sidebar, el panel central ocupa el espacio disponible */
+.app-shell > .app-sidebar.sidebar-collapsed {
+  flex: 0 0 78px !important;
+  width: 78px !important;
+  min-width: 78px !important;
+  max-width: 78px !important;
+}
+.app-shell > .chat-panel,
+.app-shell > .chat-panel.dashboard-main-scroll,
+.app-shell > .administration-main {
+  flex: 1 1 0% !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+.app-shell > .contacts-panel {
+  min-width: 0 !important;
+}
+.dashboard-main-scroll,
+.dashboard-main-scroll > .dashboard-comercial,
+.dashboard-comercial {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+.dashboard-comercial {
+  overflow-x: clip;
+}
+.dashboard-header,
+.dashboard-filtros,
+.dashboard-main-grid,
+.advisor-grid {
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+.dashboard-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr)) !important;
+}
+.dashboard-main-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+.dashboard-table-wrap,
+.table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: auto !important;
+}
+@media (max-width: 1200px) {
+  .app-shell > .app-sidebar.sidebar-collapsed {
+    flex: 0 0 78px !important;
+    width: 78px !important;
+    min-width: 78px !important;
+    max-width: 78px !important;
+  }
+}
+@media (max-width: 900px) {
+  .app-shell > .chat-panel.dashboard-main-scroll {
+    flex: 1 1 0% !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+@media (max-width: 700px) {
+  .app-shell > .app-sidebar.sidebar-collapsed {
+    flex: 0 0 52px !important;
+    width: 52px !important;
+    min-width: 52px !important;
+    max-width: 52px !important;
+  }
+  .dashboard-comercial { padding: 12px !important; }
+  .dashboard-header { flex-direction: column !important; }
+  .dashboard-filtros { width: 100% !important; }
+  .dashboard-filtros select, .dashboard-filtros button {
+    max-width: 100% !important;
+  }
+}
+
+
+/* AMV FIX: Información y Conversaciones usan el mismo fondo visual del Dashboard.
+   Se elimina el patrón de puntos y se aplica el fondo diagonal corporativo. */
+.app-shell > .chat-panel:not(.dashboard-main-scroll),
+.app-shell > .chat-panel:not(.dashboard-main-scroll) .messages-area,
+.app-shell > .chat-panel:not(.dashboard-main-scroll) .messages,
+.app-shell > .chat-panel:not(.dashboard-main-scroll) .mensajes {
+  background:
+    linear-gradient(135deg, rgba(231,243,255,.94) 0%, rgba(211,231,255,.88) 48%, rgba(237,247,255,.94) 100%),
+    url('/amv-login-background.png') center center / cover no-repeat !important;
+  background-attachment: scroll !important;
+}
+.app-shell > .chat-panel:not(.dashboard-main-scroll) .messages-area {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+@media (max-width: 900px) {
+  .app-shell > .chat-panel:not(.dashboard-main-scroll),
+  .app-shell > .chat-panel:not(.dashboard-main-scroll) .messages-area {
+    background-size: cover !important;
+    background-position: center center !important;
+  }
+}

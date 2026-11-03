@@ -1,0 +1,3 @@
+-- Dashboard: el filtro por sala usa la asignación guardada en public.usuarios.sala.
+-- Verifica que la migración ASIGNACION_SALAS_ASESORES.sql ya fue ejecutada.
+-- Los roles autorizados a filtrar son Administrador y SuperAdmin; Supervisor y Asesor no verán el selector.

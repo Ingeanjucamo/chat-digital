@@ -69,7 +69,7 @@ const [ultimosMensajesPorUsuario, setUltimosMensajesPorUsuario] = useState({});
   const [alerta, setAlerta] = useState(null);
 
   useEffect(() => {
-    document.title = "Chat Digital | Comunicación Interna";
+    document.title = "AMV CRM & Software";
   }, []);
 
   /* =====================================================
@@ -152,6 +152,103 @@ function obtenerNombreUsuario(id) {
     encontrado?.usuario ||
     "Usuario"
   );
+}
+
+// Cargar el historial al abrir Información General o una conversación.
+useEffect(() => {
+  if (!usuario || !["informacion", "privado"].includes(seccion)) return;
+
+  let cancelado = false;
+
+  async function cargarHistorial() {
+    try {
+      let consulta = supabase.from("mensajes").select("*");
+
+      if (seccion === "informacion") {
+        consulta = consulta.eq("grupo", "informacion");
+      } else if (miChat) {
+        consulta = consulta
+          .is("grupo", null)
+          .eq("emisor_id", usuario.id)
+          .eq("receptor_id", usuario.id);
+      } else if (usuarioChat) {
+        const yo = Number(usuario.id);
+        const otro = Number(usuarioChat.id);
+        consulta = consulta
+          .is("grupo", null)
+          .or(`and(emisor_id.eq.${yo},receptor_id.eq.${otro}),and(emisor_id.eq.${otro},receptor_id.eq.${yo})`);
+      } else {
+        setMensajes([]);
+        return;
+      }
+
+      const { data, error } = await consulta.order("created_at", { ascending: true });
+      if (error) throw error;
+
+      const mensajesConNombre = (data || []).map((m) => ({
+        ...m,
+        nombre: obtenerNombreUsuario(m.emisor_id),
+      }));
+
+      if (!cancelado) setMensajes(mensajesConNombre);
+    } catch (error) {
+      console.error("Error cargando historial de mensajes:", error);
+    }
+  }
+
+  cargarHistorial();
+  return () => { cancelado = true; };
+}, [usuario, seccion, usuarioChat, miChat, usuarios]);
+
+async function enviarMensaje(e) {
+  e.preventDefault();
+  const mensajeTexto = texto.trim();
+
+  if (!mensajeTexto || !usuario) return;
+
+  if (seccion === "informacion" && usuario.rol !== "Administrador") {
+    alert("Solo los administradores pueden publicar información.");
+    return;
+  }
+
+  if (seccion === "privado" && !usuarioChat) {
+    alert("Selecciona un contacto primero.");
+    return;
+  }
+
+  try {
+    const nuevoMensaje = {
+      emisor_id: usuario.id,
+      texto: mensajeTexto,
+      receptor_id: seccion === "privado" ? usuarioChat.id : null,
+      grupo: seccion === "informacion" ? "informacion" : null,
+    };
+
+    const { data, error } = await supabase
+      .from("mensajes")
+      .insert(nuevoMensaje)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+
+    const mensajeConNombre = {
+      ...data,
+      nombre: usuario.nombre || usuario.usuario || "Usuario",
+    };
+
+    setTexto("");
+    setMensajeRespondido(null);
+    setMensajes((anteriores) => {
+      if (anteriores.some((m) => Number(m.id) === Number(data.id))) {
+        return anteriores;
+      }
+      return [...anteriores, mensajeConNombre];
+    });
+  } catch (error) {
+    console.error("Error enviando mensaje:", error);
+    alert(error?.message || "No se pudo enviar el mensaje. Verifica la conexión y los permisos de Supabase.");
+  }
 }
 
 async function buscarMensajes() {
@@ -490,6 +587,69 @@ if (
 
 
   /* =====================================================
+     NAVEGACIÓN PRINCIPAL
+  ===================================================== */
+
+  function abrirInformacion() {
+    setSeccion("informacion");
+    setMiChat(false);
+    setUsuarioChat(null);
+  }
+
+  function abrirConversaciones() {
+    setSeccion("privado");
+    setMiChat(false);
+    setUsuarioChat(null);
+    setMensajes([]);
+  }
+
+  function abrirVentas() {
+    setSeccion("ventas");
+    setMiChat(false);
+    setUsuarioChat(null);
+  }
+
+  function abrirDashboard() {
+    setSeccion("dashboard");
+    setMiChat(false);
+    setUsuarioChat(null);
+  }
+
+  function abrirAdministracion() {
+    setSeccion("administracion");
+    setMiChat(false);
+    setUsuarioChat(null);
+    cargarUsuariosAdministracion();
+  }
+
+  function abrirMiChat() {
+    setSeccion("privado");
+    setMiChat(true);
+    setUsuarioChat(null);
+    setMensajes([]);
+  }
+
+  function abrirChatPrivado(contacto) {
+    setSeccion("privado");
+    setMiChat(false);
+    setUsuarioChat(contacto);
+    setMensajes([]);
+  }
+
+  function cerrarSesion() {
+    setUsuario(null);
+    setLoginUsuario("");
+    setLoginPassword("");
+    setErrorLogin("");
+    setSeccion("informacion");
+    setUsuarioChat(null);
+    setMiChat(false);
+    setMensajes([]);
+    setBusqueda("");
+    setBusquedaMensajes("");
+  }
+
+  /* =====================================================
      ADMINISTRACIÓN - CARGAR USUARIOS
   ===================================================== */
 
@@ -567,817 +727,39 @@ async function iniciarSesion(e) {
 ===================================================== */
 
 const contactos = useMemo(() => {
-  if (!usuario) {
-    return [];
-  }
-
+  if (!usuario) return [];
   let lista = [];
-
   if (usuario.rol === "Asesor") {
-    lista = usuarios.filter(
-      (u) =>
-        ["Administrador", "Supervisor"].includes(u.rol) &&
-        u.id !== usuario.id &&
-        u.activo !== false
-    );
+    lista = usuarios.filter((u) => u.rol === "Administrador" && u.id !== usuario.id && u.activo !== false);
   }
-
-  if (usuario.rol === "Supervisor" || usuario.rol === "Administrador") {
-    lista = usuarios.filter(
-      (u) =>
-        u.rol === "Asesor" &&
-        u.id !== usuario.id &&
-        u.activo !== false
-    );
+  if (usuario.rol === "Administrador") {
+    lista = usuarios.filter((u) => u.rol === "Asesor" && u.id !== usuario.id && u.activo !== false);
   }
-
-  const textoBusqueda = busqueda.trim().toLowerCase();
-
-  if (textoBusqueda !== "") {
-    lista = lista.filter((u) => {
-      const nombre = u.nombre ? u.nombre.toLowerCase() : "";
-      const usuarioNombre = u.usuario
-        ? u.usuario.toLowerCase()
-        : "";
-
-      return (
-        nombre.includes(textoBusqueda) ||
-        usuarioNombre.includes(textoBusqueda)
-      );
-    });
+  if (busqueda.trim() !== "") {
+    const textoBusqueda = busqueda.toLowerCase().trim();
+    lista = lista.filter((u) => (u.nombre || "").toLowerCase().includes(textoBusqueda) || (u.usuario || "").toLowerCase().includes(textoBusqueda));
   }
-
-  lista.sort((a, b) => {
-    const fechaA = ultimosMensajesPorUsuario[a.id]
-      ? new Date(ultimosMensajesPorUsuario[a.id]).getTime()
-      : 0;
-
-    const fechaB = ultimosMensajesPorUsuario[b.id]
-      ? new Date(ultimosMensajesPorUsuario[b.id]).getTime()
-      : 0;
-
-    return fechaB - fechaA;
-  });
-
   return lista;
-}, [
-  usuarios,
-  usuario,
-  busqueda,
-  pendientesPorUsuario,
-  ultimosMensajesPorUsuario,
-]);
+}, [usuarios, usuario, busqueda]);
 
-
-
-    /* =====================================================
-     ABRIR INFORMACIÓN
-  ===================================================== */
-
-  async function abrirInformacion() {
-    setSeccion("informacion");
-    setUsuarioChat(null);
-    setTexto("");
-    setBusqueda("");
-    setNotificacionesInfo(0);
-    setArchivoSeleccionado(null);
-
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("mensajes")
-        .select("*")
-        .eq("grupo", "informacion")
-        .order("created_at", { ascending: true });
-
-    if (error) throw error;
-
-const mensajesChat = data || [];
-
-setMensajes(
-  mensajesChat.map((mensaje) => ({
-    ...mensaje,
-    nombre: obtenerNombreUsuario(mensaje.emisor_id),
-  }))
-);
-
-
-    } catch (error) {
-      console.error(
-        "Error cargando información:",
-        error
-      );
-
-      setMensajes([]);
-    }
-  }
-
-
-  /* =====================================================
-     ABRIR DASHBOARD COMERCIAL
-  ===================================================== */
-  function abrirDashboard() {
-    setSeccion("dashboard");
-    setUsuarioChat(null);
-    setMensajes([]);
-    setTexto("");
-    setBusqueda("");
-    setArchivoSeleccionado(null);
-
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
-  }
-
-  /* =====================================================
-     ABRIR VENTAS
-  ===================================================== */
-
-  function abrirVentas() {
-    setSeccion("ventas");
-    setUsuarioChat(null);
-    setMensajes([]);
-    setTexto("");
-    setBusqueda("");
-    setArchivoSeleccionado(null);
-
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
-  }
-
-  /* =====================================================
-     ABRIR CONVERSACIONES
-  ===================================================== */
-
-  async function abrirConversaciones() {
-    setSeccion("privado");
-    setUsuarioChat(null);
-    setMensajes([]);
-    setBusqueda("");
-    setTexto("");
-    setArchivoSeleccionado(null);
-
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
-  }
-
-
-  /* =====================================================
-     ABRIR CHAT PRIVADO
-  ===================================================== */
-
-  async function abrirChatPrivado(contacto) {
-    console.log(
-      "ABRIENDO CHAT CON:",
-      contacto
-    );
-
-    console.log(
-      "USUARIO ACTUAL:",
-      usuario
-    );
-
-    setSeccion("privado");
-    setUsuarioChat(contacto);
-
-    const { error: errorLeido } = await supabase
-  .from("mensajes")
-  .update({ leido: true })
-  .eq("receptor_id", usuario.id)
-  .eq("emisor_id", contacto.id)
-  .eq("leido", false);
-
-if (errorLeido) {
-  console.error(
-    "Error marcando mensajes como leídos:",
-    errorLeido
-  );
-}
-
-    setPendientesPorUsuario(
-      (anteriores) => {
-        const copia = { ...anteriores };
-
-        delete copia[contacto.id];
-
-        return copia;
-      }
-    );
-
-    setNotificacionesPrivadas(
-      (cantidad) =>
-        Math.max(
-          0,
-          cantidad -
-            (pendientesPorUsuario[
-              contacto.id
-            ] || 0)
-        )
-    );
-
-    try {
-      const { data, error } =
-        await supabase
-          .from("mensajes")
-          .select("*")
-          .is("grupo", null)
-          .or(
-            `and(emisor_id.eq.${usuario.id},receptor_id.eq.${contacto.id}),and(emisor_id.eq.${contacto.id},receptor_id.eq.${usuario.id})`
-          )
-          .order("created_at", {
-            ascending: true,
-          });
-
-      if (error) {
-        throw error;
-      }
-
-      setMensajes(
-        (data || []).map((mensaje) => ({
-          ...mensaje,
-          nombre:
-            obtenerNombreUsuario(
-              mensaje.emisor_id
-            ),
-        }))
-      );
-    } catch (error) {
-      console.error(
-        "Error cargando conversación:",
-        error
-      );
-
-      setMensajes([]);
-    }
-  }
-
-/* =====================================================
-   ABRIR MI CHAT
-===================================================== */
-
-async function abrirMiChat() {
-  if (!usuario) return;
-
-  console.log("ABRIENDO MI CHAT");
-
-  setSeccion("privado");
-  setMiChat(true);
-  setUsuarioChat(usuario);
-
-  try {
-    const { data, error } = await supabase
-      .from("mensajes")
-      .select("*")
-      .eq("emisor_id", usuario.id)
-      .eq("receptor_id", usuario.id)
-      .is("grupo", null)
-      .order("created_at", {
-        ascending: true,
-      });
-
-    if (error) {
-      throw error;
-    }
-
-    setMensajes(
-      (data || []).map((mensaje) => ({
-        ...mensaje,
-        nombre:
-          usuario.nombre ||
-          usuario.usuario ||
-          "Yo",
-      }))
-    );
-  } catch (error) {
-    console.error(
-      "Error cargando Mi chat:",
-      error
-    );
-
-    setMensajes([]);
-  }
-}
-  /* =====================================================
-     ENVIAR MENSAJE
-  ===================================================== */
-
- async function enviarMensaje(e) {
-  e.preventDefault();
-
-  const mensajeTexto = texto
-  .replace(/\r\n/g, "\n")
-  .replace(/\r/g, "\n")
-  .trim();
-
-  if (
-    (!mensajeTexto && !archivoSeleccionado) ||
-    !usuario
-  ) {
-    return;
-  }
-
-if (archivoSeleccionado) {
-  const esImagen =
-    archivoSeleccionado.type?.startsWith("image/");
-
-  const puedeEnviarImagenPrivada =
-  seccion === "privado" &&
-  usuarioChat &&
-  (
-    usuarioChat.id === usuario.id ||
-    usuarioChat.rol !== usuario.rol
-  ) &&
-  esImagen;
-
-  const puedeEnviarArchivoInformacion =
-    seccion === "informacion" &&
-    usuario.rol === "Administrador";
-
-  if (
-    !puedeEnviarImagenPrivada &&
-    !puedeEnviarArchivoInformacion
-  ) {
-    alert(
-      "En chats privados solo se pueden enviar imágenes entre Asesor y Administrador."
-    );
-    return;
-  }
-}
-
-  if (
-    seccion === "informacion" &&
-    usuario.rol !== "Administrador"
-  ) {
-    alert(
-      "Solo los administradores pueden publicar información."
-    );
-    return;
-  }
-
-  if (
-  seccion === "privado" &&
-  !usuarioChat
-) {
-  alert("Selecciona un contacto primero.");
-  return;
-}
-
-  try {
-    const { data: { user: authUser } } =
-  await supabase.auth.getUser();
-
-console.log("AUTH USER:", authUser);
-console.log("AUTH UID:", authUser?.id);
-console.log("USUARIO APP:", usuario);
-
-    let archivoData = null;
-
-    /* =================================================
-       SUBIR ARCHIVO A SUPABASE STORAGE
-    ================================================= */
-
-    if (archivoSeleccionado) {
-      setSubiendoArchivo(true);
-
-      const nombreArchivo =
-        `${usuario.id}_${Date.now()}_${archivoSeleccionado.name}`
-          .replace(/\s+/g, "_");
-
-      const rutaArchivo =
-        `mensajes/${nombreArchivo}`;
-
-      const { error: errorArchivo } =
-        await supabase.storage
-          .from("archivos")
-          .upload(
-            rutaArchivo,
-            archivoSeleccionado
-          );
-
-      if (errorArchivo) {
-        throw errorArchivo;
-      }
-
-      const { data: urlData } =
-        supabase.storage
-          .from("archivos")
-          .getPublicUrl(rutaArchivo);
-
-      archivoData = {
-        nombre: archivoSeleccionado.name,
-        tipo: archivoSeleccionado.type,
-        url: urlData.publicUrl,
-      };
-
-      setSubiendoArchivo(false);
-    }
-
-    /* =================================================
-       PREPARAR MENSAJE
-    ================================================= */
-
-const nuevoMensaje = {
-  emisor_id: usuario.id,
-  texto: mensajeTexto || null,
-  grupo: seccion === "informacion" ? "informacion" : null,
-
-  receptor_id:
-    seccion === "privado"
-      ? usuarioChat.id
-      : null,
-
-  archivo: archivoData,
-
-  mensaje_respondido_id:
-    mensajeRespondido?.id || null,
-};
-
-    /* =================================================
-       GUARDAR EN SUPABASE
-    ================================================= */
-
-    const { data, error } = await supabase
-      .from("mensajes")
-      .insert(nuevoMensaje)
-      .select()
-      .single();
-
-    if (error) {
-      console.error(
-        "ERROR SUPABASE AL ENVIAR:",
-        error
-      );
-
-      throw error;
-    }
-
-    // Actualizar posición de la conversación
-if (seccion === "privado" && usuarioChat) {
-  setUltimosMensajesPorUsuario((anteriores) => ({
-    ...anteriores,
-    [usuarioChat.id]: data.created_at,
-  }));
-}
-
-    /* =================================================
-       LIMPIAR
-    ================================================= */
-
-    setTexto("");
-setArchivoSeleccionado(null);
-setMensajeRespondido(null);
-
-    if (archivoInputRef.current) {
-      archivoInputRef.current.value = "";
-    }
-
-    /* =================================================
-       MOSTRAR MENSAJE
-    ================================================= */
-
-setMensajes((anteriores) => {
-  if (
-    anteriores.some(
-      (m) => Number(m.id) === Number(data.id)
-    )
-  ) {
-    return anteriores;
-  }
-
-  return [
-    ...anteriores,
-    {
-      ...data,
-      nombre:
-        usuario.nombre ||
-        usuario.usuario ||
-        "Usuario",
-    },
-  ];
-});
-
-  } catch (error) {
-    console.error(
-      "Error enviando mensaje:",
-      error
-    );
-
-    setSubiendoArchivo(false);
-
-    alert(
-      error.message ||
-        "No se pudo enviar el mensaje"
-    );
-  }
-}
-
-  /* =====================================================
-     ADMINISTRACIÓN
-  ===================================================== */
-
-  function abrirAdministracion() {
-    if (
-  !usuario?.esSuperAdmin &&
-  usuario?.usuario !== "andres.cardozo"
-) {
-  return;
-}
-
-    setSeccion("administracion");
-    setUsuarioChat(null);
-    setMensajes([]);
-    setBusqueda("");
-
-    cargarUsuariosAdministracion();
-  }
-
-  function limpiarFormularioUsuario() {
-    setMostrarFormularioUsuario(false);
-    setUsuarioEditando(null);
-
-    setFormUsuario({
-      usuario: "",
-      nombre: "",
-      password: "",
-      rol: "Asesor",
-    });
-  }
-
-  function editarUsuario(u) {
-    setUsuarioEditando(u);
-
-    setFormUsuario({
-      usuario: u.usuario || "",
-      nombre: u.nombre || "",
-      password: "",
-      rol: u.rol || "Asesor",
-    });
-
-    setMostrarFormularioUsuario(true);
-  }
-
- async function guardarUsuario() {
-  try {
-    if (!formUsuario.usuario.trim()) {
-      alert("Escribe el usuario.");
-      return;
-    }
-
-    if (!formUsuario.nombre.trim()) {
-      alert("Escribe el nombre.");
-      return;
-    }
-
-    if (!usuarioEditando && !formUsuario.password.trim()) {
-      alert("Escribe la contraseña.");
-      return;
-    }
-
-    // CREAR USUARIO
-    if (!usuarioEditando) {
-      const {
-        data: sessionData,
-        error: sessionError,
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !sessionData.session) {
-        throw new Error("No hay una sesión activa de administrador.");
-      }
-
-      const respuesta = await fetch(
-        "https://frghtzsodaivkxbzzbnk.supabase.co/functions/v1/admin-create-user",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionData.session.access_token}`,
-          },
-          body: JSON.stringify({
-            usuario: formUsuario.usuario.trim(),
-            nombre: formUsuario.nombre.trim(),
-            password: formUsuario.password,
-            // Compatibilidad con la Edge Function actual.
-            // Supervisor se crea inicialmente como Administrador y
-            // se corrige inmediatamente en el perfil de Supabase.
-            rol: formUsuario.rol === "Supervisor" ? "Administrador" : formUsuario.rol,
-          }),
-        }
-      );
-
-      const datos = await respuesta.json();
-
-      if (!respuesta.ok) {
-        throw new Error(
-          datos.error || "No se pudo crear el usuario."
-        );
-      }
-
-      // Si se creó como Supervisor mediante la compatibilidad con la
-      // Edge Function antigua, corregimos el rol y sus funciones.
-      if (formUsuario.rol === "Supervisor") {
-        const { error: rolError } = await supabase
-          .from("usuarios")
-          .update({
-            rol: "Supervisor",
-            funciones: ["Ventas", "Revisión"],
-          })
-          .eq("usuario", formUsuario.usuario.trim());
-
-        if (rolError) {
-          throw new Error(
-            `El usuario fue creado, pero no se pudo asignar Supervisor: ${rolError.message}`
-          );
-        }
-      }
-
-      limpiarFormularioUsuario();
-
-      await cargarUsuariosAdministracion();
-      await cargarUsuarios();
-
-      alert("Usuario creado correctamente.");
-      return;
-    }
-
-    // EDITAR USUARIO
-    alert(
-      "La edición de usuarios todavía está pendiente de migración a Supabase."
-    );
-  } catch (error) {
-    console.error("ERROR GUARDANDO USUARIO:", error);
-
-    alert(
-      error.message || "No se pudo guardar el usuario."
-    );
-  }
-}
-
-  async function cambiarPassword() {
-  if (!nuevaPassword.trim()) {
-    alert("Escribe una nueva contraseña");
-    return;
-  }
-
-  try {
-    const {
-      data: sessionData,
-      error: sessionError,
-    } = await supabase.auth.getSession();
-
-    if (sessionError || !sessionData.session) {
-      throw new Error(
-        "No hay una sesión activa de administrador."
-      );
-    }
-
-    const respuesta = await fetch(
-      "https://frghtzsodaivkxbzzbnk.supabase.co/functions/v1/admin-update-password",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionData.session.access_token}`,
-        },
-        body: JSON.stringify({
-          usuario_id: usuarioPassword.id,
-          password: nuevaPassword,
-        }),
-      }
-    );
-
-    const datos = await respuesta.json();
-
-    if (!respuesta.ok) {
-      throw new Error(
-        datos.error ||
-          "No se pudo cambiar la contraseña."
-      );
-    }
-
-    setUsuarioPassword(null);
-    setNuevaPassword("");
-
-    alert("Contraseña cambiada correctamente.");
-  } catch (error) {
-    console.error(
-      "ERROR CAMBIANDO CONTRASEÑA:",
-      error
-    );
-
-    alert(error.message);
-  }
-}
-
- async function cerrarSesion() {
-  try {
-    await supabase.auth.signOut();
-  } catch (error) {
-    console.error("Error cerrando sesión de Supabase:", error);
-  }
-
-  setUsuario(null);
-  setUsuarioChat(null);
-  setMensajes([]);
-  setTexto("");
-  setBusqueda("");
-  setLoginUsuario("");
-  setLoginPassword("");
-  setErrorLogin("");
-  setNotificacionesPrivadas(0);
-  setNotificacionesInfo(0);
-  setPendientesPorUsuario({});
-  setAlerta(null);
-  setArchivoSeleccionado(null);
-  setSubiendoArchivo(false);
-
-  setUsuariosAdmin([]);
-  setUsuarioEditando(null);
-  setUsuarioPassword(null);
-  setNuevaPassword("");
+function limpiarFormularioUsuario() {
   setMostrarFormularioUsuario(false);
-
-  if (archivoInputRef.current) {
-    archivoInputRef.current.value = "";
-  }
+  setUsuarioEditando(null);
+  setFormUsuario({ usuario: "", nombre: "", password: "", rol: "Asesor" });
 }
 
-  /* =====================================================
-     LOGIN
-  ===================================================== */
-
+const vistaApp = (() => {
   if (!usuario) {
     return (
-      <div
-        className="login-page"
-        style={estilos.loginPagina}
-      >
-        <div
-          className="login-card"
-          style={estilos.loginCaja}
-        >
-          <div className="login-brand">
-            <img
-              src="/logo-digital.png"
-              alt="Digital Contact Center Colombia S.A.S."
-              className="login-logo"
-            />
-          </div>
-
-          <h1 style={estilos.loginTitulo}>
-            Chat Digital
-          </h1>
-
-          <p style={estilos.loginSubtitulo}>
-            Comunicación interna · Chat corporativo
-          </p>
-
-          <form onSubmit={iniciarSesion}>
-            <input
-              type="text"
-              placeholder="Usuario"
-              value={loginUsuario}
-              onChange={(e) =>
-                setLoginUsuario(
-                  e.target.value
-                )
-              }
-              style={estilos.input}
-              autoComplete="username"
-            />
-
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={loginPassword}
-              onChange={(e) =>
-                setLoginPassword(
-                  e.target.value
-                )
-              }
-              style={estilos.input}
-              autoComplete="current-password"
-            />
-
-            {errorLogin && (
-              <div style={estilos.error}>
-                {errorLogin}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              style={estilos.botonLogin}
-            >
-              Ingresar
-            </button>
-          </form>
-        </div>
-      </div>
+      <Login
+        loginUsuario={loginUsuario}
+        setLoginUsuario={setLoginUsuario}
+        loginPassword={loginPassword}
+        setLoginPassword={setLoginPassword}
+        errorLogin={errorLogin}
+        iniciarSesion={iniciarSesion}
+        estilos={estilos}
+      />
     );
   }
 
@@ -1501,32 +883,7 @@ setMensajes((anteriores) => {
         >
           <Administration
             usuario={usuario}
-            usuarios={usuariosAdmin}
-            cargando={cargandoAdmin}
-            usuarioEditando={usuarioEditando}
-            setUsuarioEditando={setUsuarioEditando}
-            usuarioPassword={usuarioPassword}
-            setUsuarioPassword={setUsuarioPassword}
-            nuevaPassword={nuevaPassword}
-            setNuevaPassword={setNuevaPassword}
-            mostrarFormularioUsuario={
-              mostrarFormularioUsuario
-            }
-            setMostrarFormularioUsuario={
-              setMostrarFormularioUsuario
-            }
-            formUsuario={formUsuario}
-            setFormUsuario={setFormUsuario}
-            cargarUsuariosAdministracion={
-              cargarUsuariosAdministracion
-            }
-            limpiarFormularioUsuario={
-              limpiarFormularioUsuario
-            }
-            editarUsuario={editarUsuario}
-            guardarUsuario={guardarUsuario}
-            cambiarPassword={cambiarPassword}
-            estilos={estilos}
+            onUsuariosActualizados={cargarUsuariosAdministracion}
           />
         </main>
       ) : seccion === "ventas" ? (
@@ -1954,6 +1311,9 @@ setMensajes((anteriores) => {
       
     </div>
   );
+})();
+
+  return vistaApp;
 }
 
 /* =========================================================
@@ -1971,27 +1331,26 @@ const estilos = {
     alignItems: "center",
     justifyContent: "center",
     background:
-      "linear-gradient(135deg, #061b35 0%, #0a3158 50%, #1769e8 100%)",
+      "radial-gradient(circle at 15% 20%, #0b3d80 0%, #04152f 48%, #020817 100%)",
     fontFamily:
       "Inter, Arial, Helvetica, sans-serif",
     padding: 20,
   },
 
   loginCaja: {
-    width: 400,
+    width: 460,
     maxWidth: "100%",
-    padding: 40,
-    borderRadius: 22,
-    background: "#ffffff",
-    boxShadow:
-      "0 25px 70px rgba(0, 20, 50, 0.30)",
+    padding: 36,
+    borderRadius: 24,
+    background: "linear-gradient(145deg, #fafdff 0%, #eaf6ff 100%)",
+    boxShadow: "0 30px 90px rgba(0, 10, 40, 0.48)",
   },
 
   loginTitulo: {
     textAlign: "center",
     margin: "15px 0 5px",
-    color: "#142033",
-    fontSize: 28,
+    color: "#071d49",
+    fontSize: 30,
     fontWeight: 800,
   },
 
@@ -2010,11 +1369,11 @@ const estilos = {
     marginBottom: 14,
     borderRadius: 11,
     border:
-      "1px solid #d8e0ea",
+      "1px solid #c8dff5",
     fontSize: 14,
     outline: "none",
-    background: "#fbfcfe",
-    color: "#142033",
+    background: "#ffffff",
+    color: "#08204a",
   },
 
   botonLogin: {
@@ -2023,13 +1382,13 @@ const estilos = {
     border: "none",
     borderRadius: 11,
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     color: "#ffffff",
     fontSize: 15,
     fontWeight: 700,
     cursor: "pointer",
     boxShadow:
-      "0 8px 20px rgba(23,105,232,.25)",
+      "0 10px 26px rgba(0,145,255,.32)",
   },
 
   error: {
@@ -2183,7 +1542,7 @@ const estilos = {
     minWidth: 42,
     borderRadius: 12,
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -2231,11 +1590,9 @@ const estilos = {
   },
 
   menuActivo: {
-    background:
-      "linear-gradient(90deg, #1769e8, #2480ee)",
-    color: "#ffffff",
-    boxShadow:
-      "0 6px 18px rgba(23,105,232,.25)",
+    background: "transparent",
+    color: "rgba(255,255,255,.76)",
+    boxShadow: "none",
   },
 
   badge: {
@@ -2364,7 +1721,7 @@ const estilos = {
     minWidth: 40,
     borderRadius: 11,
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     color: "#ffffff",
     display: "flex",
     alignItems: "center",
@@ -2475,7 +1832,7 @@ const estilos = {
     minWidth: 44,
     borderRadius: 12,
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     color: "#ffffff",
     display: "flex",
     alignItems: "center",
@@ -2520,7 +1877,7 @@ const estilos = {
 
   mensajePropio: {
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     color: "#ffffff",
     borderBottomRightRadius: 3,
     boxShadow:
@@ -2567,13 +1924,13 @@ const estilos = {
     padding:
       "12px 14px",
     border:
-      "1px solid #d8e0ea",
+      "1px solid #c8dff5",
     borderRadius: 11,
     outline: "none",
     fontSize: 13,
     minWidth: 0,
-    background: "#fbfcfe",
-    color: "#142033",
+    background: "#ffffff",
+    color: "#08204a",
   },
 
   botonAdjuntar: {
@@ -2581,7 +1938,7 @@ const estilos = {
     height: 43,
     flexShrink: 0,
     border:
-      "1px solid #d8e0ea",
+      "1px solid #c8dff5",
     borderRadius: 11,
     background: "#ffffff",
     color: "#475467",
@@ -2626,7 +1983,7 @@ const estilos = {
     border: "none",
     borderRadius: 11,
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     color: "#ffffff",
     fontSize: 19,
     cursor: "pointer",
@@ -2726,7 +2083,7 @@ const estilos = {
   botonNuevoUsuario: {
     border: "none",
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     color: "#ffffff",
     padding:
       "12px 17px",
@@ -3116,7 +2473,7 @@ const estilos = {
       "12px 13px",
     marginBottom: 15,
     border:
-      "1px solid #d8e0ea",
+      "1px solid #c8dff5",
     borderRadius: 10,
     outline: "none",
     fontSize: 13,
@@ -3138,7 +2495,7 @@ const estilos = {
     padding:
       "10px 15px",
     border:
-      "1px solid #d8e0ea",
+      "1px solid #c8dff5",
     borderRadius: 9,
     background: "#ffffff",
     color: "#475467",
@@ -3153,7 +2510,7 @@ const estilos = {
     border: "none",
     borderRadius: 9,
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     color: "#ffffff",
     cursor: "pointer",
     fontSize: 11,
@@ -3180,7 +2537,7 @@ const estilos = {
     height: 40,
     borderRadius: 11,
     background:
-      "linear-gradient(135deg, #1769e8, #2b7cff)",
+      "linear-gradient(135deg, #00c9f2, #0878ff 58%, #0644c7)",
     color: "#ffffff",
     display: "flex",
     alignItems: "center",

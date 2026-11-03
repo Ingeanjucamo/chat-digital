@@ -282,6 +282,7 @@ function Administration({ usuario, onUsuariosActualizados }) {
     password: "",
     rol: "Asesor",
     cedula: "",
+    sala: "Sala 1",
   });
 
   // =========================================================
@@ -336,6 +337,7 @@ function Administration({ usuario, onUsuariosActualizados }) {
       password: "",
       rol: "Asesor",
       cedula: "",
+      sala: "Sala 1",
     });
 
     setMostrarFormularioUsuario(true);
@@ -355,6 +357,7 @@ function Administration({ usuario, onUsuariosActualizados }) {
       password: "",
       rol: "Asesor",
       cedula: "",
+      sala: "Sala 1",
     });
   };
 
@@ -363,6 +366,10 @@ function Administration({ usuario, onUsuariosActualizados }) {
   // =========================================================
 
   const guardarUsuario = async () => {
+    if (!esSuperAdmin) {
+      alert("Solo el SuperAdmin puede asignar asesores a salas.");
+      return;
+    }
     try {
       if (
         !formUsuario.usuario.trim() ||
@@ -471,6 +478,14 @@ function Administration({ usuario, onUsuariosActualizados }) {
           }
         }
 
+        if (formUsuario.rol === "Asesor") {
+          const { error: salaError } = await supabase
+            .from("usuarios")
+            .update({ sala: formUsuario.sala })
+            .eq("usuario", formUsuario.usuario.trim());
+          if (salaError) throw new Error(`Usuario creado, pero no se pudo asignar la sala: ${salaError.message}`);
+        }
+
         cerrarFormulario();
 
         await cargarUsuarios();
@@ -560,6 +575,14 @@ function Administration({ usuario, onUsuariosActualizados }) {
             `El usuario se actualizó, pero no se pudo guardar la cédula: ${cedulaError.message}`
           );
         }
+      }
+
+      if (formUsuario.rol === "Asesor") {
+        const { error: salaError } = await supabase
+          .from("usuarios")
+          .update({ sala: formUsuario.sala })
+          .eq("id", usuarioEditando.id);
+        if (salaError) throw new Error(`Usuario actualizado, pero no se pudo asignar la sala: ${salaError.message}`);
       }
 
       cerrarFormulario();
@@ -1500,6 +1523,21 @@ function Administration({ usuario, onUsuariosActualizados }) {
                 </option>
 
               </select>
+
+              {esSuperAdmin && formUsuario.rol === "Asesor" && (
+                <>
+                  <label>Sala asignada al asesor</label>
+                  <select
+                    value={formUsuario.sala || "Sala 1"}
+                    onChange={(e) => setFormUsuario({ ...formUsuario, sala: e.target.value })}
+                  >
+                    <option value="Sala 1">Sala 1</option>
+                    <option value="Sala 2">Sala 2</option>
+                    <option value="Sala 3">Sala 3</option>
+                    <option value="Sala 4">Sala 4</option>
+                  </select>
+                </>
+              )}
 
             </div>
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 function Sidebar({
   usuario,
@@ -13,28 +13,38 @@ function Sidebar({
   cerrarSesion,
   estilos,
 }) {
+  const [collapsed, setCollapsed] = useState(false);
   return (
     <aside
-      className="app-sidebar"
+      className={`app-sidebar ${collapsed ? "sidebar-collapsed" : ""}`}
       style={estilos.sidebar}
     >
+      <button
+        type="button"
+        className="sidebar-toggle"
+        onClick={() => setCollapsed((value) => !value)}
+        aria-label={collapsed ? "Expandir menú" : "Contraer menú"}
+        title={collapsed ? "Expandir menú" : "Contraer menú"}
+      >
+        {collapsed ? "›" : "‹"}
+      </button>
       <div
         className="brand-area"
         style={estilos.logoArea}
       >
         <img
-          src="/logo-digital.png"
-          alt="Digital Contact Center Colombia S.A.S."
+          src="/amv-logo.png"
+          alt="AMV CRM & SOFTWARE"
           className="sidebar-logo"
         />
 
-        <div className="brand-text">
+        <div className={`brand-text ${collapsed ? "sidebar-hidden" : ""}`}>
           <div style={estilos.logoTitulo}>
-            Chat Digital
+            AMV CRM &amp; SOFTWARE
           </div>
 
           <div style={estilos.logoTexto}>
-            Comunicación interna
+            Gestiona, conecta y haz crecer tu negocio.
           </div>
         </div>
       </div>
@@ -42,7 +52,7 @@ function Sidebar({
       {/* USUARIO */}
 
       <div
-        className="current-user"
+        className={`current-user ${collapsed ? "sidebar-user-collapsed" : ""}`}
         style={estilos.usuarioActual}
       >
         <div
@@ -54,7 +64,7 @@ function Sidebar({
             : "U"}
         </div>
 
-        <div style={{ minWidth: 0 }}>
+        <div className={collapsed ? "sidebar-hidden" : ""} style={{ minWidth: 0 }}>
           <div style={estilos.nombreUsuario}>
             {usuario.nombre}
           </div>
@@ -71,14 +81,14 @@ function Sidebar({
       {/* MENÚ */}
 
       <div
-        className="main-menu"
+        className={`main-menu ${collapsed ? "sidebar-menu-collapsed" : ""}`}
         style={estilos.menu}
       >
 
         {/* DASHBOARD */}
 
         <button
-          className="menu-item"
+          className={`menu-item ${collapsed ? "sidebar-menu-item-collapsed" : ""}`}
           style={{
             ...estilos.menuBoton,
             ...(seccion === "dashboard"
@@ -89,7 +99,7 @@ function Sidebar({
         >
           <span>📈</span>
 
-          <span style={{ flex: 1 }}>
+          <span className={collapsed ? "sidebar-hidden" : ""} style={{ flex: 1 }}>
             Dashboard
           </span>
         </button>
@@ -98,7 +108,7 @@ function Sidebar({
         {/* INFORMACIÓN */}
 
         <button
-          className="menu-item"
+          className={`menu-item ${collapsed ? "sidebar-menu-item-collapsed" : ""}`}
           style={{
             ...estilos.menuBoton,
             ...(seccion === "informacion"
@@ -109,7 +119,7 @@ function Sidebar({
         >
           <span>📢</span>
 
-          <span style={{ flex: 1 }}>
+          <span className={collapsed ? "sidebar-hidden" : ""} style={{ flex: 1 }}>
             Información
           </span>
 
@@ -124,7 +134,7 @@ function Sidebar({
         {/* CONVERSACIONES */}
 
         <button
-          className="menu-item"
+          className={`menu-item ${collapsed ? "sidebar-menu-item-collapsed" : ""}`}
           style={{
             ...estilos.menuBoton,
             ...(seccion === "privado"
@@ -135,7 +145,7 @@ function Sidebar({
         >
           <span>💬</span>
 
-          <span style={{ flex: 1 }}>
+          <span className={collapsed ? "sidebar-hidden" : ""} style={{ flex: 1 }}>
             Conversaciones
           </span>
 
@@ -150,7 +160,7 @@ function Sidebar({
         {/* VENTAS */}
 
         <button
-          className="menu-item"
+          className={`menu-item ${collapsed ? "sidebar-menu-item-collapsed" : ""}`}
           style={{
             ...estilos.menuBoton,
             ...(seccion === "ventas"
@@ -161,7 +171,7 @@ function Sidebar({
         >
           <span>📊</span>
 
-          <span style={{ flex: 1 }}>
+          <span className={collapsed ? "sidebar-hidden" : ""} style={{ flex: 1 }}>
             Ventas
           </span>
         </button>
@@ -173,7 +183,7 @@ function Sidebar({
           (usuario.esSuperAdmin ||
             usuario.usuario === "andres.cardozo") && (
             <button
-              className="menu-item"
+              className={`menu-item ${collapsed ? "sidebar-menu-item-collapsed" : ""}`}
               style={{
                 ...estilos.menuBoton,
                 ...(seccion === "administracion"
@@ -184,7 +194,7 @@ function Sidebar({
             >
               <span>⚙️</span>
 
-              <span>
+              <span className={collapsed ? "sidebar-hidden" : ""}>
                 Administración
               </span>
             </button>
@@ -204,7 +214,7 @@ function Sidebar({
         {/* CERRAR SESIÓN */}
 
         <button
-          className="logout-button"
+          className={`logout-button ${collapsed ? "sidebar-logout-collapsed" : ""}`}
           style={estilos.botonCerrar}
           onClick={cerrarSesion}
         >
@@ -212,7 +222,7 @@ function Sidebar({
             🚪
           </span>
 
-          <span>
+          <span className={collapsed ? "sidebar-hidden" : ""}>
             Cerrar sesión
           </span>
         </button>
@@ -221,7 +231,7 @@ function Sidebar({
         {/* FIRMA */}
 
         <div
-          className="sidebar-credit"
+          className={`sidebar-credit ${collapsed ? "sidebar-hidden" : ""}`}
           style={{
             display: "flex",
             alignItems: "flex-start",
