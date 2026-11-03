@@ -220,16 +220,18 @@ if (archivoSeleccionado) {
     archivoSeleccionado.type?.startsWith("image/");
 
   const puedeEnviarImagenPrivada =
-  seccion === "privado" &&
-  (miChat || (usuarioChat && (
-    Number(usuarioChat.id) === Number(usuario.id) ||
-    usuarioChat.rol !== usuario.rol
-  ))) &&
-  esImagen;
+    seccion === "privado" &&
+    (
+      miChat ||
+      (usuarioChat && (
+        Number(usuarioChat.id) === Number(usuario.id) ||
+        usuarioChat.rol !== usuario.rol
+      ) && esImagen)
+    );
 
   const puedeEnviarArchivoInformacion =
     seccion === "informacion" &&
-    usuario.rol === "Administrador";
+    ["Administrador", "Supervisor"].includes(usuario.rol);
 
   if (
     !puedeEnviarImagenPrivada &&
@@ -244,16 +246,17 @@ if (archivoSeleccionado) {
 
   if (
     seccion === "informacion" &&
-    usuario.rol !== "Administrador"
+    !["Administrador", "Supervisor"].includes(usuario.rol)
   ) {
     alert(
-      "Solo los administradores pueden publicar información."
+      "Solo los administradores y supervisores pueden publicar información."
     );
     return;
   }
 
   if (
   seccion === "privado" &&
+  !miChat &&
   !usuarioChat
 ) {
   alert("Selecciona un contacto primero.");
@@ -890,9 +893,15 @@ const contactos = useMemo(() => {
   if (!usuario) return [];
   let lista = [];
   if (usuario.rol === "Asesor") {
-    lista = usuarios.filter((u) => u.rol === "Administrador" && u.id !== usuario.id && u.activo !== false);
+    // El asesor puede iniciar chats con administradores y supervisores.
+    lista = usuarios.filter((u) => ["Administrador", "Supervisor"].includes(u.rol) && u.id !== usuario.id && u.activo !== false);
+  }
+  if (usuario.rol === "Supervisor") {
+    // Supervisor: conversaciones únicamente con asesores.
+    lista = usuarios.filter((u) => u.rol === "Asesor" && u.id !== usuario.id && u.activo !== false);
   }
   if (usuario.rol === "Administrador") {
+    // Administrador: conversaciones únicamente con asesores.
     lista = usuarios.filter((u) => u.rol === "Asesor" && u.id !== usuario.id && u.activo !== false);
   }
   if (busqueda.trim() !== "") {

@@ -877,14 +877,12 @@ setTimeout(() => {
           {/* SOLO INFORMACIÓN PARA ASESORES */}
 
           {seccion === "informacion" &&
-          usuario.rol !== "Administrador" ? (
+          !["Administrador", "Supervisor"].includes(usuario.rol) ? (
             <div
               className="read-only"
               style={estilos.soloLectura}
             >
-              👁 Los asesores pueden leer la
-              información, pero solo los
-              administradores pueden publicar.
+              👁 Los asesores pueden leer la información; administradores y supervisores pueden publicar.
             </div>
           ) : (
             <>
@@ -978,15 +976,14 @@ setTimeout(() => {
                 {(
   (
     seccion === "informacion" &&
-    usuario.rol === "Administrador"
+    ["Administrador", "Supervisor"].includes(usuario.rol)
   ) ||
   (
     seccion === "privado" &&
-    usuarioChat &&
-    (
+    (miChat || (usuarioChat && (
       usuarioChat.id === usuario.id ||
       usuarioChat.rol !== usuario.rol
-    )
+    )))
   )
 )&& (
                   <>
@@ -997,9 +994,9 @@ setTimeout(() => {
                         display: "none",
                       }}
                       accept={
-                        seccion === "privado"
+                        seccion === "privado" && !miChat
                           ? "image/*"
-                          : "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
+                          : "image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,.rar"
                       }
                       onChange={(e) => {
                         const archivo =
@@ -1021,7 +1018,7 @@ setTimeout(() => {
                         estilos.botonAdjuntar
                       }
                       title={
-                        seccion === "privado"
+                        seccion === "privado" && !miChat
                           ? "Adjuntar imagen"
                           : "Adjuntar archivo"
                       }

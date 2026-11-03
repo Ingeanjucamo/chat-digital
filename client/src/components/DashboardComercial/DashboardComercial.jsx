@@ -182,6 +182,7 @@ export default function DashboardComercial({ usuario }) {
 
   const esGestion =
     usuario?.rol === "Administrador" ||
+    usuario?.rol === "Supervisor" ||
     esSuperAdmin;
 
   /**
