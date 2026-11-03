@@ -292,11 +292,16 @@ console.log("USUARIO APP:", usuario);
           .from("archivos")
           .upload(
             rutaArchivo,
-            archivoSeleccionado
+            archivoSeleccionado,
+            {
+              upsert: true,
+              contentType: archivoSeleccionado.type || "application/octet-stream",
+              cacheControl: "3600",
+            }
           );
 
       if (errorArchivo) {
-        throw errorArchivo;
+        throw new Error(`No se pudo subir "${archivoSeleccionado.name}" a Supabase Storage: ${errorArchivo.message || "Verifica permisos del bucket archivos."}`);
       }
 
       const { data: urlData } =

@@ -100,3 +100,5 @@
 .ventas-period-toggle { height:38px; border:1px solid #d7e1ee; border-radius:9px; background:#fff; color:#2563d9; padding:0 12px; font-weight:800; cursor:pointer; }
 .ventas-period-toggle.active { background:#eef5ff; border-color:#a9c7fb; }
 @media(max-width:700px){.ventas-period-toolbar{align-items:stretch;flex-direction:column}.ventas-period-controls{width:100%}.ventas-period-controls select,.ventas-period-toggle{flex:1;min-width:0}}
+
+.ventas-page{overflow-y:auto!important;overflow-x:auto;scrollbar-width:thin;scrollbar-color:#7ea9e8 #e7eef8}.ventas-page::-webkit-scrollbar{width:12px;height:12px}.ventas-page::-webkit-scrollbar-track{background:#e7eef8;border-radius:10px}.ventas-page::-webkit-scrollbar-thumb{background:#7ea9e8;border:2px solid #e7eef8;border-radius:10px}.ventas-page::-webkit-scrollbar-thumb:hover{background:#4f83d1}
