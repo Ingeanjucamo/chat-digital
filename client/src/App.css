@@ -2991,29 +2991,3 @@ html, body, #root { width:100%; max-width:100%; min-width:0; overflow-x:hidden; 
     max-width: 100% !important;
   }
 }
-
-
-/* AMV FIX: Información y Conversaciones usan el mismo fondo visual del Dashboard.
-   Se elimina el patrón de puntos y se aplica el fondo diagonal corporativo. */
-.app-shell > .chat-panel:not(.dashboard-main-scroll),
-.app-shell > .chat-panel:not(.dashboard-main-scroll) .messages-area,
-.app-shell > .chat-panel:not(.dashboard-main-scroll) .messages,
-.app-shell > .chat-panel:not(.dashboard-main-scroll) .mensajes {
-  background:
-    linear-gradient(135deg, rgba(231,243,255,.94) 0%, rgba(211,231,255,.88) 48%, rgba(237,247,255,.94) 100%),
-    url('/amv-login-background.png') center center / cover no-repeat !important;
-  background-attachment: scroll !important;
-}
-.app-shell > .chat-panel:not(.dashboard-main-scroll) .messages-area {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-@media (max-width: 900px) {
-  .app-shell > .chat-panel:not(.dashboard-main-scroll),
-  .app-shell > .chat-panel:not(.dashboard-main-scroll) .messages-area {
-    background-size: cover !important;
-    background-position: center center !important;
-  }
-}

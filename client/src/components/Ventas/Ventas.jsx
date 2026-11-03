@@ -2147,7 +2147,7 @@ function prepararCorreccion(venta) {
             <div className="venta-grid">
               <Field label="Tipo de cargue" required>
                 <select value={form.tipo_cargue} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
-                  <option value="NORMAL">NORMAL</option>
+                  <option value="NORMAL">Hoy</option>
                   <option value="FIN_SEMANA">FIN DE SEMANA</option>
                 </select>
               </Field>
@@ -2418,7 +2418,7 @@ function prepararCorreccion(venta) {
             <div className="venta-grid">
               <Field label="Tipo de cargue" required>
                 <select value={form.tipo_cargue} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
-                  <option value="NORMAL">NORMAL</option>
+                  <option value="NORMAL">Hoy</option>
                   <option value="FIN_SEMANA">FIN DE SEMANA</option>
                 </select>
               </Field>
@@ -2763,7 +2763,7 @@ function prepararCorreccion(venta) {
                         {v.tipo_cargue === "FIN_SEMANA" ? (
                           <span style={{ display: "inline-block", padding: "4px 9px", borderRadius: "999px", background: "#fff1d6", color: "#92400e", fontWeight: 700, fontSize: "12px" }}>FIN DE SEMANA</span>
                         ) : (
-                          <span style={{ display: "inline-block", padding: "4px 9px", borderRadius: "999px", background: "#e8f5e9", color: "#166534", fontWeight: 700, fontSize: "12px" }}>NORMAL</span>
+                          <span style={{ display: "inline-block", padding: "4px 9px", borderRadius: "999px", background: "#e8f5e9", color: "#166534", fontWeight: 700, fontSize: "12px" }}>Hoy</span>
                         )}
                       </td>
 
