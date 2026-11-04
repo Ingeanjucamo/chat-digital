@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import * as XLSX from "xlsx";
 import "./DashboardComercial.css";
 
 const MESES = [
@@ -148,6 +149,22 @@ function contarCantadasReportadas(reportes, asesorId, desde, hasta, salaFiltro =
   }).reduce((sum, r) => sum + numero(r.cantidad), 0);
 }
 
+function desgloseCantadasPorTipo(reportes, asesorId, desde, hasta, salaFiltro = "TODAS") {
+  const resultado = { Marcador: 0, Masivos: 0, CRM: 0, "Gestion Propia": 0 };
+  (reportes || []).forEach((r) => {
+    const fecha = String(r.fecha || "").slice(0, 10);
+    if (Number(r.asesor_id) !== Number(asesorId) || fecha < desde || fecha > hasta ||
+        (salaFiltro !== "TODAS" && String(r.sala || "").toUpperCase() !== String(salaFiltro).toUpperCase())) return;
+    let detalle = {};
+    try { detalle = JSON.parse(r.observacion || "{}"); } catch { detalle = {}; }
+    const categorias = detalle.categorias || {};
+    Object.keys(resultado).forEach((categoria) => {
+      resultado[categoria] += numero(categorias[categoria]);
+    });
+  });
+  return resultado;
+}
+
 export default function DashboardComercial({ usuario }) {
   const hoy = new Date();
 
@@ -155,6 +172,7 @@ export default function DashboardComercial({ usuario }) {
   const [mes, setMes] = useState(hoy.getMonth() + 1);
 
   const [asesores, setAsesores] = useState([]);
+  const [salasPorAsesor, setSalasPorAsesor] = useState({});
   const [empresa, setEmpresa] = useState(null);
   const [calendario, setCalendario] = useState(null);
   const [ventasCantadas, setVentasCantadas] = useState([]);
@@ -172,6 +190,8 @@ export default function DashboardComercial({ usuario }) {
   );
   const [salaFiltro, setSalaFiltro] = useState("TODAS");
   const [asesorFiltro, setAsesorFiltro] = useState("TODOS");
+  const [mostrarSoloSinCantadas, setMostrarSoloSinCantadas] = useState(false);
+  const [modoHoyActivo, setModoHoyActivo] = useState(false);
 
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -295,6 +315,14 @@ export default function DashboardComercial({ usuario }) {
       const calendarioRows = calendarioResp.data || [];
       const ventasData = ventasResp.data || [];
       const reportesCantadasData = reportesCantadasResp.error ? [] : (reportesCantadasResp.data || []);
+      // Sala actual de cada asesor, consultada desde Administración/usuarios.
+      const { data: perfilesSala, error: perfilesSalaError } = await supabase
+        .from("usuarios")
+        .select("id,sala,nombre,usuario,rol")
+        .eq("rol", "Asesor");
+      if (perfilesSalaError) console.warn("No se pudieron cargar salas de asesores:", perfilesSalaError.message);
+      const salasMap = Object.fromEntries((perfilesSala || []).map(p => [Number(p.id), String(p.sala || "Sala 1").trim().toUpperCase()]));
+      setSalasPorAsesor(salasMap);
       const metasData = metasResp.error ? [] : (metasResp.data || []);
       const novedadesData = novedadesResp.error ? [] : (novedadesResp.data || []);
 
@@ -628,6 +656,18 @@ export default function DashboardComercial({ usuario }) {
       });
   }, [asesores, metasConfiguradas, novedadesComerciales, ventasCantadas, anio, mes, fechaHasta]);
 
+  // Datos del dashboard limitados a la sala y asesor seleccionados.
+  // Normalizamos el texto de sala para evitar diferencias de mayúsculas.
+  const datosTablaFiltrados = useMemo(() => datosTabla.filter((a) => {
+    const salaAsesor = String(
+      salasPorAsesor[Number(a.asesor_id)] || a.sala || "Sala 1"
+    ).trim().toUpperCase();
+    const salaSeleccionada = String(salaFiltro || "TODAS").trim().toUpperCase();
+    const asesorSeleccionado = String(asesorFiltro || "TODOS");
+    return (salaSeleccionada === "TODAS" || salaAsesor === salaSeleccionada) &&
+      (asesorSeleccionado === "TODOS" || Number(a.asesor_id) === Number(asesorSeleccionado));
+  }), [datosTabla, salasPorAsesor, salaFiltro, asesorFiltro]);
+
   /**
    * ============================================================
    * DATOS DEL ASESOR
@@ -681,7 +721,7 @@ export default function DashboardComercial({ usuario }) {
    */
 
   const resumen = useMemo(() => {
-    const lista = datosTabla;
+    const lista = datosTablaFiltrados;
 
     const metaTabla = lista.reduce(
       (s, a) => s + a.metaAjustada,
@@ -730,7 +770,7 @@ export default function DashboardComercial({ usuario }) {
         0
       ),
     };
-  }, [datosTabla]);
+  }, [datosTablaFiltrados]);
 
   /**
    * ============================================================
@@ -832,7 +872,7 @@ export default function DashboardComercial({ usuario }) {
   );
 
   const resumenPeriodo = useMemo(() => {
-    const activos = datosTabla.filter((a) => a.activo !== false);
+    const activos = datosTablaFiltrados.filter((a) => a.activo !== false);
     const cantadas = ventasPeriodo.length; // ventas realmente cargadas al sistema, sin filtrar por estado
     const rechazadas = ventasPeriodo.filter((v) => String(v.estado).toUpperCase() === "RECHAZADA").length;
     const pendientes = ventasPeriodo.filter((v) => String(v.estado).toUpperCase() === "PENDIENTE").length;
@@ -850,7 +890,7 @@ export default function DashboardComercial({ usuario }) {
       pendientes,
       cumplimiento,
     };
-  }, [datosTabla, ventasPeriodo, resumen.meta, estadisticasAsesores, fechaDesde, fechaHasta, anio, mes, salaFiltro, asesorFiltro]);
+  }, [datosTablaFiltrados, ventasPeriodo, resumen.meta, estadisticasAsesores, fechaDesde, fechaHasta, anio, mes, salaFiltro, asesorFiltro]);
 
   useEffect(() => {
     // Si el usuario escoge un rango invertido, lo corregimos de forma segura.
@@ -939,6 +979,21 @@ export default function DashboardComercial({ usuario }) {
     })
     .reduce((sum, r) => sum + numero(r.cantidad), 0);
 
+  // Conteo diario individual para detectar asesores sin cantadas en la fecha seleccionada.
+  const asesoresSinCantadasDia = datosTablaFiltrados.filter((a) => {
+    const totalDia = contarCantadasReportadas(
+      reportesCantadasDiarias,
+      a.asesor_id,
+      fechaReporteDiario,
+      fechaReporteDiario,
+      salaFiltro
+    );
+    return totalDia === 0;
+  });
+  const asesoresTablaDashboard = mostrarSoloSinCantadas
+    ? asesoresSinCantadasDia
+    : datosTablaFiltrados;
+
   const diasConReporte = new Set(reportesCantadasDiarias
     .filter((r) => {
       const fecha = String(r.fecha || "").slice(0, 10);
@@ -958,6 +1013,53 @@ export default function DashboardComercial({ usuario }) {
    * RENDER
    * ============================================================
    */
+
+  const descargarExcelRendimiento = () => {
+    const filas = datosTablaFiltrados.map((a) => {
+      const stats = estadisticasAsesores.get(Number(a.asesor_id)) || { acumulado: 0 };
+      const cantadasDia = contarCantadasReportadas(
+        reportesCantadasDiarias,
+        a.asesor_id,
+        fechaDesde || primerDiaMes(anio, mes),
+        fechaHasta || ultimoDiaMes(anio, mes),
+        salaFiltro
+      );
+      const desglose = desgloseCantadasPorTipo(
+        reportesCantadasDiarias,
+        a.asesor_id,
+        fechaDesde || primerDiaMes(anio, mes),
+        fechaHasta || ultimoDiaMes(anio, mes),
+        salaFiltro
+      );
+      const meta = numero(a.metaAjustada);
+      const faltan = Math.max(meta - numero(stats.acumulado), 0);
+      const cumplimiento = meta > 0 ? (numero(stats.acumulado) / meta) * 100 : 0;
+      return {
+        "Asesor": a.nombre_asesor,
+        "Identificación": a.cedula_asesor || "",
+        "Sala": salasPorAsesor[Number(a.asesor_id)] || a.sala || "",
+        "Ventas cantadas": cantadasDia,
+        "Marcador": desglose.Marcador,
+        "Masivos": desglose.Masivos,
+        "CRM": desglose.CRM,
+        "Gestión Propia": desglose["Gestion Propia"],
+        "Ventas cargadas acumuladas": numero(stats.acumulado),
+        "Meta": meta,
+        "Faltan": faltan,
+        "Descuento": numero(a.descuento),
+        "Cumplimiento (%)": Number(cumplimiento.toFixed(2)),
+      };
+    });
+    const hoja = XLSX.utils.json_to_sheet(filas);
+    hoja["!cols"] = Object.keys(filas[0] || {}).map((nombre) => ({
+      wch: Math.max(14, Math.min(32, nombre.length + 4))
+    }));
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Rendimiento asesores");
+    const nombreSala = salaFiltro === "TODAS" ? "Todas" : salaFiltro.replace(/\\s+/g, "");
+    const nombreAsesor = asesorFiltro === "TODOS" ? "Todos" : asesorFiltro;
+    XLSX.writeFile(libro, `Dashboard_Comercial_${MESES[mes - 1]}_${anio}_${nombreSala}_${nombreAsesor}.xlsx`);
+  };
 
   return (
     <section className="dashboard-comercial">
@@ -1035,10 +1137,10 @@ export default function DashboardComercial({ usuario }) {
               </div>
             </div>
             <div className="commercial-filters">
-              <label><span>Desde</span><input type="date" value={fechaDesde} onChange={(e) => setFechaDesde(e.target.value)} /></label>
-              <label><span>Hasta</span><input type="date" value={fechaHasta} onChange={(e) => setFechaHasta(e.target.value)} /></label>
+              <label><span>Desde</span><input type="date" value={fechaDesde} onChange={(e) => { setFechaDesde(e.target.value); setModoHoyActivo(false); setMostrarSoloSinCantadas(false); }} /></label>
+              <label><span>Hasta</span><input type="date" value={fechaHasta} onChange={(e) => { setFechaHasta(e.target.value); setModoHoyActivo(false); setMostrarSoloSinCantadas(false); }} /></label>
               {esGestion && <label><span>Sala</span><select value={salaFiltro} onChange={(e) => setSalaFiltro(e.target.value)}><option value="TODAS">Todas</option><option value="SALA 1">Sala 1</option><option value="SALA 2">Sala 2</option><option value="SALA 3">Sala 3</option><option value="SALA 4">Sala 4</option></select></label>}
-              <label><span>Asesor</span><select value={asesorFiltro} onChange={(e) => setAsesorFiltro(e.target.value)}><option value="TODOS">Todos</option>{datosTabla.map((a) => <option key={a.asesor_id} value={a.asesor_id}>{a.nombre_asesor}</option>)}</select></label>
+              <label><span>Asesor</span><select value={asesorFiltro} onChange={(e) => setAsesorFiltro(e.target.value)}><option value="TODOS">Todos</option>{datosTabla.filter(a => salaFiltro === "TODAS" || (salasPorAsesor[Number(a.asesor_id)] || String(a.sala || "SALA 1").toUpperCase()) === salaFiltro).map((a) => <option key={a.asesor_id} value={a.asesor_id}>{a.nombre_asesor}</option>)}</select></label>
               <div className="filter-actions">
                 <button className="filter-today" onClick={() => {
                   const hoyFiltro = new Date();
@@ -1049,8 +1151,10 @@ export default function DashboardComercial({ usuario }) {
                   setFechaHasta(hoyKey);
                   setSalaFiltro("TODAS");
                   setAsesorFiltro("TODOS");
+                  setModoHoyActivo(true);
+                  setMostrarSoloSinCantadas(true);
                 }}>📅 Hoy</button>
-                <button className="filter-clear" onClick={() => { setFechaDesde(primerDiaMes(anio, mes)); setFechaHasta(esMesActual(anio, mes) ? fechaLocalKey(new Date()) : ultimoDiaMes(anio, mes)); setSalaFiltro("TODAS"); setAsesorFiltro("TODOS"); }}>Limpiar filtros</button>
+                <button className="filter-clear" onClick={() => { setFechaDesde(primerDiaMes(anio, mes)); setFechaHasta(esMesActual(anio, mes) ? fechaLocalKey(new Date()) : ultimoDiaMes(anio, mes)); setModoHoyActivo(false); setMostrarSoloSinCantadas(false); setSalaFiltro("TODAS"); setAsesorFiltro("TODOS"); }}>Limpiar filtros</button>
               </div>
             </div>
           </div>
@@ -1058,7 +1162,7 @@ export default function DashboardComercial({ usuario }) {
           <div className="dashboard-cards">
             <Kpi icon="👥" label="Asesores activos" value={resumenPeriodo.activos} />
             <Kpi icon="🎯" label="Meta general" value={resumen.meta} />
-            <Kpi icon="📣" label="Cantadas selección" value={resumenPeriodo.cantadas} />
+            <Kpi icon="📣" label="Ventas cantadas" value={reportesEnPeriodo} />
             <Kpi icon="📈" label="Cantadas acumuladas" value={acumuladoSeleccion} />
             <Kpi icon="📊" label="Cumplimiento" value={porcentaje(resumenPeriodo.cumplimiento)} />
           </div>
@@ -1068,19 +1172,35 @@ export default function DashboardComercial({ usuario }) {
               <div className="dashboard-panel">
                 <div className="panel-title">
                   <div><h2>Rendimiento de asesores</h2><span>{MESES[mes - 1]} {anio} · acumulado hasta {fechaHasta}</span></div>
-                  <div className="table-caption">{datosTabla.length} asesores</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                    <div className="table-caption">{asesoresTablaDashboard.length} asesores</div>
+                    <button
+                      type="button"
+                      className="filter-today"
+                      onClick={() => setMostrarSoloSinCantadas((actual) => !actual)}
+                      title={`Asesores sin cantadas en ${fechaReporteDiario}`}
+                      style={{
+                        borderColor: mostrarSoloSinCantadas ? "#dc2626" : "#fecaca",
+                        color: mostrarSoloSinCantadas ? "#ffffff" : "#b91c1c",
+                        background: mostrarSoloSinCantadas ? "#dc2626" : "#fff1f2",
+                      }}
+                    >
+                      🔴 {mostrarSoloSinCantadas ? "Mostrar todos" : `Ver asesores en 0 (${asesoresSinCantadasDia.length})`}
+                    </button>
+                    <button type="button" onClick={descargarExcelRendimiento} className="filter-today" title="Descargar el rendimiento filtrado en Excel">⬇️ Descargar Excel</button>
+                  </div>
                 </div>
                 <div className="table-wrap">
                   <table className="dashboard-table advisor-performance-table">
-                    <thead><tr><th>Asesor</th><th>Cantadas día</th><th>Acumulado</th><th>Meta</th><th>Faltan</th><th>Descuento</th><th>Cumplimiento</th></tr></thead>
+                    <thead><tr><th>Asesor</th><th>Ventas cantadas</th><th>Marcador</th><th>Masivos</th><th>CRM</th><th>Gestión Propia</th><th>Acumulado</th><th>Meta</th><th>Faltan</th><th>Descuento</th><th>Cumplimiento</th></tr></thead>
                     <tbody>
-                      {datosTabla.filter(a => asesorFiltro === "TODOS" || Number(a.asesor_id) === Number(asesorFiltro)).length === 0 ? (
+                      {asesoresTablaDashboard.length === 0 ? (
                         <tr>
-                          <td colSpan={7} className="dashboard-empty-cell">
+                          <td colSpan={11} className="dashboard-empty-cell">
                             No hay asesores ni ventas para los filtros seleccionados. Ajusta el período, la sala o el asesor.
                           </td>
                         </tr>
-                      ) : datosTabla.filter(a => asesorFiltro === "TODOS" || Number(a.asesor_id) === Number(asesorFiltro)).map((a) => {
+                      ) : asesoresTablaDashboard.map((a) => {
                         const stats = estadisticasAsesores.get(Number(a.asesor_id)) || { acumulado: 0 };
                         const cantadasDia = contarCantadasReportadas(
                           reportesCantadasDiarias,
@@ -1089,11 +1209,28 @@ export default function DashboardComercial({ usuario }) {
                           fechaHasta || ultimoDiaMes(anio, mes),
                           salaFiltro
                         );
+                        const desgloseTipos = desgloseCantadasPorTipo(
+                          reportesCantadasDiarias,
+                          a.asesor_id,
+                          fechaDesde || primerDiaMes(anio, mes),
+                          fechaHasta || ultimoDiaMes(anio, mes),
+                          salaFiltro
+                        );
                         const faltan = Math.max(a.metaAjustada - stats.acumulado, 0);
                         const cumplimiento = a.metaAjustada > 0 ? (stats.acumulado / a.metaAjustada) * 100 : 0;
-                        return <tr key={`${a.asesor_id}-${a.cedula_asesor || a.nombre_asesor}`}>
+                        return <tr
+                          key={`${a.asesor_id}-${a.cedula_asesor || a.nombre_asesor}`}
+                          style={modoHoyActivo && cantadasDia === 0 ? {
+                            backgroundColor: "#fff1f2",
+                            boxShadow: "inset 4px 0 0 #dc2626",
+                          } : undefined}
+                        >
                           <td><strong>{a.nombre_asesor}</strong>{a.cedula_asesor && <small>{a.cedula_asesor}</small>}</td>
-                          <td className="strong-blue">{cantadasDia}</td>
+                          <td className={modoHoyActivo && cantadasDia === 0 ? "strong-red" : "strong-blue"}><b>{cantadasDia}</b></td>
+                          <td className="strong-blue">{desgloseTipos.Marcador}</td>
+                          <td className="strong-blue">{desgloseTipos.Masivos}</td>
+                          <td className="strong-blue">{desgloseTipos.CRM}</td>
+                          <td className="strong-blue">{desgloseTipos["Gestion Propia"]}</td>
                           <td className="strong-blue"><b>{stats.acumulado}</b></td>
                           <td>{a.metaAjustada}</td>
                           <td>{faltan}</td>
@@ -1125,7 +1262,7 @@ export default function DashboardComercial({ usuario }) {
                   <div><span>Meta base</span><b>{resumen.metaBase}</b></div>
                   <div><span>Descuentos</span><b className="goal-discount">-{resumen.descuentos}</b></div>
                   <div><span>Ejecutado</span><b>{acumuladoSeleccion}</b></div>
-                  <div><span>Faltan</span><b>{Math.max(resumen.meta - acumuladoSeleccion, 0)}</b></div>
+                  <div><span>Faltan (cantadas)</span><b>{Math.max(resumen.meta - reportesEnPeriodo, 0)}</b></div>
                 </div>
                 <div className="goal-rhythm-grid">
                   <div><span>Meta diaria total</span><b>{metaDiariaNecesariaTotal}</b><small>ventas/día</small></div>
@@ -1141,10 +1278,10 @@ export default function DashboardComercial({ usuario }) {
                 <div className="summary-mini-grid">
                   <div><span>HC</span><b>{resumenPeriodo.activos}</b></div>
                   <div><span>Meta</span><b>{resumen.meta}</b></div>
-                  <div><span>Ventas cargadas acumuladas</span><b>{resumenPeriodo.acumulado}</b></div>
-                  <div><span>Avance sobre meta (cargadas)</span><b>{porcentaje(resumenPeriodo.cumplimiento)}</b></div>
-                  <div><span>Ratio / asesor</span><b>{resumenPeriodo.activos ? (resumenPeriodo.acumulado / resumenPeriodo.activos).toFixed(2) : "0.00"}</b></div>
-                  <div><span>Faltan</span><b>{Math.max(resumen.meta - acumuladoSeleccion, 0)}</b></div>
+                  <div><span>Ventas cantadas reportadas</span><b>{reportesEnPeriodo}</b></div>
+                  <div><span>Avance sobre meta (cantadas)</span><b>{porcentaje(resumen.meta ? (reportesEnPeriodo / resumen.meta) * 100 : 0)}</b></div>
+                  <div><span>Ratio / asesor</span><b>{resumenPeriodo.activos ? (reportesEnPeriodo / resumenPeriodo.activos).toFixed(2) : "0.00"}</b></div>
+                  <div><span>Faltan (cantadas)</span><b>{Math.max(resumen.meta - reportesEnPeriodo, 0)}</b></div>
                 </div>
               </div>
 
@@ -1169,7 +1306,7 @@ export default function DashboardComercial({ usuario }) {
             </div>
           </div>
 
-          <DashboardCharts ventasPorDia={ventasPorDia.filas} ventasPeriodo={ventasPeriodo} asesores={datosTabla} />
+          <DashboardCharts ventasPorDia={ventasPorDia.filas} ventasPeriodo={ventasPeriodo} asesores={datosTablaFiltrados} />
 
         </>
       ) : (
@@ -1365,7 +1502,9 @@ function DashboardAsesor({
   }
 
   const meta = numero(datos.meta);
-  const cantadas = numero(datos.cantadas);
+  const cantadas = numero(datos.cantadas); // Ventas ya cargadas por el asesor
+  const ventasCantadasReportadas = numero(datos.ventas_cantadas_reportadas); // Cantadas reportadas por supervisión
+  const faltanSubir = Math.max(ventasCantadasReportadas - cantadas, 0);
   const rechazadas = numero(datos.rechazadas);
   const pendientes = numero(datos.pendientes);
   const corregir = numero(datos.por_corregir);
@@ -1526,6 +1665,12 @@ function DashboardAsesor({
         />
 
         <Kpi
+          icon="📣"
+          label="Ventas cantadas"
+          value={ventasCantadasReportadas}
+        />
+
+        <Kpi
           icon="📌"
           label="Me faltan"
           value={faltan}
@@ -1559,6 +1704,20 @@ function DashboardAsesor({
           <h2>
             📊 Mi avance
           </h2>
+
+          {faltanSubir > 0 && (
+            <div className="projection-message" style={{ marginBottom: "14px", borderLeft: "4px solid #f59e0b", background: "#fff7e6" }}>
+              <strong>⚠️ ¡Ojo! Te falta subir {faltanSubir} {faltanSubir === 1 ? "venta" : "ventas"}.</strong>
+              <span>Ya aparecen como ventas cantadas reportadas por tu supervisor, pero todavía no están en tus ventas cargadas.</span>
+            </div>
+          )}
+
+          {ventasCantadasReportadas > 0 && faltanSubir === 0 && (
+            <div className="projection-message" style={{ marginBottom: "14px", borderLeft: "4px solid #10b981" }}>
+              <strong>✓ Tus ventas cantadas están al día.</strong>
+              <span>Las ventas cantadas reportadas coinciden con tus ventas cargadas.</span>
+            </div>
+          )}
 
           <div className="large-progress">
             <div

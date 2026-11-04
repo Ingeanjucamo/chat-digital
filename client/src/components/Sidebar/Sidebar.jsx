@@ -9,6 +9,7 @@ function Sidebar({
   abrirConversaciones,
   abrirAdministracion,
   abrirVentas,
+  abrirVentasCantadas,
   abrirDashboard,
   cerrarSesion,
   estilos,
@@ -176,6 +177,16 @@ function Sidebar({
           </span>
         </button>
 
+
+        {/* VENTAS CANTADAS */}
+        {(usuario.rol === "Administrador" || usuario.rol === "Supervisor" ||
+          usuario.esSuperAdmin || usuario.es_super_admin) && (
+          <button className={`menu-item ${collapsed ? "sidebar-menu-item-collapsed" : ""}`}
+            style={{...estilos.menuBoton,...(seccion === "ventasCantadas" ? estilos.menuActivo : {})}}
+            onClick={abrirVentasCantadas}>
+            <span>📣</span><span className={collapsed ? "sidebar-hidden" : ""} style={{flex:1}}>Venta Cantadas</span>
+          </button>
+        )}
 
         {/* ADMINISTRACIÓN */}
 

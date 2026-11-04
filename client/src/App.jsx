@@ -10,6 +10,7 @@ import Administration from "./components/Administration/Administration";
 import Ventas from "./components/Ventas/Ventas";
 import { iniciarLogin } from "./services/api";
 import DashboardComercial from "./components/DashboardComercial/DashboardComercial";
+import VentasCantadas from "./components/VentasCantadas/VentasCantadas";
 
 
 function App() {
@@ -200,6 +201,62 @@ useEffect(() => {
   return () => { cancelado = true; };
 }, [usuario, seccion, usuarioChat, miChat, usuarios]);
 
+ async function optimizarImagenParaChat(archivo) {
+  if (!archivo?.type?.startsWith("image/")) return archivo;
+
+  // No procesar GIF animado ni SVG para conservar su comportamiento.
+  if (archivo.type === "image/gif" || archivo.type === "image/svg+xml") return archivo;
+
+  // Capturas de pantalla suelen ser PNG pesados; se reducen y convierten a JPEG.
+  try {
+    const imagen = await new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(archivo);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("No se pudo procesar la imagen."));
+      };
+      img.src = url;
+    });
+
+    const maxDimension = 1600;
+    const escala = Math.min(1, maxDimension / Math.max(imagen.width, imagen.height));
+    const ancho = Math.max(1, Math.round(imagen.width * escala));
+    const alto = Math.max(1, Math.round(imagen.height * escala));
+    const canvas = document.createElement("canvas");
+    canvas.width = ancho;
+    canvas.height = alto;
+    const contexto = canvas.getContext("2d");
+    if (!contexto) return archivo;
+
+    // Fondo blanco para evitar fondos negros al convertir capturas con transparencia.
+    contexto.fillStyle = "#ffffff";
+    contexto.fillRect(0, 0, ancho, alto);
+    contexto.drawImage(imagen, 0, 0, ancho, alto);
+
+    const blob = await new Promise((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.78)
+    );
+    if (!blob) return archivo;
+
+    // Si el resultado no queda más liviano, conserva el archivo original.
+    if (blob.size >= archivo.size) return archivo;
+
+    const nombreBase = archivo.name.replace(/\\.[^.]+$/, "") || "imagen";
+    return new File([blob], `${nombreBase}.jpg`, {
+      type: "image/jpeg",
+      lastModified: Date.now(),
+    });
+  } catch (error) {
+    console.warn("No se pudo optimizar la imagen; se enviará original:", error);
+    return archivo;
+  }
+}
+
  async function enviarMensaje(e) {
   e.preventDefault();
 
@@ -280,8 +337,9 @@ console.log("USUARIO APP:", usuario);
     if (archivoSeleccionado) {
       setSubiendoArchivo(true);
 
+      const archivoOptimizado = await optimizarImagenParaChat(archivoSeleccionado);
       const nombreArchivo =
-        `${usuario.id}_${Date.now()}_${archivoSeleccionado.name}`
+        `${usuario.id}_${Date.now()}_${archivoOptimizado.name}`
           .replace(/\s+/g, "_");
 
       const rutaArchivo =
@@ -292,10 +350,10 @@ console.log("USUARIO APP:", usuario);
           .from("archivos")
           .upload(
             rutaArchivo,
-            archivoSeleccionado,
+            archivoOptimizado,
             {
               upsert: true,
-              contentType: archivoSeleccionado.type || "application/octet-stream",
+              contentType: archivoOptimizado.type || "application/octet-stream",
               cacheControl: "3600",
             }
           );
@@ -310,8 +368,8 @@ console.log("USUARIO APP:", usuario);
           .getPublicUrl(rutaArchivo);
 
       archivoData = {
-        nombre: archivoSeleccionado.name,
-        tipo: archivoSeleccionado.type,
+        nombre: archivoOptimizado.name,
+        tipo: archivoOptimizado.type,
         url: urlData.publicUrl,
       };
 
@@ -799,6 +857,12 @@ if (
     setUsuarioChat(null);
   }
 
+  function abrirVentasCantadas() {
+    setSeccion("ventasCantadas");
+    setMiChat(false);
+    setUsuarioChat(null);
+  }
+
   function abrirDashboard() {
     setSeccion("dashboard");
     setMiChat(false);
@@ -1055,6 +1119,7 @@ const vistaApp = (() => {
   abrirInformacion={abrirInformacion}
   abrirConversaciones={abrirConversaciones}
   abrirVentas={abrirVentas}
+  abrirVentasCantadas={abrirVentasCantadas}
   abrirDashboard={abrirDashboard}
   abrirAdministracion={abrirAdministracion}
   cerrarSesion={cerrarSesion}
@@ -1120,6 +1185,10 @@ const vistaApp = (() => {
           style={estilos.chat}
         >
           <Ventas usuario={usuario} />
+        </main>
+      ) : seccion === "ventasCantadas" ? (
+        <main className="chat-panel dashboard-main-scroll" style={{...estilos.chat, overflowY:"auto", minHeight:0}}>
+          <VentasCantadas usuario={usuario} />
         </main>
       ) : (
         <Chat

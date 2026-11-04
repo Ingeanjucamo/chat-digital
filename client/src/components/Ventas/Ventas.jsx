@@ -2241,7 +2241,7 @@ async function prepararCorreccion(venta) {
 
               <select value={form.origen} onChange={(e) => actualizarCampo("origen", e.target.value)}><option value="">Seleccionar</option>
 
-                <option>CRM</option><option>BASE</option>
+                <option>CRM</option><option>BASE</option><option>GESTION PROPIA</option>
 
               </select>
 
@@ -2510,7 +2510,7 @@ async function prepararCorreccion(venta) {
 
               <select value={form.origen} onChange={(e) => actualizarCampo("origen", e.target.value)}><option value="">Seleccionar</option>
 
-                <option>CRM</option><option>BASE</option>
+                <option>CRM</option><option>BASE</option><option>GESTION PROPIA</option>
 
               </select>
 

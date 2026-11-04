@@ -51,75 +51,58 @@ function Chat({
   }, [mensajes, usuarioChat, seccion]);
 
   // =====================================================
-  // PEGAR IMAGEN DESDE EL PORTAPAPELES
+  // PEGAR IMAGEN DESDE EL PORTAPAPELES (CTRL + V)
   // =====================================================
 
-  useEffect(() => {
-    const manejarPegado = (e) => {
-      const puedePegarEnInformacion =
-        seccion === "informacion" &&
-        usuario?.rol === "Administrador";
+  function manejarPegadoImagen(e) {
+    const puedePegarEnInformacion =
+      seccion === "informacion" &&
+      usuario?.rol === "Administrador";
 
-      const puedePegarEnChatPrivado =
-        seccion === "privado" &&
-        usuarioChat &&
-        (
-          usuarioChat.id === usuario?.id ||
-          usuarioChat.rol !== usuario?.rol
-        );
+    // En Mi Chat / conversaciones privadas se permite pegar
+    // cuando el campo de mensaje está activo.
+    const puedePegarEnChatPrivado = seccion === "privado";
 
-      if (!puedePegarEnInformacion && !puedePegarEnChatPrivado) {
-        return;
-      }
+    if (!puedePegarEnInformacion && !puedePegarEnChatPrivado) {
+      return;
+    }
 
-      const items = e.clipboardData?.items;
+    const clipboard = e.clipboardData;
+    if (!clipboard) return;
 
-      if (!items) return;
+    let archivoImagen = null;
 
-      for (const item of items) {
-        if (item.type.startsWith("image/")) {
-          e.preventDefault();
+    // Primero revisamos clipboardData.items (capturas de Windows).
+    const items = Array.from(clipboard.items || []);
+    const itemImagen = items.find((item) =>
+      item.type && item.type.startsWith("image/")
+    );
 
-          const archivo = item.getAsFile();
+    if (itemImagen) {
+      archivoImagen = itemImagen.getAsFile();
+    }
 
-          if (!archivo) return;
+    // Compatibilidad con navegadores que exponen la imagen en files.
+    if (!archivoImagen) {
+      archivoImagen = Array.from(clipboard.files || []).find((file) =>
+        file.type && file.type.startsWith("image/")
+      ) || null;
+    }
 
-          const extension =
-            archivo.type.split("/")[1] || "png";
+    if (!archivoImagen) return;
 
-          const nombreArchivo =
-            `captura_${Date.now()}.${extension}`;
+    e.preventDefault();
 
-          const archivoCaptura = new File(
-            [archivo],
-            nombreArchivo,
-            {
-              type: archivo.type,
-            }
-          );
+    const extension = (archivoImagen.type.split("/")[1] || "png")
+      .replace("jpeg", "jpg");
+    const archivoCaptura = new File(
+      [archivoImagen],
+      `captura_${Date.now()}.${extension}`,
+      { type: archivoImagen.type || "image/png" }
+    );
 
-          setArchivoSeleccionado(archivoCaptura);
-
-          return;
-        }
-      }
-    };
-
-    window.addEventListener("paste", manejarPegado);
-
-    return () => {
-      window.removeEventListener(
-        "paste",
-        manejarPegado
-      );
-    };
-  }, [
-    seccion,
-    usuarioChat,
-    miChat,
-    usuario,
-    setArchivoSeleccionado,
-  ]);
+    setArchivoSeleccionado(archivoCaptura);
+  }
 
   // =====================================================
   // RESPONDER UN MENSAJE
@@ -1076,6 +1059,7 @@ setTimeout(() => {
 
                 <textarea
                   value={texto}
+                  onPaste={manejarPegadoImagen}
                   onChange={(e) =>
                     setTexto(e.target.value)
                   }
