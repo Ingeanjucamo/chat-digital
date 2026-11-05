@@ -535,6 +535,7 @@ function Administration({ usuario, onUsuariosActualizados }) {
               formUsuario.rol === "Supervisor"
                 ? "Administrador"
                 : formUsuario.rol,
+            sala: formUsuario.sala,
           }),
         }
       );
@@ -578,11 +579,18 @@ function Administration({ usuario, onUsuariosActualizados }) {
       }
 
       if (formUsuario.rol === "Asesor") {
-        const { error: salaError } = await supabase
+        const { data: salaActualizada, error: salaError } = await supabase
           .from("usuarios")
           .update({ sala: formUsuario.sala })
-          .eq("id", usuarioEditando.id);
-        if (salaError) throw new Error(`Usuario actualizado, pero no se pudo asignar la sala: ${salaError.message}`);
+          .eq("id", usuarioEditando.id)
+          .select("id, sala");
+        if (salaError) throw new Error(`No se pudo guardar la sala: ${salaError.message}`);
+        if (!salaActualizada || salaActualizada.length === 0) {
+          throw new Error("La sala no se guardó: Supabase no actualizó el registro. Verifica los permisos RLS de la tabla usuarios.");
+        }
+        if (salaActualizada[0].sala !== formUsuario.sala) {
+          throw new Error(`La sala guardada no coincide. Supabase devolvió: ${salaActualizada[0].sala || "sin sala"}.`);
+        }
       }
 
       cerrarFormulario();
@@ -1076,6 +1084,8 @@ function Administration({ usuario, onUsuariosActualizados }) {
                                 u.rol,
                               cedula:
                                 u.cedula || "",
+                              sala:
+                                u.sala || "Sala 1",
                             });
 
                             setMostrarFormularioUsuario(

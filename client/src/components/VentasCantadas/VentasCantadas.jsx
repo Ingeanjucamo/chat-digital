@@ -4,14 +4,14 @@ import "./VentasCantadas.css";
 const CATS=["Marcador","Masivos","CRM","Gestion Propia"];
 const hoy=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 const clean=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toUpperCase();
-const ROOMS={"Sala 1":["ANA LUCIA GONZALEZ MANRIQUE","BEYANIR CHALA SANCHEZ","DIANA MARIA CHALA SANCHEZ","INGRID GISED MOLANO DIAZ","JHON ALEXANDER MONTEALEGRE TRUJILLO","JUAN ANDRES OTALORA CARVAJAL","KATHERINE TRUJILLO MUÑOZ","NATHALY RENDON CONDE"],"Sala 2":["ANYI LORENA PERDOMO DUSSAN","BRAYAN ESTEBAN MARIN FERNANDEZ","CRISTIAN GEOVANNY DUSSAN POLANIA","DANA VALENTINA CUADRADO GONZALEZ","DEIVID ALEJANDRO MONTEALEGRE AMAYA","DIANA MARCELA SOLANO NARVAEZ","ISABEL VALENTINA EMBUS GAITAN","JULIAN ANDRES RAMOS SABOGAL","KATERINE CORTES JIMENEZ","LAURA STEFFANNIA ESCOBAR NINCO","MARIA DEL PILAR CASTRO AREVALO","NICOL DAYANA PAZOS CHANTRE","SARA ALEJANDRA ORTIZ LUGO","SORANI ZAPATA USAQUEN","VERONICA TATIANA LOPEZ MORALES","YULIANA ANDREA MACANILLA TRUJILLO"]};
+
 export default function VentasCantadas({usuario}){
  const [fecha,setFecha]=useState(hoy()),[sala,setSala]=useState("TODAS"),[users,setUsers]=useState([]),[values,setValues]=useState({}),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(""),[soloCeros,setSoloCeros]=useState(false);
  const allowed=["Administrador","Supervisor"].includes(usuario?.rol)||usuario?.esSuperAdmin||usuario?.es_super_admin;
  const load=useCallback(async()=>{setLoading(true);setError("");try{
   const [ur,rr]=await Promise.all([supabase.from("usuarios").select("id,nombre,usuario,rol,activo,sala").eq("rol","Asesor").eq("activo",true).order("nombre"),supabase.from("ventas_cantadas_diarias").select("id,asesor_id,fecha,sala,cantidad,observacion").eq("fecha",fecha)]);
   if(ur.error)throw ur.error;if(rr.error)throw new Error(rr.error.message+" — ejecuta el SQL incluido en el ZIP.");
-  const list=(ur.data||[]).map(u=>{let assigned=u.sala||"Sala 1";const name=clean(u.nombre||u.usuario);for(const [room,names] of Object.entries(ROOMS))if(names.some(n=>clean(n)===name))assigned=room;return {...u,sala:assigned}});
+  const list=(ur.data||[]).map(u=>({...u,sala:u.sala||"Sala 1"}));
   setUsers(list);const map={};list.forEach(u=>{let r=(rr.data||[]).find(x=>+x.asesor_id===+u.id),detail={};try{detail=JSON.parse(r?.observacion||"{}")}catch{};map[u.id]={...(detail.categorias||{}),total:+(r?.cantidad||0),nota:detail.nota||""}});setValues(map);
  }catch(e){setError(e.message||"No se pudo cargar.")}finally{setLoading(false)}},[fecha]);
  useEffect(()=>{load()},[load]);
