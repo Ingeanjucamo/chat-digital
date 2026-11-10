@@ -1638,18 +1638,52 @@
   letter-spacing: .25px;
 }
 .advisor-performance-table .performance-header-filter select {
-  width: 100%;
-  max-width: 120px;
-  min-width: 65px;
-  padding: 4px 5px;
+  width: 28px;
+  max-width: 28px;
+  min-width: 28px;
+  height: 23px;
+  padding: 0;
   border: 1px solid #c7dcff;
   border-radius: 6px;
   background: rgba(255,255,255,.95);
-  color: #18345d;
-  font-size: 10px;
+  color: transparent;
+  font-size: 0;
   line-height: 1.2;
+  cursor: pointer;
+}
+.advisor-performance-table .performance-header-filter select option {
+  color: #18345d;
+  font-size: 12px;
 }
 .advisor-performance-table .performance-header-filter select:focus {
   outline: 2px solid rgba(48,111,255,.22);
   border-color: #3978ff;
+}
+
+/* Control de orden minimalista: solo muestra la flecha, sin menú desplegable */
+.advisor-performance-table .performance-header-filter .performance-sort-arrow {
+  width: 28px;
+  min-width: 28px;
+  height: 23px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c7dcff;
+  border-radius: 6px;
+  background: rgba(255,255,255,.95);
+  color: #234675;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.advisor-performance-table .performance-header-filter .performance-sort-arrow:hover {
+  background: #eaf2ff;
+  border-color: #3978ff;
+}
+.advisor-performance-table .performance-header-filter .performance-sort-arrow.is-asc span {
+  transform: rotate(180deg);
+}
+.advisor-performance-table .performance-header-filter .performance-sort-arrow.is-desc span {
+  transform: rotate(0deg);
 }

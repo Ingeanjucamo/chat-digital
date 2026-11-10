@@ -314,7 +314,11 @@ export default function DashboardComercial({ usuario }) {
       let asesoresData = [...(asesoresResp.data || [])];
       const empresaData = normalizarEmpresa(empresaResp.data || null);
       const calendarioRows = calendarioResp.data || [];
-      const ventasData = ventasResp.data || [];
+      // Hogar es un registro independiente: no debe sumar en el Dashboard Comercial,
+      // acumulados, metas ni cumplimiento de ventas Móvil.
+      const ventasData = (ventasResp.data || []).filter(
+        (venta) => String(venta.producto || "MOVIL").trim().toUpperCase() !== "HOGAR"
+      );
       const reportesCantadasData = reportesCantadasResp.error ? [] : (reportesCantadasResp.data || []);
       // Sala actual de cada asesor, consultada desde Administración/usuarios.
       const { data: perfilesSala, error: perfilesSalaError } = await supabase
@@ -1278,24 +1282,23 @@ export default function DashboardComercial({ usuario }) {
                           <th key={key}>
                             <div className="performance-header-filter">
                               <span>{label}</span>
-                              <select
+                              <button
+                                type="button"
+                                className={`performance-sort-arrow ${ordenRendimiento.columna === key ? `is-${ordenRendimiento.direccion}` : ""}`}
                                 aria-label={`Ordenar ${label}`}
-                                title={`Opciones de orden para ${label}`}
-                                value={ordenRendimiento.columna === key ? ordenRendimiento.direccion : ""}
-                                onChange={(e) => {
-                                  const accion = e.target.value;
-                                  if (accion === "reset") {
+                                title={ordenRendimiento.columna === key ? (ordenRendimiento.direccion === "asc" ? "Orden actual: menor a mayor. Clic para mayor a menor" : "Orden actual: mayor a menor. Clic para restablecer") : `Clic para ordenar ${label} de menor a mayor`}
+                                onClick={() => {
+                                  if (ordenRendimiento.columna !== key) {
+                                    setOrdenRendimiento({ columna: key, direccion: "asc" });
+                                  } else if (ordenRendimiento.direccion === "asc") {
+                                    setOrdenRendimiento({ columna: key, direccion: "desc" });
+                                  } else {
                                     setOrdenRendimiento({ columna: null, direccion: null });
-                                  } else if (accion === "asc" || accion === "desc") {
-                                    setOrdenRendimiento({ columna: key, direccion: accion });
                                   }
                                 }}
                               >
-                                <option value="">Ordenar…</option>
-                                <option value="asc">Ordenar de menor a mayor</option>
-                                <option value="desc">Ordenar de mayor a menor</option>
-                                <option value="reset">Restablecer orden original</option>
-                              </select>
+                                <span aria-hidden="true">▾</span>
+                              </button>
                             </div>
                           </th>
                         ))}

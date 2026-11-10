@@ -55,69 +55,30 @@ const MOVIL_COLUMNS = [
 
 
 const HOGAR_COLUMNS = [
-
-  "FECHA LLAMADA",
-
-  "HORA LLAMADA",
-
-  "AGENTE ID",
-
-  "AGENTE",
-
-  "NOMBRE CLIENTE",
-
-  "CEDULA CLIENTE",
-
-  "CIUDAD",
-
-  "DEPARTAMENTO",
-
-  "CANTIDAD DE SERVICIOS",
-
-  "TODO CLARO",
-
-  "TELEFONIA",
-
-  "TV",
-
-  "INTERNET",
-
-  "ULTRA WIFI",
-
-  "CANTIDAD DE DECOS",
-
-  "INSTALACION",
-
-  "FECHA DE INSTALACION",
-
-  "ESTADO",
-
-  "SERVICIOS ADICIONALES",
-
-  "TIPO DE VENTA",
-
+  "FECHA DIGITACION",
+  "FECHA INSTALACION",
+  "FRANJA",
   "OT",
-
-  "OTT ADICIONAL",
-
-  "OTT INCLUIDAS",
-
-  "POLITICA",
-
   "CUENTA",
-
-  "TIPO DE VALIDACION DE IDENTIDAD",
-
-  "ORIGEN",
-
-  "SEGMENTO",
-
+  "NOMBRE CLIENTE",
+  "CEDULA CLIENTE",
+  "TELEFONO 1",
+  "TELEFONO 2",
+  "CORREO",
+  "DIRECCION",
+  "CIUDAD",
+  "DEPARTAMENTO",
+  "REGIONAL",
+  "PLAN",
+  "SERVICIOS",
+  "VALOR",
   "OFERTA",
-
-  "RENTA",
-
+  "OTT",
   "CANTIDAD DE DECOS ADICIONALES",
-
+  "SEGMENTO",
+  "ORIGEN",
+  "ESTADO",
+  "ASESOR",
 ];
 
 
@@ -1616,76 +1577,33 @@ async function prepararCorreccion(venta) {
       const filas =
 
         producto === "HOGAR"
-
           ? datosExportar.map((v) => ({
-
-              "FECHA LLAMADA": v.fecha_llamada || v.created_at?.slice(0, 10) || "",
-
-              "HORA LLAMADA": v.hora_llamada || "",
-
-              "AGENTE ID": v.agente_id ?? "",
-
-              "AGENTE": v.agente || "",
-              "FECHA DIGITACION": v.fecha_llamada || "",
+              "FECHA DIGITACION": v.fecha_llamada || v.created_at?.slice(0, 10) || "",
+              "FECHA INSTALACION": v.fecha_instalacion || "",
+              "FRANJA": v.instalacion || "",
+              "OT": v.ot || "",
+              "CUENTA": v.cuenta || "",
+              "NOMBRE CLIENTE": v.nombre_cliente || "",
+              "CEDULA CLIENTE": v.cedula_cliente || "",
               "TELEFONO 1": v.telefono_1 || "",
               "TELEFONO 2": v.telefono_2 || "",
-              "REGIONAL": v.regional || "",
-
-              "NOMBRE CLIENTE": v.nombre_cliente || "",
-
-              "CEDULA CLIENTE": v.cedula_cliente || "",
-
+              "CORREO": v.email || "",
+              "DIRECCION": v.direccion || "",
               "CIUDAD": v.ciudad || "",
-
               "DEPARTAMENTO": v.departamento || "",
-
-              "CANTIDAD DE SERVICIOS": v.cantidad_servicios || "",
-
-              "TODO CLARO": v.todo_claro || "",
-
-              "TELEFONIA": v.telefonia || "",
-
-              "TV": v.tv || "",
-
-              "INTERNET": v.internet || "",
-
-              "ULTRA WIFI": v.ultra_wifi ?? "",
-
-              "CANTIDAD DE DECOS": v.cantidad_decos ?? "",
-
-              "INSTALACION": v.instalacion || "",
-
-              "FECHA DE INSTALACION": v.fecha_instalacion || "",
-
-              "ESTADO": v.estado || "",
-
-              "SERVICIOS ADICIONALES": v.servicios_adicionales || "",
-
-              "TIPO DE VENTA": v.tipo_venta_hogar || "",
-
-              "OT": v.ot || "",
-
-              "OTT ADICIONAL": v.ott_adicional || "",
-
-              "OTT INCLUIDAS": v.ott_incluidas || "",
-
-              "POLITICA": v.politica || "",
-
-              "CUENTA": v.cuenta || "",
-
-              "TIPO DE VALIDACION DE IDENTIDAD": v.tipo_validacion || "",
-
-              "ORIGEN": v.origen || "",
-
-              "SEGMENTO": v.segmento || "",
-
+              "REGIONAL": v.regional || "",
+              "PLAN": v.tipo_venta_hogar || "",
+              "SERVICIOS": v.cantidad_servicios ?? "",
+              "VALOR": v.renta ?? "",
               "OFERTA": v.oferta || "",
-
-              "RENTA": v.renta ?? "",
-
+              "OTT": v.ott_incluidas || "",
               "CANTIDAD DE DECOS ADICIONALES": v.cantidad_decos_adicionales ?? "",
-
+              "SEGMENTO": v.segmento || "",
+              "ORIGEN": v.origen || "",
+              "ESTADO": v.estado || "",
+              "ASESOR": v.agente || "",
             }))
+
 
           : datosExportar.map((v) => ({
 
