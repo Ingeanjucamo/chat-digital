@@ -129,9 +129,9 @@ const initialForm = {
 
   // Comunes
 
-  tipo_cedula: "",
+  tipo_cedula: "C.C",
 
-  sala: "",
+  sala: "SALA 1",
 
   origen: "",
 
@@ -141,7 +141,7 @@ const initialForm = {
 
   ciudad: "",
 
-  tipo_validacion: "",
+  tipo_validacion: "N/A",
 
 
 
@@ -185,13 +185,18 @@ const initialForm = {
 
 
 
-  // Hogar
-
+  // Hogar - formulario actualizado solicitado
+  fecha_digitacion: new Date().toISOString().slice(0, 10),
+  franja: "",
+  telefono_1: "",
+  telefono_2: "",
+  regional: "",
+  plan_hogar: "",
   departamento: "",
 
   cantidad_servicios: "",
 
-  todo_claro: "",
+  todo_claro: "NO",
 
   telefonia: "",
 
@@ -550,50 +555,27 @@ function Ventas({ usuario }) {
 
 
     const hogar = [
-
-      ["departamento", "Departamento"],
-
-      ["cantidad_servicios", "Cantidad de servicios"],
-
-      ["todo_claro", "Todo Claro"],
-
-      ["telefonia", "Telefonía"],
-
-      ["tv", "TV"],
-
-      ["internet", "Internet"],
-
-      ["ultra_wifi", "Ultra WiFi"],
-
-      ["cantidad_decos", "Cantidad de decos"],
-
-      ["instalacion", "Instalación"],
-
       ["fecha_instalacion", "Fecha de instalación"],
-
-      ["tipo_venta_hogar", "Tipo de venta"],
-
+      ["franja", "Franja"],
       ["ot", "OT"],
-
-      ["ott_adicional", "OTT adicional"],
-
-      ["ott_incluidas", "OTT incluidas"],
-
-      ["politica", "Política"],
-
       ["cuenta", "Cuenta"],
-
-      ["segmento", "Segmento"],
-
+      ["nombre_cliente", "Nombre cliente"],
+      ["cedula_cliente", "Cédula cliente"],
+      ["telefono_1", "Teléfono 1"],
+      ["email", "Correo"],
+      ["direccion", "Dirección"],
+      ["ciudad", "Ciudad"],
+      ["departamento", "Departamento"],
+      ["regional", "Regional"],
+      ["plan_hogar", "Plan"],
+      ["cantidad_servicios", "Servicios"],
+      ["renta", "Valor"],
       ["oferta", "Oferta"],
-
-      ["renta", "Renta"],
-
+      ["ott_incluidas", "OTT"],
       ["cantidad_decos_adicionales", "Cantidad de decos adicionales"],
-
+      ["segmento", "Segmento"],
+      ["origen", "Origen"],
     ];
-
-
 
     const soportes = [
       ["rectificacion_plan", "Rectificación de plan adquirido"],
@@ -605,7 +587,7 @@ function Ventas({ usuario }) {
 
       tipoProducto === "HOGAR"
 
-        ? [...comunes, ...hogar, ...soportes]
+        ? hogar
 
         : [...comunes, ...movil, ...soportes];
 
@@ -956,6 +938,14 @@ async function prepararCorreccion(venta) {
 
       observacion: venta.observacion || "",
 
+      fecha_digitacion: venta.fecha_llamada || new Date().toISOString().slice(0, 10),
+      franja: venta.instalacion || "",
+      telefono_1: venta.telefono_1 || "",
+      telefono_2: venta.telefono_2 || "",
+      regional: venta.regional || "",
+      plan_hogar: venta.tipo_venta_hogar || "",
+      email: venta.email || "",
+      direccion: venta.direccion || "",
       departamento: venta.departamento || "",
 
       cantidad_servicios: venta.cantidad_servicios ?? "",
@@ -1090,9 +1080,9 @@ async function prepararCorreccion(venta) {
 
             ? {
 
-                tipo_cedula: form.tipo_cedula,
+                tipo_cedula: "C.C",
 
-                sala: form.sala,
+                sala: "SALA 1",
 
                 origen: form.origen,
 
@@ -1102,11 +1092,14 @@ async function prepararCorreccion(venta) {
 
                 ciudad: form.ciudad.trim(),
 
-                tipo_validacion: form.tipo_validacion,
+                tipo_validacion: "N/A",
 
                 tipo_cargue: form.tipo_cargue || "NORMAL",
 
-                fecha_llamada: (form.tipo_cargue === "FIN_SEMANA" && form.fecha_real_venta) ? form.fecha_real_venta : new Date().toISOString().slice(0, 10),
+                fecha_llamada: form.fecha_digitacion || new Date().toISOString().slice(0, 10),
+                telefono_1: form.telefono_1.trim(),
+                telefono_2: form.telefono_2.trim(),
+                regional: form.regional,
 
                 departamento: form.departamento.trim(),
 
@@ -1121,8 +1114,6 @@ async function prepararCorreccion(venta) {
                 internet: form.internet,
 
                 ultra_wifi: form.ultra_wifi,
-
-                cantidad_decos: Number(form.cantidad_decos),
 
                 instalacion: form.instalacion,
 
@@ -1150,9 +1141,9 @@ async function prepararCorreccion(venta) {
 
                 cantidad_decos_adicionales: Number(form.cantidad_decos_adicionales),
 
-                numero_portar: "", nip: null, email: "N/A", iccid: "N/A", direccion: "N/A",
+                numero_portar: "", nip: null, email: form.email.trim(), iccid: "N/A", direccion: form.direccion.trim(),
 
-                sim_adquirida: "NO", tipo_venta: form.tipo_venta_hogar, operador_donante: "N/A",
+                sim_adquirida: "NO", tipo_venta: "MIGRACION", operador_donante: "MIGRACION",
 
                 codigo_plan: form.ot.trim() || "HOGAR", id_descuento_oferta: form.oferta.trim() || "N/A",
 
@@ -1170,9 +1161,9 @@ async function prepararCorreccion(venta) {
 
             : {
 
-                tipo_cedula: form.tipo_cedula,
+                tipo_cedula: "C.C",
 
-                sala: form.sala,
+                sala: "SALA 1",
 
                 origen: form.origen,
 
@@ -1198,11 +1189,14 @@ async function prepararCorreccion(venta) {
 
                 operador_donante: form.operador_donante,
 
-                tipo_validacion: form.tipo_validacion,
+                tipo_validacion: "N/A",
 
                 tipo_cargue: form.tipo_cargue || "NORMAL",
 
-                fecha_llamada: (form.tipo_cargue === "FIN_SEMANA" && form.fecha_real_venta) ? form.fecha_real_venta : new Date().toISOString().slice(0, 10),
+                fecha_llamada: form.fecha_digitacion || new Date().toISOString().slice(0, 10),
+                telefono_1: form.telefono_1.trim(),
+                telefono_2: form.telefono_2.trim(),
+                regional: form.regional,
 
                 codigo_plan: form.codigo_plan.trim(),
 
@@ -1309,9 +1303,9 @@ async function prepararCorreccion(venta) {
 
 
 
-              tipo_cedula: form.tipo_cedula,
+              tipo_cedula: "C.C",
 
-              sala: form.sala,
+              sala: "SALA 1",
 
               origen: form.origen,
 
@@ -1321,9 +1315,12 @@ async function prepararCorreccion(venta) {
 
               ciudad: form.ciudad.trim(),
 
-              tipo_validacion: form.tipo_validacion,
+              tipo_validacion: "N/A",
 
-
+              fecha_llamada: form.fecha_digitacion || new Date().toISOString().slice(0, 10),
+              telefono_1: form.telefono_1.trim(),
+              telefono_2: form.telefono_2.trim(),
+              regional: form.regional,
 
               departamento: form.departamento.trim(),
 
@@ -1338,8 +1335,6 @@ async function prepararCorreccion(venta) {
               internet: form.internet,
 
               ultra_wifi: form.ultra_wifi,
-
-              cantidad_decos: Number(form.cantidad_decos),
 
               instalacion: form.instalacion,
 
@@ -1375,17 +1370,17 @@ async function prepararCorreccion(venta) {
 
               nip: null,
 
-              email: "N/A",
+              email: form.email.trim(),
 
               iccid: "N/A",
 
-              direccion: "N/A",
+              direccion: form.direccion.trim(),
 
               sim_adquirida: "NO",
 
-              tipo_venta: form.tipo_venta_hogar,
+              tipo_venta: "MIGRACION",
 
-              operador_donante: "N/A",
+              operador_donante: "MIGRACION",
 
               codigo_plan: form.ot.trim() || "HOGAR",
 
@@ -1428,9 +1423,9 @@ async function prepararCorreccion(venta) {
 
               producto: "MOVIL",
 
-              tipo_cedula: form.tipo_cedula,
+              tipo_cedula: "C.C",
 
-              sala: form.sala,
+              sala: "SALA 1",
 
               origen: form.origen,
 
@@ -1631,6 +1626,10 @@ async function prepararCorreccion(venta) {
               "AGENTE ID": v.agente_id ?? "",
 
               "AGENTE": v.agente || "",
+              "FECHA DIGITACION": v.fecha_llamada || "",
+              "TELEFONO 1": v.telefono_1 || "",
+              "TELEFONO 2": v.telefono_2 || "",
+              "REGIONAL": v.regional || "",
 
               "NOMBRE CLIENTE": v.nombre_cliente || "",
 
@@ -2147,213 +2146,44 @@ async function prepararCorreccion(venta) {
 
 
   if (tipoProducto === "HOGAR" && vista === "formulario") {
-
     return (
-
       <section className="ventas-page">
-
         <div className="ventas-header">
-
-          <div>
-
-            <div className="ventas-kicker">NUEVA VENTA</div>
-
-            <h1>🏠 Nueva venta Hogar</h1>
-
-            <p>El formulario usa exactamente las columnas de la hoja Hogar de tu plantilla de Power BI.</p>
-
-          </div>
-
-          <button className="venta-btn secondary" onClick={cancelarNuevaVenta}>
-
-            Volver
-
-          </button>
-
+          <div><div className="ventas-kicker">NUEVA VENTA</div><h1>Ventas Hogar</h1><p>Formulario actualizado de Hogar. No requiere cargar imágenes.</p></div>
+          <button className="venta-btn secondary" onClick={cancelarNuevaVenta}>Volver</button>
         </div>
-
-
-
         {error && <div className="ventas-error">⚠️ {error}</div>}
-
-
-
         <form className="venta-form" onSubmit={guardarVenta}>
-
-          <div className="venta-form-top">
-
-            <div>
-
-              <strong>🏠 {ventaEditando ? `Corregir venta Hogar #${ventaEditando.id}` : "Datos de la venta Hogar"}</strong>
-
-              <span>{ventaEditando ? "Corrige los datos indicados por el supervisor. Los soportes existentes se conservan; solo adjunta imágenes nuevas si necesitas reemplazarlas." : "Los asesores deben diligenciar todos los campos. Habeas Data 2 queda opcional."}</span>
-
-            </div>
-
-            <button type="button" className="venta-btn secondary" onClick={cancelarNuevaVenta}>
-
-              Cancelar
-
-            </button>
-
-          </div>
-
-
-
-          
-
+          <div className="venta-form-top"><div><strong>{ventaEditando ? `Corregir venta Hogar #${ventaEditando.id}` : "Datos de la venta Hogar"}</strong><span>Completa los campos de acuerdo con la plantilla de Hogar.</span></div><button type="button" className="venta-btn secondary" onClick={cancelarNuevaVenta}>Cancelar</button></div>
           <div className="venta-grid">
-            <Field label="Tipo de cargue" required>
-              <select value={form.tipo_cargue || "NORMAL"} onChange={(e) => actualizarCampo("tipo_cargue", e.target.value)}>
-                <option value="NORMAL">Hoy</option>
-                <option value="FIN_SEMANA">FIN DE SEMANA</option>
-              </select>
-            </Field>
-            {form.tipo_cargue === "FIN_SEMANA" && (
-              <Field label="Fecha real de la venta (sábado, domingo o festivo)" required>
-                <input type="date" value={form.fecha_real_venta || ""} onChange={(e) => actualizarCampo("fecha_real_venta", e.target.value)} />
-              </Field>
-            )}
+            <Field label="Fecha digitación" required><input type="date" value={form.fecha_digitacion || new Date().toISOString().slice(0,10)} onChange={(e)=>actualizarCampo("fecha_digitacion",e.target.value)} /></Field>
+            <Field label="Fecha instalación" required><input type="date" value={form.fecha_instalacion} onChange={(e)=>actualizarCampo("fecha_instalacion",e.target.value)} /></Field>
+            <Field label="Franja" required><select value={form.franja || form.instalacion} onChange={(e)=>{actualizarCampo("franja",e.target.value);actualizarCampo("instalacion",e.target.value);}}><option value="">Seleccionar</option><option>MAÑANA</option><option>TARDE</option></select></Field>
+            <Field label="OT" required><input value={form.ot} onChange={(e)=>actualizarCampo("ot",e.target.value)} /></Field>
+            <Field label="Cuenta" required><input value={form.cuenta} onChange={(e)=>actualizarCampo("cuenta",e.target.value)} /></Field>
+            <Field label="Nombre cliente" required><input value={form.nombre_cliente} onChange={(e)=>actualizarCampo("nombre_cliente",e.target.value)} /></Field>
+            <Field label="Cédula cliente" required><input inputMode="numeric" value={form.cedula_cliente} onChange={(e)=>actualizarCampo("cedula_cliente",e.target.value.replace(/\D/g,""))} /></Field>
+            <Field label="Teléfono 1" required><input type="tel" inputMode="numeric" maxLength={10} value={form.telefono_1} onChange={(e)=>actualizarCampo("telefono_1",e.target.value.replace(/\D/g,"").slice(0,10))} /></Field>
+            <Field label="Teléfono 2"><input type="tel" inputMode="numeric" maxLength={10} value={form.telefono_2} onChange={(e)=>actualizarCampo("telefono_2",e.target.value.replace(/\D/g,"").slice(0,10))} /></Field>
+            <Field label="Correo" required><input type="email" value={form.email} onChange={(e)=>actualizarCampo("email",e.target.value)} /></Field>
+            <Field label="Dirección" required><input value={form.direccion} onChange={(e)=>actualizarCampo("direccion",e.target.value)} /></Field>
+            <Field label="Ciudad" required><input value={form.ciudad} onChange={(e)=>actualizarCampo("ciudad",e.target.value)} /></Field>
+            <Field label="Departamento" required><input value={form.departamento} onChange={(e)=>actualizarCampo("departamento",e.target.value)} /></Field>
+            <Field label="Regional" required><select value={form.regional} onChange={(e)=>actualizarCampo("regional",e.target.value)}><option value="">Seleccionar</option><option>R1 COSTA</option><option>R2 NOROCCIDENTE</option><option>R3 OCCIDENTE</option><option>R4 CENTRO</option><option>R5 ORIENTE</option></select></Field>
+            <Field label="Plan" required><select value={form.plan_hogar || form.tipo_venta_hogar} onChange={(e)=>{actualizarCampo("plan_hogar",e.target.value);actualizarCampo("tipo_venta_hogar",e.target.value);}}><option value="">Seleccionar</option><option>SENCILLO</option><option>SENCILLO + OTT</option><option>DUO</option><option>TRIPLE</option></select></Field>
+            <Field label="Servicios" required><select value={form.cantidad_servicios} onChange={(e)=>actualizarCampo("cantidad_servicios",e.target.value)}><option value="">Seleccionar</option><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></Field>
+            <Field label="Valor" required><input type="number" min="0" step="1" value={form.renta} onChange={(e)=>actualizarCampo("renta",e.target.value)} /></Field>
+            <Field label="Oferta" required><select value={form.oferta} onChange={(e)=>actualizarCampo("oferta",e.target.value)}><option value="">Seleccionar</option><option>SOLO PORRATEO</option><option>PORRATEO + 1 MES 50%</option><option>PORRATEO + 2 MES 50%</option></select></Field>
+            <Field label="OTT" required><select value={form.ott_incluidas} onChange={(e)=>actualizarCampo("ott_incluidas",e.target.value)}><option value="">Seleccionar</option><option>NETFLIX</option><option>PRIME VIDEO</option><option>HBO</option><option>WIN+FUTBOL</option><option>DISNEY</option><option>WIN PAY</option><option>N/A</option></select></Field>
+            <Field label="Cantidad de decos adicionales" required><select value={form.cantidad_decos_adicionales} onChange={(e)=>actualizarCampo("cantidad_decos_adicionales",e.target.value)}><option value="">Seleccionar</option><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></Field>
+            <Field label="Segmento" required><select value={form.segmento} onChange={(e)=>actualizarCampo("segmento",e.target.value)}><option value="">Seleccionar</option><option>RESIDENCIAL</option><option>PYME</option><option>SOHO</option><option>FWA</option></select></Field>
+            <Field label="Origen" required><select value={form.origen} onChange={(e)=>actualizarCampo("origen",e.target.value)}><option value="">Seleccionar</option><option>REDES</option><option>REFERIDO</option><option>OCM</option><option>B2CHAT</option></select></Field>
           </div>
-<div className="venta-grid">
-
-            <Field label="Tipo de cédula" required>
-
-              <select value={form.tipo_cedula} onChange={(e) => actualizarCampo("tipo_cedula", e.target.value)}><option value="">Seleccionar</option>
-
-                <option>C.C</option><option>C.E</option>
-
-              </select>
-
-            </Field>
-
-            <Field label="Sala" required>
-
-              <select value={form.sala} onChange={(e) => actualizarCampo("sala", e.target.value)}><option value="">Seleccionar</option>
-
-                <option>SALA 1</option><option>SALA 2</option><option>SALA 3</option>
-
-              </select>
-
-            </Field>
-
-            <Field label="Origen" required>
-
-              <select value={form.origen} onChange={(e) => actualizarCampo("origen", e.target.value)}><option value="">Seleccionar</option>
-
-                <option>CRM</option><option>BASE</option><option>GESTION PROPIA</option>
-
-              </select>
-
-            </Field>
-
-            <Field label="Nombre cliente" required><input value={form.nombre_cliente} onChange={(e) => actualizarCampo("nombre_cliente", e.target.value)} /></Field>
-
-            <Field label="Cédula cliente" required><input value={form.cedula_cliente} onChange={(e) => actualizarCampo("cedula_cliente", e.target.value)} /></Field>
-
-            <Field label="Ciudad" required><input value={form.ciudad} onChange={(e) => actualizarCampo("ciudad", e.target.value)} /></Field>
-
-            <Field label="Departamento" required><input value={form.departamento} onChange={(e) => actualizarCampo("departamento", e.target.value)} /></Field>
-
-
-
-            <Field label="Cantidad de servicios" required><input type="number" min="1" value={form.cantidad_servicios} onChange={(e) => actualizarCampo("cantidad_servicios", e.target.value)} /></Field>
-
-            <Field label="Todo Claro" required><select value={form.todo_claro} onChange={(e) => actualizarCampo("todo_claro", e.target.value)}><option value="">Seleccionar</option><option>SI</option><option>NO</option></select></Field>
-
-            <Field label="Telefonía" required><select value={form.telefonia} onChange={(e) => actualizarCampo("telefonia", e.target.value)}><option value="">Seleccionar</option><option>SI</option><option>NO</option></select></Field>
-
-            <Field label="TV" required><input value={form.tv} onChange={(e) => actualizarCampo("tv", e.target.value)} placeholder="Ej. INTERMEDIO PLUS / NO APLICA" /></Field>
-
-            <Field label="Internet" required><select value={form.internet} onChange={(e) => actualizarCampo("internet", e.target.value)}><option value="">Seleccionar</option><option>SI</option><option>NO</option></select></Field>
-
-            <Field label="Ultra WiFi" required><input type="number" min="0" value={form.ultra_wifi} onChange={(e) => actualizarCampo("ultra_wifi", e.target.value)} /></Field>
-
-            <Field label="Cantidad de decos" required><input type="number" min="0" value={form.cantidad_decos} onChange={(e) => actualizarCampo("cantidad_decos", e.target.value)} /></Field>
-
-            <Field label="Instalación" required><select value={form.instalacion} onChange={(e) => actualizarCampo("instalacion", e.target.value)}><option value="">Seleccionar</option><option>MAÑANA</option><option>TARDE</option></select></Field>
-
-            <Field label="Fecha de instalación" required><input type="date" value={form.fecha_instalacion} onChange={(e) => actualizarCampo("fecha_instalacion", e.target.value)} /></Field>
-
-            <Field label="Servicios adicionales" required><input value={form.servicios_adicionales} onChange={(e) => actualizarCampo("servicios_adicionales", e.target.value)} /></Field>
-
-            <Field label="Tipo de venta" required><input value={form.tipo_venta_hogar} onChange={(e) => actualizarCampo("tipo_venta_hogar", e.target.value)} /></Field>
-
-            <Field label="OT" required><input value={form.ot} onChange={(e) => actualizarCampo("ot", e.target.value)} /></Field>
-
-            <Field label="OTT adicional" required><input value={form.ott_adicional} onChange={(e) => actualizarCampo("ott_adicional", e.target.value)} /></Field>
-
-            <Field label="OTT incluidas" required><input value={form.ott_incluidas} onChange={(e) => actualizarCampo("ott_incluidas", e.target.value)} /></Field>
-
-            <Field label="Política" required><input value={form.politica} onChange={(e) => actualizarCampo("politica", e.target.value)} /></Field>
-
-            <Field label="Cuenta" required><input value={form.cuenta} onChange={(e) => actualizarCampo("cuenta", e.target.value)} /></Field>
-
-            <Field label="Tipo de validación de identidad" required>
-
-              <select value={form.tipo_validacion} onChange={(e) => actualizarCampo("tipo_validacion", e.target.value)}><option value="">Seleccionar</option>
-
-                <option>POLIEDRO OTP</option><option>POLIEDRO BIOMETRIA FACIAL</option><option>BIOMETRIA EXTERNA</option><option>ID VISION</option><option>SAFE</option><option>VISOR OTP</option><option>SIN VALIDACION</option>
-
-              </select>
-
-            </Field>
-
-            <Field label="Segmento" required><input value={form.segmento} onChange={(e) => actualizarCampo("segmento", e.target.value)} /></Field>
-
-            <Field label="Oferta" required><input value={form.oferta} onChange={(e) => actualizarCampo("oferta", e.target.value)} /></Field>
-
-            <Field label="Renta" required><input type="number" min="0" step="0.01" value={form.renta} onChange={(e) => actualizarCampo("renta", e.target.value)} /></Field>
-
-            <Field label="Cantidad de decos adicionales" required><input type="number" min="0" value={form.cantidad_decos_adicionales} onChange={(e) => actualizarCampo("cantidad_decos_adicionales", e.target.value)} /></Field>
-
-          </div>
-
-
-
-          <div className="venta-supports">
-
-            <h2>📷 Soportes UMG</h2>
-
-            <p>{ventaEditando ? "Los soportes anteriores se conservan. No necesitas volver a subirlos; si seleccionas una imagen nueva, reemplazará solo ese soporte." : "Se mantienen los mismos soportes del flujo de ventas. Habeas Data 2 queda opcional."}</p>
-
-            <div className="venta-files-grid">
-
-              {inputFile("rectificacion_plan", "RECTIFICACIÓN DE PLAN ADQUIRIDO", true)}
-
-              {inputFile("validacion_imagen", "VALIDACIÓN", true)}
-
-              {inputFile("habeas_data", "HABEAS DATA", true)}
-
-              {inputFile("habeas_data_2", "HABEAS DATA 2", false)}
-
-            </div>
-
-          </div>
-
-
-
-          <div className="venta-form-footer">
-
-            <span>La venta se guardará como <b>🟡 PENDIENTE</b>.</span>
-
-            <button className="venta-btn primary" disabled={guardando}>
-
-              {guardando ? "Guardando..." : ventaEditando ? "Guardar corrección" : "Guardar venta Hogar"}
-
-            </button>
-
-          </div>
-
+          <div className="venta-form-footer"><span>La venta se guardará como <b>🟡 PENDIENTE</b>.</span><button className="venta-btn primary" disabled={guardando}>{guardando ? "Guardando..." : ventaEditando ? "Guardar corrección" : "Guardar venta Hogar"}</button></div>
         </form>
-
       </section>
-
     );
-
   }
-
-
 
   return (
 
@@ -2888,25 +2718,81 @@ async function prepararCorreccion(venta) {
 
               <div className="revision-info-grid">
 
-                {[
+                {(ventaSeleccionada.producto === "HOGAR"
 
-                  ["Cliente", ventaSeleccionada.nombre_cliente],
+                  ? [
 
-                  ["Cédula", ventaSeleccionada.cedula_cliente],
+                      ["Fecha digitación", ventaSeleccionada.fecha_llamada || ventaSeleccionada.created_at?.slice(0, 10)],
 
-                  ["Número", ventaSeleccionada.numero_portar],
+                      ["Fecha instalación", ventaSeleccionada.fecha_instalacion],
 
-                  ["Asesor", ventaSeleccionada.agente],
+                      ["Franja", ventaSeleccionada.instalacion],
 
-                  ["Fecha activación", ventaSeleccionada.fecha_activacion],
+                      ["OT", ventaSeleccionada.ot],
 
-                  ["Tipo", ventaSeleccionada.tipo_venta_hogar || ventaSeleccionada.tipo_venta],
+                      ["Cuenta", ventaSeleccionada.cuenta],
 
-                  ["Plan", ventaSeleccionada.codigo_plan || ventaSeleccionada.oferta],
+                      ["Nombre cliente", ventaSeleccionada.nombre_cliente],
 
-                  ["Estado", ventaSeleccionada.estado],
+                      ["Cédula cliente", ventaSeleccionada.cedula_cliente],
 
-                ].map(([label, value]) => (
+                      ["Teléfono 1", ventaSeleccionada.telefono_1],
+
+                      ["Teléfono 2", ventaSeleccionada.telefono_2],
+
+                      ["Correo", ventaSeleccionada.email],
+
+                      ["Dirección", ventaSeleccionada.direccion],
+
+                      ["Ciudad", ventaSeleccionada.ciudad],
+
+                      ["Departamento", ventaSeleccionada.departamento],
+
+                      ["Regional", ventaSeleccionada.regional],
+
+                      ["Plan", ventaSeleccionada.tipo_venta_hogar],
+
+                      ["Servicios", ventaSeleccionada.cantidad_servicios],
+
+                      ["Valor", ventaSeleccionada.renta != null ? `$${Number(ventaSeleccionada.renta).toLocaleString("es-CO")} COP` : ventaSeleccionada.cfm != null ? `$${Number(ventaSeleccionada.cfm).toLocaleString("es-CO")} COP` : null],
+
+                      ["Oferta", ventaSeleccionada.oferta],
+
+                      ["OTT", ventaSeleccionada.ott_incluidas || ventaSeleccionada.ott_adicional],
+
+                      ["Cantidad de decos adicionales", ventaSeleccionada.cantidad_decos_adicionales],
+
+                      ["Segmento", ventaSeleccionada.segmento],
+
+                      ["Origen", ventaSeleccionada.origen],
+
+                      ["Asesor", ventaSeleccionada.agente || ventaSeleccionada.asesor?.nombre],
+
+                      ["Estado", ventaSeleccionada.estado],
+
+                    ]
+
+                  : [
+
+                      ["Cliente", ventaSeleccionada.nombre_cliente],
+
+                      ["Cédula", ventaSeleccionada.cedula_cliente],
+
+                      ["Número", ventaSeleccionada.numero_portar],
+
+                      ["Asesor", ventaSeleccionada.agente || ventaSeleccionada.asesor?.nombre],
+
+                      ["Fecha activación", ventaSeleccionada.fecha_activacion],
+
+                      ["Tipo", ventaSeleccionada.tipo_venta_hogar || ventaSeleccionada.tipo_venta],
+
+                      ["Plan", ventaSeleccionada.codigo_plan || ventaSeleccionada.oferta],
+
+                      ["Estado", ventaSeleccionada.estado],
+
+                    ]
+
+                ).map(([label, value]) => (
 
                   <div key={label}><small>{label}</small><strong>{value || "—"}</strong></div>
 

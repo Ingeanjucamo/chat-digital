@@ -192,6 +192,7 @@ export default function DashboardComercial({ usuario }) {
   const [asesorFiltro, setAsesorFiltro] = useState("TODOS");
   const [mostrarSoloSinCantadas, setMostrarSoloSinCantadas] = useState(false);
   const [modoHoyActivo, setModoHoyActivo] = useState(false);
+  const [ordenRendimiento, setOrdenRendimiento] = useState({ columna: null, direccion: null });
 
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -1008,6 +1009,55 @@ export default function DashboardComercial({ usuario }) {
     : 0;
 
 
+  const obtenerValoresFiltroRendimiento = (a) => {
+    const stats = estadisticasAsesores.get(Number(a.asesor_id)) || { acumulado: 0 };
+    const desde = fechaDesde || primerDiaMes(anio, mes);
+    const hasta = fechaHasta || ultimoDiaMes(anio, mes);
+    const cantadas = contarCantadasReportadas(reportesCantadasDiarias, a.asesor_id, desde, hasta, salaFiltro);
+    const desglose = desgloseCantadasPorTipo(reportesCantadasDiarias, a.asesor_id, desde, hasta, salaFiltro);
+    const faltan = Math.max(a.metaAjustada - stats.acumulado, 0);
+    const cumplimiento = a.metaAjustada > 0 ? (stats.acumulado / a.metaAjustada) * 100 : 0;
+    return {
+      asesor: String(a.nombre_asesor || ""),
+      cantadas: String(cantadas),
+      marcador: String(desglose.Marcador),
+      masivos: String(desglose.Masivos),
+      crm: String(desglose.CRM),
+      gestionPropia: String(desglose["Gestion Propia"]),
+      acumulado: String(stats.acumulado),
+      meta: String(a.metaAjustada),
+      faltan: String(faltan),
+      descuento: String(numero(a.descuento)),
+      cumplimiento: `${cumplimiento.toFixed(1)}%`,
+    };
+  };
+
+  // Cálculo normal (sin Hook): este bloque está después de los retornos de
+  // carga/error y no debe alterar el orden de Hooks de React.
+  const asesoresOrdenadosRendimiento = (() => {
+    if (!ordenRendimiento.columna || !ordenRendimiento.direccion) {
+      return asesoresTablaDashboard;
+    }
+    const columna = ordenRendimiento.columna;
+    const direccion = ordenRendimiento.direccion;
+    const factor = direccion === "asc" ? 1 : -1;
+
+    return [...asesoresTablaDashboard].sort((a, b) => {
+      const valoresA = obtenerValoresFiltroRendimiento(a);
+      const valoresB = obtenerValoresFiltroRendimiento(b);
+      const va = valoresA[columna] ?? "";
+      const vb = valoresB[columna] ?? "";
+      const na = Number.parseFloat(String(va).replace("%", "").replace(",", "."));
+      const nb = Number.parseFloat(String(vb).replace("%", "").replace(",", "."));
+      const ambosNumericos = String(va).trim() !== "" && String(vb).trim() !== "" &&
+        Number.isFinite(na) && Number.isFinite(nb);
+      const comparacion = ambosNumericos
+        ? na - nb
+        : String(va).localeCompare(String(vb), "es", { sensitivity: "base" });
+      return comparacion * factor;
+    });
+  })();
+
   /**
    * ============================================================
    * RENDER
@@ -1015,8 +1065,26 @@ export default function DashboardComercial({ usuario }) {
    */
 
   const descargarExcelRendimiento = () => {
-    const filas = datosTablaFiltrados.map((a) => {
-      const stats = estadisticasAsesores.get(Number(a.asesor_id)) || { acumulado: 0 };
+    // Para el Excel se calcula un acumulado separado: únicamente ventas APROBADAS.
+    // La estadística visible en el dashboard no se modifica.
+    const finAcumuladoExcel = fechaHasta || ultimoDiaMes(anio, mes);
+    const inicioMesExcel = primerDiaMes(anio, mes);
+    const acumuladosAprobadosExcel = new Map();
+
+    ventasCantadas.forEach((venta) => {
+      const fecha = normalizarFechaVenta(venta);
+      const estado = String(venta.estado || "").trim().toUpperCase();
+      if (!fecha || fecha < inicioMesExcel || fecha > finAcumuladoExcel) return;
+      if (estado !== "APROBADA") return;
+      if (salaFiltro !== "TODAS" && venta.sala !== salaFiltro) return;
+      if (asesorFiltro !== "TODOS" && Number(venta.asesor_id) !== Number(asesorFiltro)) return;
+
+      const id = Number(venta.asesor_id);
+      acumuladosAprobadosExcel.set(id, (acumuladosAprobadosExcel.get(id) || 0) + 1);
+    });
+
+    const filas = asesoresOrdenadosRendimiento.map((a) => {
+      const acumuladoAprobado = acumuladosAprobadosExcel.get(Number(a.asesor_id)) || 0;
       const cantadasDia = contarCantadasReportadas(
         reportesCantadasDiarias,
         a.asesor_id,
@@ -1032,8 +1100,8 @@ export default function DashboardComercial({ usuario }) {
         salaFiltro
       );
       const meta = numero(a.metaAjustada);
-      const faltan = Math.max(meta - numero(stats.acumulado), 0);
-      const cumplimiento = meta > 0 ? (numero(stats.acumulado) / meta) * 100 : 0;
+      const faltan = Math.max(meta - acumuladoAprobado, 0);
+      const cumplimiento = meta > 0 ? (acumuladoAprobado / meta) * 100 : 0;
       return {
         "Asesor": a.nombre_asesor,
         "Identificación": a.cedula_asesor || "",
@@ -1043,7 +1111,7 @@ export default function DashboardComercial({ usuario }) {
         "Masivos": desglose.Masivos,
         "CRM": desglose.CRM,
         "Gestión Propia": desglose["Gestion Propia"],
-        "Ventas cargadas acumuladas": numero(stats.acumulado),
+        "Ventas cargadas acumuladas (solo aprobadas)": acumuladoAprobado,
         "Meta": meta,
         "Faltan": faltan,
         "Descuento": numero(a.descuento),
@@ -1192,7 +1260,47 @@ export default function DashboardComercial({ usuario }) {
                 </div>
                 <div className="table-wrap">
                   <table className="dashboard-table advisor-performance-table">
-                    <thead><tr><th>Asesor</th><th>Ventas cantadas</th><th>Marcador</th><th>Masivos</th><th>CRM</th><th>Gestión Propia</th><th>Acumulado</th><th>Meta</th><th>Faltan</th><th>Descuento</th><th>Cumplimiento</th></tr></thead>
+                    <thead>
+                      <tr>
+                        {[
+                          ["asesor", "Asesor"],
+                          ["cantadas", "Ventas cantadas"],
+                          ["marcador", "Marcador"],
+                          ["masivos", "Masivos"],
+                          ["crm", "CRM"],
+                          ["gestionPropia", "Gestión Propia"],
+                          ["acumulado", "Acumulado"],
+                          ["meta", "Meta"],
+                          ["faltan", "Faltan"],
+                          ["descuento", "Descuento"],
+                          ["cumplimiento", "Cumplimiento"],
+                        ].map(([key, label]) => (
+                          <th key={key}>
+                            <div className="performance-header-filter">
+                              <span>{label}</span>
+                              <select
+                                aria-label={`Ordenar ${label}`}
+                                title={`Opciones de orden para ${label}`}
+                                value={ordenRendimiento.columna === key ? ordenRendimiento.direccion : ""}
+                                onChange={(e) => {
+                                  const accion = e.target.value;
+                                  if (accion === "reset") {
+                                    setOrdenRendimiento({ columna: null, direccion: null });
+                                  } else if (accion === "asc" || accion === "desc") {
+                                    setOrdenRendimiento({ columna: key, direccion: accion });
+                                  }
+                                }}
+                              >
+                                <option value="">Ordenar…</option>
+                                <option value="asc">Ordenar de menor a mayor</option>
+                                <option value="desc">Ordenar de mayor a menor</option>
+                                <option value="reset">Restablecer orden original</option>
+                              </select>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
                     <tbody>
                       {asesoresTablaDashboard.length === 0 ? (
                         <tr>
@@ -1200,7 +1308,7 @@ export default function DashboardComercial({ usuario }) {
                             No hay asesores ni ventas para los filtros seleccionados. Ajusta el período, la sala o el asesor.
                           </td>
                         </tr>
-                      ) : asesoresTablaDashboard.map((a) => {
+                      ) : asesoresOrdenadosRendimiento.map((a) => {
                         const stats = estadisticasAsesores.get(Number(a.asesor_id)) || { acumulado: 0 };
                         const cantadasDia = contarCantadasReportadas(
                           reportesCantadasDiarias,
