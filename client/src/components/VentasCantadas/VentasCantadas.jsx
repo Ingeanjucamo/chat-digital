@@ -1,7 +1,7 @@
 import React,{useCallback,useEffect,useMemo,useState} from "react";
 import {supabase} from "../../lib/supabase";
 import "./VentasCantadas.css";
-const CATS=["Marcador","Masivos","CRM","Gestion Propia"];
+const CATS=["Marcador","Campaña","CRM","Gestion Propia"];
 const hoy=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`};
 const clean=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toUpperCase();
 
@@ -12,7 +12,7 @@ export default function VentasCantadas({usuario}){
   const [ur,rr]=await Promise.all([supabase.from("usuarios").select("id,nombre,usuario,rol,activo,sala").eq("rol","Asesor").eq("activo",true).order("nombre"),supabase.from("ventas_cantadas_diarias").select("id,asesor_id,fecha,sala,cantidad,observacion").eq("fecha",fecha)]);
   if(ur.error)throw ur.error;if(rr.error)throw new Error(rr.error.message+" — ejecuta el SQL incluido en el ZIP.");
   const list=(ur.data||[]).map(u=>({...u,sala:u.sala||"Sala 1"}));
-  setUsers(list);const map={};list.forEach(u=>{let r=(rr.data||[]).find(x=>+x.asesor_id===+u.id),detail={};try{detail=JSON.parse(r?.observacion||"{}")}catch{};map[u.id]={...(detail.categorias||{}),total:+(r?.cantidad||0),nota:detail.nota||""}});setValues(map);
+  setUsers(list);const map={};list.forEach(u=>{let r=(rr.data||[]).find(x=>+x.asesor_id===+u.id),detail={};try{detail=JSON.parse(r?.observacion||"{}")}catch{};map[u.id]={...(detail.categorias||{}),Campaña:(detail.categorias||{}).Campaña ?? (detail.categorias||{}).Masivos ?? 0,total:+(r?.cantidad||0),nota:detail.nota||""}});setValues(map);
  }catch(e){setError(e.message||"No se pudo cargar.")}finally{setLoading(false)}},[fecha]);
  useEffect(()=>{load()},[load]);
  const visible=useMemo(()=>users.filter(u=>sala==="TODAS"||u.sala===sala),[users,sala]);

@@ -131,8 +131,8 @@ function estadoVentaAprobada(venta) {
   return String(venta?.estado || "").trim().toUpperCase() === "APROBADA";
 }
 
-// El acumulado comercial incluye toda venta cargada, independientemente
-// del estado de revisión: APROBADA, PENDIENTE, RECHAZADA o POR_CORREGIR.
+// El acumulado para metas excluye las ventas RECHAZADAS; el resto de estados
+// conserva su conteo hasta que la revisión determine lo contrario.
 function contarVentasCargadas(ventas, asesorId, desde, hasta) {
   return (ventas || []).filter((venta) => {
     const fecha = normalizarFechaVenta(venta);
@@ -150,7 +150,7 @@ function contarCantadasReportadas(reportes, asesorId, desde, hasta, salaFiltro =
 }
 
 function desgloseCantadasPorTipo(reportes, asesorId, desde, hasta, salaFiltro = "TODAS") {
-  const resultado = { Marcador: 0, Masivos: 0, CRM: 0, "Gestion Propia": 0 };
+  const resultado = { Marcador: 0, Campaña: 0, CRM: 0, "Gestion Propia": 0 };
   (reportes || []).forEach((r) => {
     const fecha = String(r.fecha || "").slice(0, 10);
     if (Number(r.asesor_id) !== Number(asesorId) || fecha < desde || fecha > hasta ||
@@ -159,7 +159,8 @@ function desgloseCantadasPorTipo(reportes, asesorId, desde, hasta, salaFiltro = 
     try { detalle = JSON.parse(r.observacion || "{}"); } catch { detalle = {}; }
     const categorias = detalle.categorias || {};
     Object.keys(resultado).forEach((categoria) => {
-      resultado[categoria] += numero(categorias[categoria]);
+      const valor = categoria === "Campaña" ? (categorias.Campaña ?? categorias.Masivos) : categorias[categoria];
+      resultado[categoria] += numero(valor);
     });
   });
   return resultado;
@@ -323,10 +324,37 @@ export default function DashboardComercial({ usuario }) {
       // Sala actual de cada asesor, consultada desde Administración/usuarios.
       const { data: perfilesSala, error: perfilesSalaError } = await supabase
         .from("usuarios")
-        .select("id,sala,nombre,usuario,rol")
+        .select("id,sala,nombre,usuario,rol,activo,eliminado")
         .eq("rol", "Asesor");
       if (perfilesSalaError) console.warn("No se pudieron cargar salas de asesores:", perfilesSalaError.message);
       const salasMap = Object.fromEntries((perfilesSala || []).map(p => [Number(p.id), String(p.sala || "Sala 1").trim().toUpperCase()]));
+      const perfilesEstadoMap = Object.fromEntries((perfilesSala || []).map(p => [Number(p.id), { activo: p.activo !== false, eliminado: p.eliminado === true }]));
+      // Mostrar todos los asesores en Rendimiento: activos y retirados.
+      // El estado retirado solo cambia el estilo de la fila, no la visibilidad.
+      asesoresData = asesoresData.map(a => ({ ...a, ...perfilesEstadoMap[Number(a.asesor_id)], mostrar: true }));
+      const idsEnVista = new Set(asesoresData.map(a => Number(a.asesor_id)));
+      (perfilesSala || []).forEach((perfil) => {
+        const id = Number(perfil.id);
+        if (idsEnVista.has(id)) return;
+        asesoresData.push({
+          asesor_id: id,
+          nombre_asesor: perfil.nombre || perfil.usuario || "Asesor",
+          usuario: perfil.usuario,
+          activo: perfil.activo !== false,
+          eliminado: perfil.eliminado === true,
+          sala: perfil.sala || "Sala 1",
+          mostrar: true,
+          meta: 0,
+          cantadas: 0,
+          rechazadas: 0,
+          pendientes: 0,
+          por_corregir: 0,
+          descuento_porta: 0,
+          descuento_migra: 0,
+          descuento_hogar: 0,
+        });
+        idsEnVista.add(id);
+      });
       setSalasPorAsesor(salasMap);
       const metasData = metasResp.error ? [] : (metasResp.data || []);
       const novedadesData = novedadesResp.error ? [] : (novedadesResp.data || []);
@@ -335,10 +363,10 @@ export default function DashboardComercial({ usuario }) {
       // - En el mes actual, los asesores retirados/archivados no aparecen en la tabla.
       // - En meses anteriores, se reconstruye su fila desde usuarios + ventas + meta,
       //   para conservar el histórico sin reactivar la cuenta ni mostrarla en Conversaciones.
-      if (esGestion && esMesPasado(anio, mes)) {
+      if (esGestion) {
         const { data: perfilesHistoricos, error: perfilesHistoricosError } = await supabase
           .from("usuarios")
-          .select("id,nombre,usuario,rol,activo,eliminado")
+          .select("id,nombre,usuario,rol,activo,eliminado,sala")
           .eq("rol", "Asesor");
 
         if (perfilesHistoricosError) {
@@ -359,15 +387,20 @@ export default function DashboardComercial({ usuario }) {
             });
             const metaPeriodo = metasData.find((m) => Number(m.asesor_id) === id && Number(m.anio) === Number(anio) && Number(m.mes) === Number(mes));
             const tieneNovedad = novedadesData.some((n) => Number(n.asesor_id) === id);
+            const tieneCantadas = reportesCantadasData.some((r) => {
+              const fechaReporte = String(r.fecha || "").slice(0, 10);
+              return Number(r.asesor_id) === id && fechaReporte >= inicioPeriodo && fechaReporte <= finPeriodo;
+            });
 
-            if (ventasPeriodoAsesor.length === 0 && !metaPeriodo && !tieneNovedad) return;
+            if (ventasPeriodoAsesor.length === 0 && !metaPeriodo && !tieneNovedad && !tieneCantadas) return;
 
             asesoresData.push({
               asesor_id: id,
               nombre_asesor: perfil.nombre || perfil.usuario || "Asesor archivado",
               usuario: perfil.usuario,
-              activo: false,
+              activo: perfil.activo !== false,
               eliminado: perfil.eliminado === true,
+              sala: perfil.sala || "Sala 1",
               mostrar: true,
               meta: numero(metaPeriodo?.meta),
               cantadas: ventasPeriodoAsesor.length,
@@ -860,7 +893,7 @@ export default function DashboardComercial({ usuario }) {
       const id = Number(venta.asesor_id);
       const actual = mapa.get(id) || { acumulado: 0, porEstado: {} };
       const estado = String(venta.estado || "PENDIENTE").toUpperCase();
-      actual.acumulado += 1; // Contar toda venta cargada, aun si está en revisión/rechazada/corrección.
+      if (estado !== "RECHAZADA") actual.acumulado += 1;
       actual.porEstado[estado] = (actual.porEstado[estado] || 0) + 1;
       mapa.set(id, actual);
     });
@@ -1025,7 +1058,7 @@ export default function DashboardComercial({ usuario }) {
       asesor: String(a.nombre_asesor || ""),
       cantadas: String(cantadas),
       marcador: String(desglose.Marcador),
-      masivos: String(desglose.Masivos),
+      campaña: String(desglose.Campaña),
       crm: String(desglose.CRM),
       gestionPropia: String(desglose["Gestion Propia"]),
       acumulado: String(stats.acumulado),
@@ -1112,7 +1145,7 @@ export default function DashboardComercial({ usuario }) {
         "Sala": salasPorAsesor[Number(a.asesor_id)] || a.sala || "",
         "Ventas cantadas": cantadasDia,
         "Marcador": desglose.Marcador,
-        "Masivos": desglose.Masivos,
+        "Campaña": desglose.Campaña,
         "CRM": desglose.CRM,
         "Gestión Propia": desglose["Gestion Propia"],
         "Ventas cargadas acumuladas (solo aprobadas)": acumuladoAprobado,
@@ -1270,7 +1303,7 @@ export default function DashboardComercial({ usuario }) {
                           ["asesor", "Asesor"],
                           ["cantadas", "Ventas cantadas"],
                           ["marcador", "Marcador"],
-                          ["masivos", "Masivos"],
+                          ["campaña", "Campaña"],
                           ["crm", "CRM"],
                           ["gestionPropia", "Gestión Propia"],
                           ["acumulado", "Acumulado"],
@@ -1331,15 +1364,19 @@ export default function DashboardComercial({ usuario }) {
                         const cumplimiento = a.metaAjustada > 0 ? (stats.acumulado / a.metaAjustada) * 100 : 0;
                         return <tr
                           key={`${a.asesor_id}-${a.cedula_asesor || a.nombre_asesor}`}
-                          style={modoHoyActivo && cantadasDia === 0 ? {
+                          style={a.eliminado === true ? {
+                            backgroundColor: "#fee2e2",
+                            color: "#b91c1c",
+                            boxShadow: "inset 4px 0 0 #dc2626",
+                          } : (modoHoyActivo && cantadasDia === 0 ? {
                             backgroundColor: "#fff1f2",
                             boxShadow: "inset 4px 0 0 #dc2626",
-                          } : undefined}
+                          } : undefined)}
                         >
-                          <td><strong>{a.nombre_asesor}</strong>{a.cedula_asesor && <small>{a.cedula_asesor}</small>}</td>
+                          <td><strong style={a.eliminado === true ? { color: "#b91c1c" } : undefined}>{a.nombre_asesor}{a.eliminado === true ? " (RETIRADO)" : ""}</strong>{a.cedula_asesor && <small>{a.cedula_asesor}</small>}</td>
                           <td className={modoHoyActivo && cantadasDia === 0 ? "strong-red" : "strong-blue"}><b>{cantadasDia}</b></td>
                           <td className="strong-blue">{desgloseTipos.Marcador}</td>
-                          <td className="strong-blue">{desgloseTipos.Masivos}</td>
+                          <td className="strong-blue">{desgloseTipos.Campaña}</td>
                           <td className="strong-blue">{desgloseTipos.CRM}</td>
                           <td className="strong-blue">{desgloseTipos["Gestion Propia"]}</td>
                           <td className="strong-blue"><b>{stats.acumulado}</b></td>
@@ -1350,6 +1387,21 @@ export default function DashboardComercial({ usuario }) {
                         </tr>;
                       })}
                     </tbody>
+                    {asesoresTablaDashboard.length > 0 && <tfoot>
+                      <tr className="performance-total-row">
+                        <th>TOTAL</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + contarCantadasReportadas(reportesCantadasDiarias, a.asesor_id, fechaDesde || primerDiaMes(anio, mes), fechaHasta || ultimoDiaMes(anio, mes), salaFiltro), 0)}</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + desgloseCantadasPorTipo(reportesCantadasDiarias, a.asesor_id, fechaDesde || primerDiaMes(anio, mes), fechaHasta || ultimoDiaMes(anio, mes), salaFiltro).Marcador, 0)}</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + desgloseCantadasPorTipo(reportesCantadasDiarias, a.asesor_id, fechaDesde || primerDiaMes(anio, mes), fechaHasta || ultimoDiaMes(anio, mes), salaFiltro).Campaña, 0)}</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + desgloseCantadasPorTipo(reportesCantadasDiarias, a.asesor_id, fechaDesde || primerDiaMes(anio, mes), fechaHasta || ultimoDiaMes(anio, mes), salaFiltro).CRM, 0)}</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + desgloseCantadasPorTipo(reportesCantadasDiarias, a.asesor_id, fechaDesde || primerDiaMes(anio, mes), fechaHasta || ultimoDiaMes(anio, mes), salaFiltro)["Gestion Propia"], 0)}</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + (estadisticasAsesores.get(Number(a.asesor_id))?.acumulado || 0), 0)}</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + numero(a.metaAjustada), 0)}</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + Math.max(numero(a.metaAjustada) - (estadisticasAsesores.get(Number(a.asesor_id))?.acumulado || 0), 0), 0)}</th>
+                        <th>{asesoresOrdenadosRendimiento.reduce((sum, a) => sum + numero(a.descuento), 0)}</th>
+                        <th>{(() => { const totalMeta = asesoresOrdenadosRendimiento.reduce((sum, a) => sum + numero(a.metaAjustada), 0); const totalAcum = asesoresOrdenadosRendimiento.reduce((sum, a) => sum + (estadisticasAsesores.get(Number(a.asesor_id))?.acumulado || 0), 0); return totalMeta > 0 ? `${(totalAcum / totalMeta * 100).toFixed(1)}%` : "0.0%"; })()}</th>
+                      </tr>
+                    </tfoot>}
                   </table>
                 </div>
               </div>

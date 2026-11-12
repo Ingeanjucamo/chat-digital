@@ -1687,3 +1687,17 @@
 .advisor-performance-table .performance-header-filter .performance-sort-arrow.is-desc span {
   transform: rotate(0deg);
 }
+
+/* Fila de totales para sumar cantadas, categorías, acumulado y metas */
+.advisor-performance-table tfoot .performance-total-row th {
+  background: #dbeafe;
+  color: #173b78;
+  font-size: 11px;
+  font-weight: 900;
+  border-top: 2px solid #8db8ff;
+  padding: 10px 8px;
+  white-space: nowrap;
+}
+.advisor-performance-table tfoot .performance-total-row th:first-child {
+  text-align: left;
+}
