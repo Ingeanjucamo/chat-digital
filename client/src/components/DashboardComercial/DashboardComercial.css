@@ -1701,3 +1701,33 @@
 .advisor-performance-table tfoot .performance-total-row th:first-child {
   text-align: left;
 }
+
+/* Rendimiento de asesores: tabla completa con desplazamiento de página,
+   como en la versión de referencia. Sin scrollbar vertical interno. */
+.advisor-performance-scroll {
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: visible;
+  position: static;
+  overscroll-behavior: auto;
+  scrollbar-gutter: auto;
+}
+
+.advisor-performance-table thead th {
+  position: static;
+  z-index: auto;
+  background: #e3efff !important;
+  box-shadow: 0 1px 0 rgba(141, 184, 255, .65);
+}
+
+.advisor-performance-table tfoot th {
+  position: static;
+  z-index: auto;
+  background: #dbeafe !important;
+  box-shadow: 0 -1px 0 #8db8ff;
+}
+
+.advisor-performance-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}

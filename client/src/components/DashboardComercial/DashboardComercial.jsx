@@ -136,7 +136,9 @@ function estadoVentaAprobada(venta) {
 function contarVentasCargadas(ventas, asesorId, desde, hasta) {
   return (ventas || []).filter((venta) => {
     const fecha = normalizarFechaVenta(venta);
-    return Number(venta.asesor_id) === Number(asesorId) &&
+    const estado = String(venta?.estado || "").trim().toUpperCase();
+    return estado !== "RECHAZADA" &&
+      Number(venta.asesor_id) === Number(asesorId) &&
       fecha && fecha >= desde && fecha <= hasta;
   }).length;
 }
@@ -403,8 +405,8 @@ export default function DashboardComercial({ usuario }) {
               sala: perfil.sala || "Sala 1",
               mostrar: true,
               meta: numero(metaPeriodo?.meta),
-              cantadas: ventasPeriodoAsesor.length,
-              rechazadas: ventasPeriodoAsesor.filter((v) => String(v.estado || "").toUpperCase() === "RECHAZADA").length,
+              cantadas: ventasPeriodoAsesor.filter((v) => String(v.estado || "").trim().toUpperCase() !== "RECHAZADA").length,
+              rechazadas: ventasPeriodoAsesor.filter((v) => String(v.estado || "").trim().toUpperCase() === "RECHAZADA").length,
               pendientes: ventasPeriodoAsesor.filter((v) => String(v.estado || "").toUpperCase() === "PENDIENTE").length,
               por_corregir: ventasPeriodoAsesor.filter((v) => String(v.estado || "").toUpperCase().includes("CORREGIR")).length,
               descuento_porta: 0,
@@ -662,26 +664,29 @@ export default function DashboardComercial({ usuario }) {
           numero(a.descuento_hogar);
         const descuentoNovedades = novedadesMap.get(id) || 0;
         const descuento = descuentoVista + descuentoNovedades;
-        const metaAjustada = Math.max(metaBase - descuento, 0);
+        // Las ventas rechazadas se consideran como si no se hubieran cargado:
+        // no incrementan ni reducen la meta del asesor.
         const inicioMesVentas = primerDiaMes(anio, mes);
         const finMesVentas = fechaHasta || ultimoDiaMes(anio, mes);
         const ventasAsesorMes = ventasCantadas.filter((v) => {
           const fechaVenta = normalizarFechaVenta(v);
           return Number(v.asesor_id) === id && fechaVenta && fechaVenta >= inicioMesVentas && fechaVenta <= finMesVentas;
         });
-        const totalCargadasMes = ventasAsesorMes.length;
+        const rechazadasMes = ventasAsesorMes.filter((v) => String(v.estado || "").toUpperCase() === "RECHAZADA").length;
+        const metaAjustada = Math.max(metaBase - descuento, 0);
+        const ventasValidasMes = ventasAsesorMes.filter((v) => String(v.estado || "").toUpperCase() !== "RECHAZADA");
+        const totalCargadasMes = ventasValidasMes.length;
         const aprobadasMes = ventasAsesorMes.filter(estadoVentaAprobada).length;
         const pendientesMes = ventasAsesorMes.filter((v) => String(v.estado || "").toUpperCase() === "PENDIENTE").length;
-        const rechazadasMes = ventasAsesorMes.filter((v) => String(v.estado || "").toUpperCase() === "RECHAZADA").length;
         const corregirMes = ventasAsesorMes.filter((v) => String(v.estado || "").toUpperCase() === "POR_CORREGIR").length;
         const cumplimiento =
           metaAjustada > 0
-            ? (totalCargadasMes / metaAjustada) * 100
+            ? (aprobadasMes / metaAjustada) * 100
             : 0;
 
         return {
           ...a,
-          cantadas: totalCargadasMes, // Acumulado: todas las ventas cargadas, sin importar estado.
+          cantadas: totalCargadasMes, // Excluye rechazadas; los demás estados mantienen su conteo.
           aprobadas: aprobadasMes,
           pendientes: pendientesMes,
           rechazadas: rechazadasMes,
@@ -824,6 +829,7 @@ export default function DashboardComercial({ usuario }) {
 
     const ventasFiltradas = ventasCantadas.filter((venta) => {
       if (venta.cargue_fin_semana === true) return false;
+      if (String(venta.estado || "").trim().toUpperCase() === "RECHAZADA") return false;
       const fecha = normalizarFechaVenta(venta);
       if (!fecha || fecha < desde || fecha > hasta) return false;
       if (salaFiltro !== "TODAS" && venta.sala !== salaFiltro) return false;
@@ -835,6 +841,7 @@ export default function DashboardComercial({ usuario }) {
     const porFechaMes = new Map();
     ventasCantadas.forEach((venta) => {
       if (venta.cargue_fin_semana === true) return;
+      if (String(venta.estado || "").trim().toUpperCase() === "RECHAZADA") return;
       const fecha = normalizarFechaVenta(venta);
       if (!fecha || fecha < inicioMes || fecha > hasta) return;
       if (salaFiltro !== "TODAS" && venta.sala !== salaFiltro) return;
@@ -911,8 +918,8 @@ export default function DashboardComercial({ usuario }) {
 
   const resumenPeriodo = useMemo(() => {
     const activos = datosTablaFiltrados.filter((a) => a.activo !== false);
-    const cantadas = ventasPeriodo.length; // ventas realmente cargadas al sistema, sin filtrar por estado
-    const rechazadas = ventasPeriodo.filter((v) => String(v.estado).toUpperCase() === "RECHAZADA").length;
+    const cantadas = ventasPeriodo.filter((v) => String(v.estado || "").trim().toUpperCase() !== "RECHAZADA").length;
+    const rechazadas = ventasPeriodo.filter((v) => String(v.estado || "").trim().toUpperCase() === "RECHAZADA").length;
     const pendientes = ventasPeriodo.filter((v) => String(v.estado).toUpperCase() === "PENDIENTE").length;
     // El cumplimiento del dashboard es acumulado hasta la fecha final
     // seleccionada. Así, si el usuario filtra un solo día, las
@@ -1295,7 +1302,7 @@ export default function DashboardComercial({ usuario }) {
                     <button type="button" onClick={descargarExcelRendimiento} className="filter-today" title="Descargar el rendimiento filtrado en Excel">⬇️ Descargar Excel</button>
                   </div>
                 </div>
-                <div className="table-wrap">
+                <div className="table-wrap advisor-performance-scroll">
                   <table className="dashboard-table advisor-performance-table">
                     <thead>
                       <tr>
@@ -1611,14 +1618,15 @@ Reporte diario: cuenta las ventas normales cargadas cada día (excluye cargues d
 function DashboardCharts({ ventasPorDia, ventasPeriodo, asesores }) {
   const maxDia = Math.max(...ventasPorDia.map((f) => f.cantadas), 1);
   const porSala = new Map();
-  ventasPeriodo.forEach((v) => { const sala = v.sala || "SIN SALA"; porSala.set(sala, (porSala.get(sala) || 0) + 1); });
+  const ventasValidasPeriodo = ventasPeriodo.filter((v) => String(v.estado || "").trim().toUpperCase() !== "RECHAZADA");
+  ventasValidasPeriodo.forEach((v) => { const sala = v.sala || "SIN SALA"; porSala.set(sala, (porSala.get(sala) || 0) + 1); });
   const salas = Array.from(porSala.entries()).sort((a,b) => b[1]-a[1]);
-  const total = ventasPeriodo.length || 1;
+  const total = ventasValidasPeriodo.length || 1;
   const activos = asesores.filter(a => a.activo !== false).length || 1;
 
   return <div className="charts-grid">
     <div className="dashboard-panel chart-card">
-      <div className="panel-title"><div><h2>📊 Cantadas por día</h2><span>Ventas registradas en cada fecha</span></div><b>{ventasPeriodo.length}</b></div>
+      <div className="panel-title"><div><h2>📊 Cantadas por día</h2><span>Ventas registradas en cada fecha</span></div><b>{ventasValidasPeriodo.length}</b></div>
       <div className="bar-chart">
         {ventasPorDia.map((f) => <div className="bar-item" key={f.fecha} title={`${f.fecha}: ${f.cantadas} cantadas`}><div className="bar-value">{f.cantadas}</div><div className="bar"><span style={{height: `${Math.max((f.cantadas / maxDia) * 100, f.cantadas ? 8 : 2)}%`}} /></div><small>{f.fecha.slice(8,10)}</small></div>)}
       </div>
@@ -1626,7 +1634,7 @@ function DashboardCharts({ ventasPorDia, ventasPeriodo, asesores }) {
     <div className="dashboard-panel chart-card">
       <div className="panel-title"><div><h2>🥧 Cantadas por sala</h2><span>Distribución del período filtrado</span></div></div>
       <div className="room-bars">{salas.length ? salas.map(([sala, count]) => <div className="room-row" key={sala}><div><b>{sala}</b><span>{count} ventas</span></div><div className="room-track"><span style={{width:`${(count/total)*100}%`}} /></div><strong>{Math.round((count/total)*100)}%</strong></div>) : <div className="empty-chart">Sin ventas para el filtro.</div>}</div>
-      <div className="active-vs-sales"><div><b>{activos}</b><span>Activos</span></div><div><b>{ventasPeriodo.length}</b><span>Cantadas</span></div><div><b>{(ventasPeriodo.length/activos).toFixed(2)}</b><span>Por asesor</span></div></div>
+      <div className="active-vs-sales"><div><b>{activos}</b><span>Activos</span></div><div><b>{ventasValidasPeriodo.length}</b><span>Cantadas</span></div><div><b>{(ventasValidasPeriodo.length/activos).toFixed(2)}</b><span>Por asesor</span></div></div>
     </div>
   </div>;
 }
@@ -1665,7 +1673,8 @@ function DashboardAsesor({
   }
 
   const meta = numero(datos.meta);
-  const cantadas = numero(datos.cantadas); // Ventas ya cargadas por el asesor
+  const cantadas = numero(datos.cantadas); // Total de ventas cargadas, para mostrar en la tarjeta.
+  const ventasAprobadas = numero(datos.aprobadas); // Solo aprobadas cuentan para la meta.
   const ventasCantadasReportadas = numero(datos.ventas_cantadas_reportadas); // Cantadas reportadas por supervisión
   const faltanSubir = Math.max(ventasCantadasReportadas - cantadas, 0);
   const rechazadas = numero(datos.rechazadas);
@@ -1681,8 +1690,11 @@ function DashboardAsesor({
     0
   );
 
+  // La meta, el ritmo diario, la proyección y el cumplimiento se calculan
+  // exclusivamente con ventas APROBADAS. Rechazadas, pendientes y por corregir
+  // permanecen visibles en el total cargado, pero no avanzan la meta.
   const faltan = Math.max(
-    metaAjustada - cantadas,
+    metaAjustada - ventasAprobadas,
     0
   );
 
@@ -1737,7 +1749,7 @@ function DashboardAsesor({
 
   const ritmoActual =
     diasLaborados > 0
-      ? cantadas / diasLaborados
+      ? ventasAprobadas / diasLaborados
       : 0;
 
   /**
@@ -1754,7 +1766,7 @@ function DashboardAsesor({
       ? Math.round(
           ritmoActual * diasLaborales
         )
-      : cantadas;
+      : ventasAprobadas;
 
   /**
    * ============================================================
@@ -1764,7 +1776,7 @@ function DashboardAsesor({
 
   const cumplimiento =
     metaAjustada > 0
-      ? (cantadas / metaAjustada) * 100
+      ? (ventasAprobadas / metaAjustada) * 100
       : 0;
 
   /**
