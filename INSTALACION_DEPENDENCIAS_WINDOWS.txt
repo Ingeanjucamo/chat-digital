@@ -1,0 +1,20 @@
+INSTALACION AMV CRM - WINDOWS
+
+1. Extrae este ZIP usando clic derecho > Extraer todo.
+2. Abre la carpeta chat-interno.
+3. Para instalar dependencias del cliente:
+   Abre PowerShell dentro de chat-interno\client y ejecuta:
+       npm install
+4. Para instalar dependencias del servidor (si se utiliza):
+   Abre PowerShell dentro de chat-interno\server y ejecuta:
+       npm install
+   (Si server no tiene package.json, ejecuta el servidor según README del proyecto.)
+5. Inicia la aplicación desde client:
+       npm run dev
+
+REQUISITOS:
+- Node.js LTS instalado (incluye npm).
+- La carpeta node_modules se genera localmente al ejecutar npm install.
+- No se incluye node_modules en el ZIP porque debe instalarse en el equipo local.
+
+Si Windows vuelve a mostrar error ZIP, intenta extraer con 7-Zip.

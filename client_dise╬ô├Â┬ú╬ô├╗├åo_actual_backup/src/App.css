@@ -1,0 +1,685 @@
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f0f2f5;
+  color: #111b21;
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+/* LOGIN */
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e9edef;
+}
+
+.login-box {
+  width: 380px;
+  background: white;
+  padding: 40px;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  text-align: center;
+}
+
+.logo {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #25d366;
+  border-radius: 50%;
+  font-size: 35px;
+}
+
+.login-box h1 {
+  margin: 10px 0 5px;
+}
+
+.login-box p {
+  color: #667781;
+  margin-bottom: 25px;
+}
+
+.login-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.login-box input {
+  padding: 13px;
+  border: 1px solid #d1d7db;
+  border-radius: 8px;
+  outline: none;
+  font-size: 15px;
+}
+
+.login-box input:focus {
+  border-color: #25d366;
+}
+
+.login-box button {
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background: #25d366;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.login-box button:hover {
+  background: #20bd5a;
+}
+
+.demo {
+  margin-top: 25px;
+  padding: 15px;
+  background: #f5f6f6;
+  border-radius: 8px;
+  color: #667781;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* APP */
+
+.app {
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+  width: 330px;
+  min-width: 330px;
+  background: #fff;
+  border-right: 1px solid #d1d7db;
+  display: flex;
+  flex-direction: column;
+}
+
+.perfil {
+  height: 70px;
+  padding: 10px 16px;
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #25d366;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 21px;
+  font-weight: bold;
+}
+
+.perfil strong {
+  display: block;
+  font-size: 15px;
+}
+
+.perfil small {
+  display: block;
+  color: #667781;
+  margin-top: 4px;
+}
+
+.sidebar h3 {
+  font-size: 11px;
+  color: #667781;
+  padding: 15px 18px 8px;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* GRUPOS */
+
+.grupo {
+  border: none;
+  background: white;
+  padding: 13px 18px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #111b21;
+}
+
+.grupo span {
+  font-size: 20px;
+}
+
+.grupo:hover {
+  background: #f5f6f6;
+}
+
+.grupo.activo {
+  background: #e9edef;
+  font-weight: bold;
+}
+
+/* CONTACTOS */
+
+.titulo-contactos {
+  border-top: 1px solid #e9edef;
+  margin-top: 5px !important;
+}
+
+.contactos {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.contacto {
+  width: 100%;
+  border: none;
+  background: white;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.contacto:hover {
+  background: #f5f6f6;
+}
+
+.contacto.activo {
+  background: #e9edef;
+}
+
+.avatar-contacto {
+  width: 45px;
+  height: 45px;
+  min-width: 45px;
+  border-radius: 50%;
+  background: #dfe5e7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #54656f;
+  font-size: 18px;
+}
+
+.info-contacto {
+  overflow: hidden;
+}
+
+.info-contacto strong {
+  display: block;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info-contacto small {
+  display: block;
+  margin-top: 4px;
+  color: #667781;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* CERRAR SESIÓN */
+
+.cerrar {
+  border: none;
+  border-top: 1px solid #d1d7db;
+  background: #f0f2f5;
+  padding: 15px;
+  cursor: pointer;
+  color: #d32f2f;
+  font-weight: bold;
+}
+
+.cerrar:hover {
+  background: #e9edef;
+}
+
+/* CONTENIDO */
+
+.contenido {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #efeae2;
+}
+
+/* HEADER */
+
+.header {
+  height: 70px;
+  min-height: 70px;
+  background: #f0f2f5;
+  border-bottom: 1px solid #d1d7db;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.header span {
+  display: block;
+  margin-top: 4px;
+  color: #667781;
+  font-size: 12px;
+}
+
+.estado {
+  color: #128c7e;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+/* MENSAJES */
+
+.mensajes {
+  flex: 1;
+  overflow-y: auto;
+  padding: 25px 7%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.mensaje {
+  max-width: 65%;
+  align-self: flex-start;
+  background: white;
+  padding: 8px 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+}
+
+.mensaje.mio {
+  align-self: flex-end;
+  background: #d9fdd3;
+}
+
+.mensaje-nombre {
+  color: #128c7e;
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.mensaje-texto {
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.mensaje small {
+  display: block;
+  text-align: right;
+  color: #667781;
+  font-size: 10px;
+  margin-top: 4px;
+}
+
+.vacio {
+  margin: auto;
+  padding: 15px 25px;
+  background: #fff;
+  border-radius: 10px;
+  color: #667781;
+  text-align: center;
+}
+
+/* BARRA MENSAJE */
+
+.barra-mensaje {
+  min-height: 65px;
+  padding: 10px 18px;
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.barra-mensaje input {
+  flex: 1;
+  border: none;
+  outline: none;
+  border-radius: 22px;
+  padding: 13px 18px;
+  font-size: 14px;
+  background: white;
+}
+
+.barra-mensaje button {
+  border: none;
+  background: #25d366;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 22px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.barra-mensaje button:hover {
+  background: #20bd5a;
+}
+
+/* BIENVENIDA */
+
+.bienvenida {
+  margin: auto;
+  text-align: center;
+  max-width: 500px;
+  padding: 40px;
+  color: #667781;
+}
+
+.bienvenida-icono {
+  font-size: 70px;
+  margin-bottom: 15px;
+}
+
+.bienvenida h2 {
+  color: #111b21;
+  margin-bottom: 10px;
+}
+
+.bienvenida p {
+  line-height: 1.6;
+}
+
+/* ADMIN */
+
+.admin-panel {
+  padding: 40px;
+}
+
+.admin-panel h2 {
+  margin-top: 0;
+}
+
+.tarjetas {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.tarjetas div {
+  width: 220px;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.tarjetas strong {
+  display: block;
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.tarjetas span {
+  color: #667781;
+  font-size: 13px;
+}
+
+/* SCROLL */
+
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c5c9cc;
+  border-radius: 10px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 800px) {
+  .sidebar {
+    width: 260px;
+    min-width: 260px;
+  }
+
+  .mensajes {
+    padding: 20px;
+  }
+
+  .mensaje {
+    max-width: 80%;
+  }
+}
+
+/* =========================================================
+   DIGITAL CONTACT - REDISEÑO CORPORATIVO
+   ========================================================= */
+:root {
+  --dc-blue: #1476d4;
+  --dc-blue-dark: #0c4f95;
+  --dc-cyan: #2aa9e8;
+  --dc-red: #e53935;
+  --dc-yellow: #f5c400;
+  --dc-ink: #17202a;
+  --dc-muted: #718096;
+  --dc-bg: #f5f7fa;
+  --dc-line: #e5eaf0;
+  --dc-card: #ffffff;
+}
+
+.login-page { position: relative; overflow: hidden; }
+.login-page::before,
+.login-page::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.login-page::before {
+  width: 520px; height: 520px; right: -180px; top: -180px;
+  background: radial-gradient(circle, rgba(42,169,232,.24), rgba(42,169,232,0) 68%);
+}
+.login-page::after {
+  width: 420px; height: 420px; left: -180px; bottom: -180px;
+  background: radial-gradient(circle, rgba(20,118,212,.18), rgba(20,118,212,0) 68%);
+}
+.login-card { position: relative; z-index: 1; }
+.brand-logo { object-fit: contain; display: block; }
+.login-logo { width: 112px; height: 112px; margin: 0 auto 12px; }
+
+.app-shell { position: relative; background: var(--dc-bg) !important; }
+.app-sidebar {
+  background: linear-gradient(180deg, #0b3768 0%, #0b4e92 55%, #0d5fae 100%) !important;
+  border-right: 0 !important;
+  width: 260px !important;
+  min-width: 260px !important;
+  padding: 18px !important;
+}
+.brand-area { margin-bottom: 22px !important; }
+.logoPequeno { background: #fff !important; border-radius: 14px !important; padding: 5px; overflow: hidden; }
+.brand-logo-small { width: 100%; height: 100%; object-fit: contain; }
+.logoTitulo { color: #fff !important; font-size: 16px !important; letter-spacing: .1px; }
+.logoTexto { color: rgba(255,255,255,.72) !important; }
+.usuarioActual { background: rgba(255,255,255,.10) !important; border: 1px solid rgba(255,255,255,.12); }
+.avatar { background: linear-gradient(135deg, var(--dc-cyan), var(--dc-blue)) !important; box-shadow: 0 6px 15px rgba(0,0,0,.15); }
+.rolUsuario { color: rgba(255,255,255,.65) !important; }
+.menuBoton { color: rgba(255,255,255,.78) !important; }
+.menuBoton:hover { background: rgba(255,255,255,.09) !important; color: #fff !important; }
+.menuActivo { background: linear-gradient(90deg, #1683df, #0e6bc2) !important; color: #fff !important; box-shadow: 0 7px 18px rgba(0,0,0,.16); }
+.botonCerrar { background: rgba(255,255,255,.10) !important; color: #fff !important; border-top: 1px solid rgba(255,255,255,.12) !important; }
+.botonCerrar:hover { background: rgba(229,57,53,.18) !important; }
+
+.contacts-panel {
+  width: 340px !important;
+  min-width: 340px !important;
+  background: #fff !important;
+  border-right: 1px solid var(--dc-line) !important;
+}
+.contactosTitulo { padding: 25px 22px 14px !important; }
+.tituloContactos { color: var(--dc-ink) !important; font-size: 22px !important; font-weight: 750 !important; }
+.subtituloContactos { color: var(--dc-muted) !important; }
+.busquedaCaja { background: #f3f6f9 !important; border: 1px solid #e7edf3; border-radius: 13px !important; }
+.contacto { padding: 13px 18px !important; border-bottom-color: #eef2f6 !important; }
+.contacto:hover { background: #f7fbff !important; }
+.contactoActivo { background: #edf6ff !important; box-shadow: inset 3px 0 0 var(--dc-blue); }
+.avatarContacto { background: linear-gradient(135deg, #e8f4ff, #d8ecff) !important; color: var(--dc-blue-dark) !important; }
+.badgeContacto, .badge { background: var(--dc-red) !important; }
+
+.chat-panel { background: #eef3f7 !important; }
+.chatHeader { background: rgba(255,255,255,.97) !important; border-bottom: 1px solid var(--dc-line) !important; box-shadow: 0 1px 8px rgba(20,40,60,.04); }
+.avatarChat { background: linear-gradient(135deg, var(--dc-blue), var(--dc-cyan)) !important; box-shadow: 0 5px 15px rgba(20,118,212,.22); }
+.chatNombre { color: var(--dc-ink) !important; }
+.chatEstado { color: var(--dc-muted) !important; }
+.mensajes { background: radial-gradient(circle at top left, #f8fbfd, #edf2f6 72%) !important; padding: 28px clamp(18px, 5vw, 72px) !important; }
+.mensaje { border-radius: 15px !important; box-shadow: 0 4px 14px rgba(30,55,80,.07) !important; }
+.mensajePropio { background: linear-gradient(135deg, #1176d4, #0e62ae) !important; }
+.mensajeOtro { border: 1px solid #e3e9ef !important; }
+.nombreMensaje { color: var(--dc-blue) !important; }
+.formMensaje { background: #fff !important; border-top: 1px solid var(--dc-line) !important; padding: 13px 18px !important; }
+.inputMensaje { border-color: #dfe6ed !important; border-radius: 13px !important; background: #f8fafc; }
+.inputMensaje:focus { border-color: var(--dc-blue) !important; box-shadow: 0 0 0 3px rgba(20,118,212,.10); }
+.botonEnviar { background: linear-gradient(135deg, var(--dc-blue), var(--dc-cyan)) !important; border-radius: 13px !important; box-shadow: 0 6px 15px rgba(20,118,212,.22); }
+.soloLectura { background: #edf6ff !important; color: #145b98 !important; border-top-color: #d9eafb !important; }
+
+.app-credit {
+  position: fixed;
+  right: 14px;
+  bottom: 7px;
+  z-index: 1000;
+  color: #8b98a6;
+  font-size: 10px;
+  letter-spacing: .2px;
+  background: rgba(255,255,255,.78);
+  border: 1px solid rgba(220,228,236,.9);
+  border-radius: 999px;
+  padding: 4px 9px;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 980px) {
+  .app-sidebar { width: 78px !important; min-width: 78px !important; padding: 12px 9px !important; }
+  .brand-area > div:last-child, .usuarioActual > div:last-child, .menuBoton > span:nth-child(2), .botonCerrar { display: none !important; }
+  .brand-area { justify-content: center; }
+  .usuarioActual { justify-content: center; padding: 9px !important; }
+  .menuBoton { justify-content: center; padding: 13px 8px !important; }
+  .menuBoton > span:first-child { font-size: 21px; }
+  .contacts-panel { width: 290px !important; min-width: 290px !important; }
+}
+
+@media (max-width: 720px) {
+  body { overflow: hidden; }
+  .app-shell { height: 100dvh !important; }
+  .app-sidebar { width: 64px !important; min-width: 64px !important; }
+  .contacts-panel { width: 235px !important; min-width: 235px !important; }
+  .contactosTitulo { padding: 18px 13px 10px !important; }
+  .tituloContactos { font-size: 17px !important; }
+  .subtituloContactos { font-size: 10px !important; }
+  .contacto { padding: 11px 10px !important; gap: 8px !important; }
+  .avatarContacto { width: 38px !important; height: 38px !important; min-width: 38px !important; font-size: 14px !important; }
+  .nombreContacto { font-size: 12px !important; }
+  .funcionesContacto { font-size: 9px !important; }
+  .chatHeader { height: 62px !important; min-height: 62px !important; padding: 0 12px !important; }
+  .avatarChat { width: 38px !important; height: 38px !important; min-width: 38px !important; font-size: 17px !important; }
+  .chatNombre { font-size: 14px !important; }
+  .chatEstado { font-size: 9px !important; }
+  .mensajes { padding: 18px 10px 72px !important; }
+  .mensaje { max-width: 86% !important; font-size: 13px !important; }
+  .formMensaje { position: absolute; left: 64px; right: 0; bottom: 0; z-index: 20; padding: 8px !important; }
+  .inputMensaje { padding: 11px !important; }
+  .botonEnviar { width: 44px !important; }
+  .app-credit { right: 8px; bottom: 2px; font-size: 8px; opacity: .8; }
+}
+
+@media (max-width: 520px) {
+  .app-sidebar { display: none !important; }
+  .contacts-panel { width: 42vw !important; min-width: 150px !important; max-width: 205px !important; }
+  .formMensaje { left: 0; }
+  .login-card { width: min(92vw, 380px) !important; padding: 28px !important; }
+  .login-logo { width: 92px; height: 92px; }
+}
+
+/* Clases añadidas para que el responsive también funcione con los estilos inline existentes */
+.app-sidebar .brand-area { display:flex !important; align-items:center; gap:10px; }
+.app-sidebar .brand-area > div:last-child { min-width:0; }
+.app-sidebar .current-user { display:flex !important; align-items:center; }
+.app-sidebar .current-avatar { flex:0 0 auto; }
+.app-sidebar .main-menu { display:flex !important; flex-direction:column; gap:7px; }
+.app-sidebar .menu-item { width:100%; }
+.app-sidebar .logout-button { width:100%; }
+.contacts-panel .contacts-heading { flex-shrink:0; }
+.contacts-panel .search-box { flex-shrink:0; }
+.contacts-panel .contacts-list { min-height:0; }
+.contacts-panel .contact-item { width:100%; }
+.chat-panel .chat-header { flex-shrink:0; }
+.chat-panel .messages-area { min-height:0; }
+.message-row { width:100%; }
+.message-bubble { overflow-wrap:anywhere; }
+.message-form { flex-shrink:0; }
+
+@media (max-width: 980px) {
+  .app-sidebar .brand-area > div:last-child,
+  .app-sidebar .current-user > div:last-child,
+  .app-sidebar .menu-item > span:nth-child(2),
+  .app-sidebar .logout-button { display:none !important; }
+  .app-sidebar .brand-area { justify-content:center; }
+  .app-sidebar .current-user { justify-content:center; }
+  .app-sidebar .menu-item { justify-content:center; }
+}
+
+@media (max-width: 520px) {
+  .app-sidebar { display:none !important; }
+  .contacts-panel { width:42vw !important; min-width:150px !important; max-width:205px !important; }
+  .chat-panel { width:calc(58vw - 0px); }
+}
+
+/* Ajuste logo Digital Contact */
+.login-logo {
+  width: 180px !important;
+  max-width: 180px !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+.brand-logo-small {
+  width: 120px !important;
+  max-width: 120px !important;
+  height: auto !important;
+  object-fit: contain !important;
+}

@@ -77,11 +77,12 @@ const usuario = buscarUsuario(datos, emisorId);
       });
     }
 
-    if (usuario.rol !== "Administrador") {
+    // Administradores y supervisores pueden cargar archivos para el módulo Información.
+    if (!["Administrador", "Supervisor"].includes(usuario.rol)) {
       fs.unlinkSync(req.file.path);
 
       return res.status(403).json({
-        error: "Solo los administradores pueden subir archivos",
+        error: "Solo los administradores y supervisores pueden subir archivos",
       });
     }
 
@@ -246,21 +247,21 @@ function puedeChatPrivado(emisor, receptor) {
     return false;
   }
 
-  if (emisor.id === receptor.id) {
-    return false;
+  // Mi chat: el usuario puede enviarse mensajes/archivos a sí mismo.
+  if (Number(emisor.id) === Number(receptor.id)) {
+    return true;
   }
 
-  // ADMINISTRADOR -> solamente asesores
-  if (emisor.rol === "Administrador") {
-    return receptor.rol === "Asesor";
-  }
+  // Reglas exactas solicitadas para Conversaciones:
+  // Admin -> solo Asesores; Supervisor -> solo Asesores;
+  // Asesor -> Admin y Supervisor.
+  const contactosPermitidos = {
+    Administrador: ["Asesor"],
+    Supervisor: ["Asesor"],
+    Asesor: ["Administrador", "Supervisor"],
+  };
 
-  // ASESOR -> solamente administradores
-  if (emisor.rol === "Asesor") {
-    return receptor.rol === "Administrador";
-  }
-
-  return false;
+  return (contactosPermitidos[emisor.rol] || []).includes(receptor.rol);
 }
 
 /* =========================================================
@@ -268,7 +269,7 @@ function puedeChatPrivado(emisor, receptor) {
 ========================================================= */
 
 function puedePublicarInformacion(usuario) {
-  return usuario && usuario.rol === "Administrador";
+  return usuario && ["Administrador", "Supervisor"].includes(usuario.rol);
 }
 
 /* =========================================================
@@ -381,7 +382,7 @@ app.post("/api/administracion/usuarios", (req, res) => {
     });
   }
 
-  if (!["Asesor", "Administrador"].includes(rol)) {
+  if (!["Asesor", "Supervisor", "Administrador"].includes(rol)) {
     return res.status(400).json({
       error: "Rol no válido",
     });
@@ -413,7 +414,9 @@ app.post("/api/administracion/usuarios", (req, res) => {
     funciones:
       rol === "Administrador"
         ? ["Administración"]
-        : ["Asesor"],
+        : rol === "Supervisor"
+          ? ["Ventas", "Revisión"]
+          : ["Asesor"],
     activo: true,
   };
 
@@ -482,7 +485,7 @@ app.put("/api/administracion/usuarios/:id", (req, res) => {
   }
 
   if (rol !== undefined) {
-    if (!["Asesor", "Administrador"].includes(rol)) {
+    if (!["Asesor", "Supervisor", "Administrador"].includes(rol)) {
       return res.status(400).json({
         error: "Rol no válido",
       });
@@ -685,7 +688,7 @@ app.post("/api/mensajes", (req, res) => {
       if (!puedePublicarInformacion(emisor)) {
         return res.status(403).json({
           error:
-            "Solo los administradores pueden publicar información",
+            "Solo los administradores y supervisores pueden publicar información",
         });
       }
 
